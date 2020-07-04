@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ContentView xmlns="http://xamarin.com/schemas/2014/forms" 
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="IntelliCenterControl.Views.BodyStatus">
+    <ContentView.Content>
+        <Grid >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0"
+                                   Text="{Binding Name}"
+                                   FontAttributes="Bold" VerticalTextAlignment="Center"/>
+            <Image Grid.Column="1" x:Name="HeatImage" HorizontalOptions="StartAndExpand" VerticalOptions="StartAndExpand" Aspect="AspectFit" Scale="0.5"/>
+            <Label Grid.Column="1" x:Name="HeatMode" IsVisible="false" Text="{Binding HeatMode}" VerticalTextAlignment="Center"/>
+            <Label Grid.Column="2" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                               Text="{Binding LastTemp, StringFormat='{}{0}°'}"
+                               FontAttributes="Italic"/>
+            <Switch Grid.Column="3" IsToggled="{Binding Active}"
+                                    VerticalOptions="Center" />
+        </Grid>
+    </ContentView.Content>
+</ContentView>

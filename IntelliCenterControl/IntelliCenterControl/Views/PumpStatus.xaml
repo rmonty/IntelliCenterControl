@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ContentView xmlns="http://xamarin.com/schemas/2014/forms" 
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="IntelliCenterControl.Views.PumpStatus">
+  <ContentView.Content>
+      <Grid >
+          <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
+          <Image Grid.Column="0" x:Name="PumpImage" HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand" Aspect="AspectFit"/>
+          <Switch IsVisible="false" x:Name="ActiveToggle" IsToggled="{Binding Active}"/>
+          <Label Grid.Column="1" 
+                 Text="{Binding Name}" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
+                 FontAttributes="Bold" />
+          <Label Grid.Column="2" x:Name="PumpPower"
+                 Text="{Binding Power}" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
+                 FontAttributes="Italic"
+                 VerticalOptions="End" />
+            <Label Grid.Column="3" x:Name="PumpRPM"
+                 Text="{Binding RPM}" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
+                 FontAttributes="Italic"
+                 VerticalOptions="End" />
+            <Label Grid.Column="4" x:Name="PumpGPM"
+                 Text="{Binding GPM}" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
+                 FontAttributes="Italic"
+                 VerticalOptions="End" />
+      </Grid>
+    </ContentView.Content>
+</ContentView>

@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:IntelliCenterControl.Views;assembly=IntelliCenterControl"
+             mc:Ignorable="d"
+             x:Class="IntelliCenterControl.Views.HardwareDefinitionPage"
+             Title="{Binding Title}"
+             x:Name="BrowseItemsPage"
+             BackgroundColor="LightGray">
+
+    <!--<ContentPage.ToolbarItems>
+        <ToolbarItem Text="Add" Clicked="AddItem_Clicked" />
+    </ContentPage.ToolbarItems>-->
+    <ContentPage.Resources>
+       
+    </ContentPage.Resources>
+    <RefreshView IsRefreshing="{Binding IsBusy, Mode=TwoWay}" Command="{Binding LoadHardwareDefinitionCommand}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Frame Grid.Row="0" Grid.Column="0" Grid.RowSpan="1" BackgroundColor="White" CornerRadius="5" />
+            <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="1" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Image Source="temperature_icon.png" Aspect="AspectFill" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand"/>
+                <Label Text="Water Temp" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"  FontAttributes="Bold" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontSize="Body"/>
+                <Frame Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" BorderColor="#000000"/>
+                <Label Text="{Binding WaterTemp, StringFormat='{}{0}°'}" FontAttributes="Bold" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" FontSize="Body"/>
+                <Label Text="Air Temp" Grid.Row="2" Grid.ColumnSpan="2" VerticalTextAlignment="Center" FontSize="Body"/>
+                <Frame Grid.Row="2" Grid.Column="2" BorderColor="#000000"/>
+                <Label Text="{Binding AirTemp, StringFormat='{}{0}°'}"  Grid.Row="2" Grid.Column="2" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"/>
+            </Grid>
+            <Frame Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
+            <Grid Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <CollectionView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" x:Name="BodyView" ItemsSource="{Binding Bodies}">
+                <!--<CollectionView.Header>
+                    <Grid >
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="1"
+                               Text="Last Temp" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
+                               FontAttributes="Italic"
+                               VerticalOptions="End" />
+                    </Grid>
+                </CollectionView.Header>-->
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <views:BodyStatus/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+                <Label Grid.Row="1" Grid.Column="0" Text="Salt Level" HorizontalTextAlignment="Center"/>
+                <Label Grid.Row="1" Grid.Column="1" Text="{Binding SaltLevel}" HorizontalTextAlignment="Center"/>
+            </Grid>
+            <Frame Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" BackgroundColor="White" CornerRadius="5" />
+            <CollectionView Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="5" x:Name="CircuitGroupView" ItemsSource="{Binding CircuitGroup}">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical"
+                                         Span="2" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid >
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       FontAttributes="Bold" />
+                                <Switch Grid.Column="1" IsToggled="{Binding Active}"
+                                        VerticalOptions="End" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+           
+            <Frame Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
+                <CollectionView Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="5" x:Name="CircuitView" ItemsSource="{Binding Circuits}" >
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid >
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       FontAttributes="Bold" />
+                                <Switch Grid.Column="1" IsToggled="{Binding Active}"
+                                        VerticalOptions="End" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            
+            <Frame Grid.Row="2" Grid.Column="2" BackgroundColor="White" CornerRadius="5" />
+            <Frame Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" BackgroundColor="White" CornerRadius="5" />
+            <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <!--<Label Grid.Row="0" Text="Pumps" FontSize="Body" FontAttributes="Bold,Italic" HorizontalOptions="Center"/>-->
+                <CollectionView Grid.Row="1" x:Name="PumpView" ItemsSource="{Binding Pumps}">
+                    <CollectionView.Header>
+                        <Grid >
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <!--<Label Grid.Column="0" Text="Status" FontAttributes="Bold" HorizontalTextAlignment="Center"/>-->
+                            <Label Grid.Column="2"
+                                   Text="Watts" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="End" />
+                            <Label Grid.Column="3"
+                                   Text="RPM" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="End" />
+                            <Label Grid.Column="4"
+                                   Text="GPM" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="End" />
+                        </Grid>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <views:PumpStatus/>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Grid>
+    </RefreshView>
+</ContentPage>
