@@ -25,7 +25,8 @@
                                Text="{Binding LastTemp, StringFormat='{}{0}°'}"
                                FontAttributes="Italic"/>
             <Switch Grid.Column="3" IsToggled="{Binding Active}"
-                                    VerticalOptions="Center" />
+                                    VerticalOptions="Center">
+            </Switch>
         </Grid>
     </ContentView.Content>
 </ContentView>

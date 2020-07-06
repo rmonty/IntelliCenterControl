@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using IntelliCenterControl.Models;
 using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace IntelliCenterControl.Services
@@ -14,12 +16,8 @@ namespace IntelliCenterControl.Services
         
         public event EventHandler<string> DataReceived;
         
-        public const string pumpKeys = "[\"RPM\", \"GPM\", \"PWR\",\"STATUS\"]";
-        public const string bodyKeys = "[\"TEMP\",\"STATUS\",\"HTMODE\",\"MODE\",\"LSTTMP\"]";
-        public const string senseKeys = "[\"PROBE\", \"STATUS\"]";
-        public const string circuitKeys = "[\"STATUS\", \"MODE\"]";
-        public const string chemKeys = "[\"SALT\"]";
-        
+        public Dictionary<string, string> Subscriptions = new Dictionary<string, string>();
+        public Dictionary<Guid, string> UnsubscribeMessages = new Dictionary<Guid, string>();
 
         public IntelliCenterDataInterface()
         {
@@ -60,11 +58,13 @@ namespace IntelliCenterControl.Services
             };
 
 
-            connection.StartAsync();
-            DataSubscribe();
+            connection.StartAsync();//.ContinueWith(antecedent =>
+            //{
+                DataSubscribe();
+            //});
         }
 
-        public async Task<bool> UpdateItemAsync(string id, string prop, string data)
+        public async Task<bool> SendItemUpdateAsync(string id, string prop, string data)
         {
             var message = CreateParameters(id, prop, data);
 
@@ -73,6 +73,7 @@ namespace IntelliCenterControl.Services
                 try
                 {
                     await connection.InvokeAsync("Request", message);
+                    return await Task.FromResult(true);
                     //Console.WriteLine(message);
                 }
                 catch (Exception ex)
@@ -81,63 +82,54 @@ namespace IntelliCenterControl.Services
                 }
             }
 
-            return await Task.FromResult(true);
+            return await Task.FromResult(false);
         }
 
         
-        public async void GetItemAsync(string id, string type)
+        public async Task<bool> SubscribeItemUpdateAsync(string id, string type)
         {
             if (Enum.TryParse<Circuit.CircuitType>(type, out var result))
             {
                 var g = Guid.NewGuid();
-                var cmd = String.Empty;
+                var key = String.Empty;
 
                 switch (result)
                 {
                     case Circuit.CircuitType.PUMP:
-                        cmd =
-                            "{ \"command\": \"RequestParamList\", \"objectList\": [{ \"objnam\": \"" + id +
-                            "\", \"keys\": " + pumpKeys + " }], \"messageID\": \"" +
-                            g.ToString() + "\" }";
+                        key = Pump.PumpKeys;
                         break;
                     case Circuit.CircuitType.BODY:
-                        cmd =
-                            "{ \"command\": \"RequestParamList\", \"objectList\": [{ \"objnam\": \"" + id +
-                            "\", \"keys\": " + bodyKeys + " }], \"messageID\": \"" +
-                            g.ToString() + "\" }";
+                        key = Body.BodyKeys;
                         break;
                     case Circuit.CircuitType.SENSE:
-                        cmd =
-                            "{ \"command\": \"RequestParamList\", \"objectList\": [{ \"objnam\": \"" + id +
-                            "\", \"keys\": " + senseKeys + " }], \"messageID\": \"" +
-                            g.ToString() + "\" }";
+                        key = Sense.SenseKeys;
                         break;
                     case Circuit.CircuitType.CIRCUIT:
-                        cmd =
-                            "{ \"command\": \"RequestParamList\", \"objectList\": [{ \"objnam\": \"" + id +
-                            "\", \"keys\": " + circuitKeys + " }], \"messageID\": \"" +
-                            g.ToString() + "\" }";
+                        key = Circuit.CircuitKeys;
+                        break;
+                    case Circuit.CircuitType.GENERIC:
+                        key = Circuit.CircuitKeys;
                         break;
                     case Circuit.CircuitType.CIRCGRP:
-                        cmd =
-                            "{ \"command\": \"RequestParamList\", \"objectList\": [{ \"objnam\": \"" + id +
-                            "\", \"keys\": " + circuitKeys + " }], \"messageID\": \"" +
-                            g.ToString() + "\" }";
+                        key = Circuit.CircuitKeys;
                         break;
                     case Circuit.CircuitType.CHEM:
-                        cmd =
-                            "{ \"command\": \"RequestParamList\", \"objectList\": [{ \"objnam\": \"" + id +
-                            "\", \"keys\": " + chemKeys + " }], \"messageID\": \"" +
-                            g.ToString() + "\" }";
+                        key = Chem.ChemKeys;
                         break;
                     default: break;
                 }
 
-                if (!string.IsNullOrEmpty(cmd))
+                if (!string.IsNullOrEmpty(key))
                 {
                     try
                     {
+                        Subscriptions[id] = key;
+                        var cmd =
+                            "{ \"command\": \"RequestParamList\", \"objectList\": [{ \"objnam\": \"" + id +
+                            "\", \"keys\": " + key + " }], \"messageID\": \"" +
+                            g.ToString() + "\" }";
                         await connection.InvokeAsync("Request", cmd);
+                        return await Task.FromResult(true);
                     }
                     catch (Exception ex)
                     {
@@ -145,6 +137,58 @@ namespace IntelliCenterControl.Services
                     }
                 }
             }
+            return await Task.FromResult(false);
+        }
+
+        public async Task<bool> UnSubscribeItemUpdate(string id)
+        {
+            if(Subscriptions.TryGetValue(id, out var keys))
+            {
+                var g = Guid.NewGuid();
+                var cmd =
+                    "{ \"command\": \"ReleaseParamList\", \"objectList\": [{ \"objnam\": \"" + id +
+                    "\", \"keys\": " + keys + " }], \"messageID\": \"" +
+                    g + "\" }";
+
+                if (!string.IsNullOrEmpty(cmd))
+                {
+                    try
+                    {
+                        await connection.InvokeAsync("Request", cmd);
+                        UnsubscribeMessages[g] = id;
+                        return await Task.FromResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                    }
+                }
+            }
+            return await Task.FromResult(false);
+        }
+
+        public async Task<bool> UnSubscribeAllItemsUpdate()
+        {
+            if (Subscriptions.Count > 0)
+            {
+                var g = Guid.NewGuid();
+                var cmd =
+                    "{ \"command\": \"ClearParam\", \"messageID\": \"" + g + "\" }";
+
+                if (!string.IsNullOrEmpty(cmd))
+                {
+                    try
+                    {
+                        await connection.InvokeAsync("Request", cmd);
+                        return await Task.FromResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                    }
+                }
+            }
+            return await Task.FromResult(false);
         }
 
         protected virtual void OnDataReceived(string message)
@@ -153,7 +197,7 @@ namespace IntelliCenterControl.Services
             handler?.Invoke(this, message);
         }
 
-        public async void GetItemsAsync(bool forceRefresh = false)
+        public async Task<bool> GetItemsDefinitionAsync(bool forceRefresh = false)
         {
             if (forceRefresh)
             {
@@ -164,13 +208,14 @@ namespace IntelliCenterControl.Services
                 try
                 {
                     await connection.InvokeAsync("Request", cmd);
+                    return await Task.FromResult(true);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex);
                 }
             }
-
+            return await Task.FromResult(false);
         }
 
         
@@ -180,7 +225,7 @@ namespace IntelliCenterControl.Services
             var g = Guid.NewGuid();
             var paramsObject = "\"" + property + "\":\"" + value + "\"";
 
-            var newobj = "{ \"objnam\": \"" + objName + "\", \"params\": [" + paramsObject + "]}";
+            var newobj = "{ \"objnam\": \"" + objName + "\", \"params\": {" + paramsObject + "}}";
 
             var message = "{ \"command\": \"SETPARAMLIST\", \"objectList\":[" + newobj + "], \"messageID\" : \"" + g.ToString() +"\" }";
 
@@ -196,10 +241,38 @@ namespace IntelliCenterControl.Services
                 {
                     try
                     {
-                        if (!count.StartsWith('p'))
+                        if (count.StartsWith('{'))
                         {
-                            //HardwareDefinition = await Task.FromResult(JsonSerializer.Deserialize<HardwareDefinition>(count, jsonOptions));
-                            OnDataReceived(count);
+                            var data = JsonConvert.DeserializeObject(count);
+                            if (data != null)
+                            {
+                                var jData = (JObject) data;
+                                if (jData.TryGetValue("command", out var commandValue))
+                                {
+                                    switch (commandValue.ToString())
+                                    {
+                                        case "ClearParam":
+                                            Subscriptions.Clear();
+                                            UnsubscribeMessages.Clear();
+                                            break;
+                                        case "ReleaseParamList":
+                                            if (jData.TryGetValue("messageID", out var g))
+                                            {
+                                                var gid = (Guid)g;
+                                                if (UnsubscribeMessages.TryGetValue(gid, out var id))
+                                                {
+                                                    Subscriptions.Remove(id);
+                                                    UnsubscribeMessages.Remove(gid);
+                                                }
+                                            }
+                                            break;
+                                        default:
+                                            OnDataReceived(count);
+                                            break;
+                                    }
+                                }
+                            }
+
                             //Console.WriteLine($"{count}");
                         }
                     }

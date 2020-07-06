@@ -11,6 +11,8 @@ namespace IntelliCenterControl.Models
 {
     public class Body : Circuit
     {
+        public const string BodyKeys = "[\"TEMP\",\"STATUS\",\"HTMODE\",\"MODE\",\"LSTTMP\"]";
+
         public enum BodyType
         {
             [Display(Name = "Pool")]

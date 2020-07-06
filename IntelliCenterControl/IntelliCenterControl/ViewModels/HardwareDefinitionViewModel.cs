@@ -10,6 +10,7 @@ using IntelliCenterControl.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using System.Threading;
 
 namespace IntelliCenterControl.ViewModels
 {
@@ -22,6 +23,8 @@ namespace IntelliCenterControl.ViewModels
             set => SetProperty(ref _hardwareDefinition, value);
         }
         public Command LoadHardwareDefinitionCommand { get; set; }
+        public Command ClosingCommand { get; set; }
+        public Command SubscribeDataCommand { get; set; }
 
         public ObservableCollection<Circuit> Circuits { get; private set; }
         public ObservableCollection<Circuit> CircuitGroup { get; private set; }
@@ -51,9 +54,7 @@ namespace IntelliCenterControl.ViewModels
             get => _saltLevel;
             set => SetProperty(ref _saltLevel, value);
         }
-
-
-
+        
 
         public HardwareDefinitionViewModel()
         {
@@ -64,17 +65,22 @@ namespace IntelliCenterControl.ViewModels
             Bodies = new ObservableCollection<Circuit>();
             Chems = new ObservableCollection<Circuit>();
             LoadHardwareDefinitionCommand = new Command(async () => await ExecuteLoadHardwareDefinitionCommand());
+            ClosingCommand = new Command(async () => await ExecuteClosingCommand());
+            SubscribeDataCommand = new Command(async () => await ExecuteSubscribeDataCommand());
             DataInterface.DataReceived += DataStoreDataReceived;
 
         }
 
-        private void DataStoreDataReceived(object sender, string e)
-        {
-            var data = JsonConvert.DeserializeObject(e);
+        private Guid _hardwareDefinitionMessageId;
+        //Instantiate a Singleton of the Semaphore with a value of 1. This means that only 1 thread can be granted access at a time.
+        static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
 
-            if (data != null)
+        private async void DataStoreDataReceived(object sender, string e)
+        {
+            if (!String.IsNullOrEmpty(e))
             {
-                var jData = (JObject)data;
+                var data = JsonConvert.DeserializeObject(e);
+                var jData = (JObject)(data);
 
                 if (jData.TryGetValue("command", out var commandValue))
                 {
@@ -85,8 +91,31 @@ namespace IntelliCenterControl.ViewModels
                             {
                                 if (queryNameValue.ToString() == "GetHardwareDefinition")
                                 {
-                                    HardwareDefinition = JsonConvert.DeserializeObject<HardwareDefinition>(e);
-                                    LoadModels();
+                                    if (jData.TryGetValue("messageID", out var g))
+                                    {
+                                        if (Guid.TryParse(g.ToString(), out var tempGuid))
+                                        {
+                                            if (_hardwareDefinitionMessageId != tempGuid)
+                                            {
+                                                if (Guid.TryParse(g.ToString(), out _hardwareDefinitionMessageId))
+                                                {
+                                                    await semaphoreSlim.WaitAsync();
+                                                    try
+                                                    {
+                                                        HardwareDefinition =
+                                                            JsonConvert.DeserializeObject<HardwareDefinition>(e);
+
+                                                        await LoadModels();
+                                                        await ExecuteSubscribeDataCommand();
+                                                    }
+                                                    finally
+                                                    {
+                                                        semaphoreSlim.Release();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             break;
@@ -108,35 +137,31 @@ namespace IntelliCenterControl.ViewModels
                                                 case Circuit.CircuitType.PUMP:
                                                     var pump = (Pump)circuit;
                                                     //var pump = (Pump)Pumps.FirstOrDefault(c => c.Hname == dictPump.Hname);
-                                                    if (pump != null)
+                                                    if (notifyList.TryGetValue("params", out var pumpValues))
                                                     {
-                                                        if (notifyList.TryGetValue("params", out var pumpValues))
+                                                        var pv = (JObject)pumpValues;
+                                                        if (pv.TryGetValue("RPM", out var rpm))
                                                         {
-                                                            var pv = (JObject)pumpValues;
-                                                            if (pv.TryGetValue("RPM", out var rpm))
-                                                            {
-                                                                pump.RPM = rpm.ToString() == "0" ? "-" : rpm.ToString();
-                                                            }
-                                                            if (pv.TryGetValue("GPM", out var flow))
-                                                            {
-                                                                pump.GPM = flow.ToString() == "0" ? "-" : flow.ToString();
-                                                            }
-                                                            if (pv.TryGetValue("PWR", out var power))
-                                                            {
-                                                                pump.Power = power.ToString() == "0" ? "-" : power.ToString();
-                                                            }
+                                                            pump.RPM = rpm.ToString() == "0" ? "-" : rpm.ToString();
+                                                        }
+                                                        if (pv.TryGetValue("GPM", out var flow))
+                                                        {
+                                                            pump.GPM = flow.ToString() == "0" ? "-" : flow.ToString();
+                                                        }
+                                                        if (pv.TryGetValue("PWR", out var power))
+                                                        {
+                                                            pump.Power = power.ToString() == "0" ? "-" : power.ToString();
+                                                        }
 
-                                                            if (pv.TryGetValue("STATUS", out var status))
-                                                            {
-                                                                var ps = (int)status;
-                                                                if (Enum.IsDefined(typeof(Pump.PumpStatus), ps))
-                                                                    pump.Status = (Pump.PumpStatus)ps;
-                                                                else
-                                                                    pump.Status = Pump.PumpStatus.OFF;
-                                                            }
+                                                        if (pv.TryGetValue("STATUS", out var status))
+                                                        {
+                                                            var ps = (int)status;
+                                                            if (Enum.IsDefined(typeof(Pump.PumpStatus), ps))
+                                                                pump.Status = (Pump.PumpStatus)ps;
+                                                            else
+                                                                pump.Status = Pump.PumpStatus.OFF;
                                                         }
                                                     }
-
                                                     break;
                                                 case Circuit.CircuitType.BODY:
                                                     if (notifyList.TryGetValue("params", out var bodyValues))
@@ -184,7 +209,7 @@ namespace IntelliCenterControl.ViewModels
                                                         var sensor = (Sense)circuit;
                                                         if (sv.TryGetValue("PROBE", out var temp))
                                                         {
-                                                            
+
                                                             switch (sensor.Type)
                                                             {
                                                                 case Sense.SenseType.AIR:
@@ -197,6 +222,7 @@ namespace IntelliCenterControl.ViewModels
                                                                     break;
                                                                 default: break;
                                                             }
+
                                                         }
                                                     }
                                                     break;
@@ -228,16 +254,16 @@ namespace IntelliCenterControl.ViewModels
                                                             //var gckt = Circuits.FirstOrDefault(c => c.Hname == circuit.Hname);
                                                             //if (gckt != null)
                                                             //{
-                                                                switch (stat.ToString())
-                                                                {
-                                                                    case "ON":
-                                                                        circuit.Active = true;
-                                                                        break;
-                                                                    case "OFF":
-                                                                        circuit.Active = false;
-                                                                        break;
-                                                                    default: break;
-                                                                }
+                                                            switch (stat.ToString())
+                                                            {
+                                                                case "ON":
+                                                                    circuit.Active = true;
+                                                                    break;
+                                                                case "OFF":
+                                                                    circuit.Active = false;
+                                                                    break;
+                                                                default: break;
+                                                            }
                                                             //}
                                                         }
                                                     }
@@ -266,191 +292,219 @@ namespace IntelliCenterControl.ViewModels
                         default: break;
                     }
                 }
-
             }
         }
 
-        async Task ExecuteLoadHardwareDefinitionCommand()
+        private async Task ExecuteLoadHardwareDefinitionCommand()
         {
-            IsBusy = true;
-
             try
             {
-                DataInterface.GetItemsAsync(true);
+                await DataInterface.GetItemsDefinitionAsync(true);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
             }
-            finally
-            {
-                IsBusy = false;
-            }
+
         }
 
-        async Task LoadModels()
+        private async Task ExecuteSubscribeDataCommand()
         {
+            IsBusy = true;
             Circuits.Clear();
             CircuitGroup.Clear();
             Pumps.Clear();
             Bodies.Clear();
             Chems.Clear();
+            
+            foreach (var kvp in HardwareDictionary)
+            {
+                switch (kvp.Value.CircuitDescription)
+                {
+                    case Circuit.CircuitType.BODY:
+                        Bodies.Add(kvp.Value);
+                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "BODY");
+                        break;
+                    case Circuit.CircuitType.CHEM:
+                        Chems.Add(kvp.Value);
+                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CHEM");
+                        break;
+                    case Circuit.CircuitType.CIRCGRP:
+                        CircuitGroup.Add(kvp.Value);
+                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCGRP");
+                        break;
+                    case Circuit.CircuitType.GENERIC:
+                        Circuits.Add(kvp.Value);
+                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
+                        break;
+                    case Circuit.CircuitType.PUMP:
+                        Pumps.Add(kvp.Value);
+                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "PUMP");
+                        break;
+                    case Circuit.CircuitType.SENSE:
+                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "SENSE");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            IsBusy = false;
+        }
+
+        private async Task ExecuteClosingCommand()
+        {
+            await DataInterface.UnSubscribeAllItemsUpdate();
+        }
+
+        private async Task LoadModels()
+        {
+            await DataInterface.UnSubscribeAllItemsUpdate();
             HardwareDictionary.Clear();
 
-            foreach (var answer in HardwareDefinition.answer)
+            foreach (var obj in HardwareDefinition.answer.SelectMany(answer => answer.Params.Objlist))
             {
-                foreach (var obj in answer.Params.Objlist)
+                if (Enum.TryParse<Circuit.CircuitType>(obj.Params.Objtyp, out var circuitType))
                 {
-                    if (Enum.TryParse<Circuit.CircuitType>(obj.Params.Objtyp, out var circuitType))
+                    switch (circuitType)
                     {
-                        switch (circuitType)
-                        {
-                            case Circuit.CircuitType.MODULE:
-                                foreach (var moduleCircuit in obj.Params.Circuits)
+                        case Circuit.CircuitType.MODULE:
+                            foreach (var moduleCircuit in obj.Params.Circuits)
+                            {
+                                if (Enum.TryParse<Circuit.CircuitType>(moduleCircuit.Params.Objtyp,
+                                    out var objType))
                                 {
-                                    if (Enum.TryParse<Circuit.CircuitType>(moduleCircuit.Params.Objtyp, out var objType))
+                                    switch (objType)
                                     {
-                                        switch (objType)
-                                        {
-                                            case Circuit.CircuitType.BODY:
-                                                if (Enum.TryParse<Body.BodyType>(moduleCircuit.Params.Subtyp,
-                                                        out var bodyType))
+                                        case Circuit.CircuitType.BODY:
+                                            if (Enum.TryParse<Body.BodyType>(moduleCircuit.Params.Subtyp,
+                                                out var bodyType))
+                                            {
+                                                var b = new Body(moduleCircuit.Params.Sname, bodyType)
                                                 {
-                                                    var b = new Body(moduleCircuit.Params.Sname, bodyType)
-                                                    {
-                                                        Hname = moduleCircuit.Objnam,
-                                                        LastTemp = "-"
-                                                    };
+                                                    Hname = moduleCircuit.Objnam,
+                                                    LastTemp = "-"
+                                                };
 
-                                                    Bodies.Add(b);
-                                                    HardwareDictionary[b.Hname] = b;
-                                                    DataInterface.GetItemAsync(b.Hname, "BODY");
-                                                }
-                                                foreach (var bodyParam in moduleCircuit.Params.Objlist)
+                                                HardwareDictionary[b.Hname] = b;
+                                            }
+
+                                            foreach (var bodyParam in moduleCircuit.Params.Objlist)
+                                            {
+                                                if (Enum.TryParse<Circuit.CircuitType>(
+                                                    bodyParam.Params.Objtyp.ToString(),
+                                                    out var cktType))
                                                 {
-                                                    if (Enum.TryParse<Circuit.CircuitType>(bodyParam.Params.Objtyp.ToString(),
-                                                        out var cktType))
+                                                    switch (cktType)
                                                     {
-                                                        switch (cktType)
-                                                        {
-                                                            case Circuit.CircuitType.CHEM:
-                                                                if (Enum.TryParse<Chem.ChemType>(
-                                                                    bodyParam.Params.Subtyp, out var chemType))
+                                                        case Circuit.CircuitType.CHEM:
+                                                            if (Enum.TryParse<Chem.ChemType>(
+                                                                bodyParam.Params.Subtyp, out var chemType))
+                                                            {
+                                                                var c = new Chem(bodyParam.Params.Sname, chemType)
                                                                 {
-                                                                    var c = new Chem(bodyParam.Params.Sname, chemType)
-                                                                    {
-                                                                        Hname = bodyParam.Objnam
-                                                                    };
+                                                                    Hname = bodyParam.Objnam
+                                                                };
 
-                                                                    Chems.Add(c);
-                                                                    HardwareDictionary[c.Hname] = c;
-                                                                    DataInterface.GetItemAsync(c.Hname, "CHEM");
-                                                                }
+                                                                HardwareDictionary[c.Hname] = c;
+                                                            }
 
-                                                                break;
-                                                            default: break;
-                                                        }
+                                                            break;
+                                                        default: break;
                                                     }
                                                 }
-                                                break;
-                                            case Circuit.CircuitType.CIRCUIT:
-                                                {
-                                                    //if (Enum.TryParse<Circuit.CircuitType>(moduleCircuit.Params.Subtyp,
-                                                    //    out var subType))
-                                                    //{
-                                                    //    switch (subType)
-                                                    //    {
-                                                    //            case Circuit.CircuitType.GENERIC: break;
+                                            }
 
-                                                    //            default: break;
-                                                    //    }
-                                                    //}
-                                                }
-                                                break;
-                                            default:
-                                                break;
-                                        }
+                                            break;
+                                        case Circuit.CircuitType.CIRCUIT:
+                                            {
+                                                //if (Enum.TryParse<Circuit.CircuitType>(moduleCircuit.Params.Subtyp,
+                                                //    out var subType))
+                                                //{
+                                                //    switch (subType)
+                                                //    {
+                                                //            case Circuit.CircuitType.GENERIC: break;
+
+                                                //            default: break;
+                                                //    }
+                                                //}
+                                            }
+                                            break;
+                                        default:
+                                            break;
                                     }
                                 }
-                                break;
-                            case Circuit.CircuitType.SENSE:
+                            }
+
+                            break;
+                        case Circuit.CircuitType.SENSE:
+                            {
+                                if (Enum.TryParse<Sense.SenseType>(obj.Params.Subtyp, out var senseType))
                                 {
-                                    if (Enum.TryParse<Sense.SenseType>(obj.Params.Subtyp, out var senseType))
+                                    var temp = int.Parse(obj.Params.Probe);
+
+                                    var c = new Sense(obj.Params.Sname, senseType)
                                     {
-                                        var temp = int.Parse(obj.Params.Probe);
+                                        Temp = temp,
+                                        Hname = obj.Objnam
+                                    };
 
-                                        var c = new Sense(obj.Params.Sname, senseType)
-                                        {
-                                            Temp = temp,
-                                            Hname = obj.Objnam
-                                        };
-
-                                        HardwareDictionary[c.Hname] = c;
-
-                                        DataInterface.GetItemAsync(c.Hname, "SENSE");
-                                    }
+                                    HardwareDictionary[c.Hname] = c;
                                 }
-                                break;
-                            case Circuit.CircuitType.CIRCUIT:
+                            }
+                            break;
+                        case Circuit.CircuitType.CIRCUIT:
+                            {
+                                if (Enum.TryParse<Circuit.CircuitType>(obj.Params.Subtyp,
+                                    out var subType))
                                 {
-                                    if (Enum.TryParse<Circuit.CircuitType>(obj.Params.Subtyp,
-                                        out var subType))
+                                    switch (subType)
                                     {
-                                        switch (subType)
-                                        {
-                                            case Circuit.CircuitType.GENERIC:
+                                        case Circuit.CircuitType.GENERIC:
+                                            {
+                                                if (obj.Params.Featr == "ON")
                                                 {
-                                                    if (obj.Params.Featr == "ON")
-                                                    {
-                                                        var c = new Circuit(obj.Params.Sname, Circuit.CircuitType.GENERIC, obj.Params.Hname, DataInterface);
-                                                        Circuits.Add(c);
-                                                        HardwareDictionary[c.Hname] = c;
-                                                        DataInterface.GetItemAsync(c.Hname, "CIRCUIT");
-                                                    }
-                                                }
-                                                break;
-                                            case Circuit.CircuitType.CIRCGRP:
-                                                {
-                                                    var c = new Circuit(obj.Params.Sname, Circuit.CircuitType.CIRCGRP, obj.Params.Hname, DataInterface);
-                                                    CircuitGroup.Add(c);
+                                                    var c = new Circuit(obj.Params.Sname, Circuit.CircuitType.GENERIC,
+                                                        obj.Params.Hname, DataInterface);
                                                     HardwareDictionary[c.Hname] = c;
-                                                    DataInterface.GetItemAsync(c.Hname, "CIRCGRP");
                                                 }
-                                                break;
-                                            default: break;
-                                        }
+                                            }
+                                            break;
+                                        case Circuit.CircuitType.CIRCGRP:
+                                            {
+                                                var c = new Circuit(obj.Params.Sname, Circuit.CircuitType.CIRCGRP,
+                                                    obj.Params.Hname, DataInterface);
+                                                HardwareDictionary[c.Hname] = c;
+                                            }
+                                            break;
+                                        default: break;
                                     }
-
                                 }
-                                break;
-                            case Circuit.CircuitType.PUMP:
+
+                            }
+                            break;
+                        case Circuit.CircuitType.PUMP:
+                            {
+                                if (Enum.TryParse<Pump.PumpType>(obj.Params.Subtyp,
+                                    out var subType))
                                 {
-                                    if (Enum.TryParse<Pump.PumpType>(obj.Params.Subtyp,
-                                        out var subType))
+                                    var p = new Pump(obj.Params.Sname, obj.Objnam)
                                     {
-                                        var p = new Pump(obj.Params.Sname, obj.Objnam)
-                                        {
-                                            RPM = "-",
-                                            GPM = "-",
-                                            Power = "-"
-                                        };
-                                        if (!HardwareDictionary.ContainsKey(p.Hname))
-                                        {
-                                            Pumps.Add(p);
-                                            HardwareDictionary[p.Hname] = p;
-                                            DataInterface.GetItemAsync(p.Hname, obj.Params.Objtyp.ToString());
-                                        }
-                                    }
-                                }
-                                break;
-                            default:
-                                break;
-                        }
+                                        RPM = "-",
+                                        GPM = "-",
+                                        Power = "-"
+                                    };
 
+                                    HardwareDictionary[p.Hname] = p;
+                                }
+                            }
+                            break;
+                        default:
+                            break;
                     }
 
                 }
             }
+
         }
 
 

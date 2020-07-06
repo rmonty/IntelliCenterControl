@@ -25,19 +25,34 @@ namespace IntelliCenterControl.Views
             InitializeComponent();
 
             BindingContext = viewModel = new HardwareDefinitionViewModel();
-            viewModel.LoadHardwareDefinitionCommand.Execute(true);
+            
+
+            MessagingCenter.Subscribe<App>(this, "Starting", (sender) =>
+            {
+                viewModel.LoadHardwareDefinitionCommand.Execute(true);
+            });
+            MessagingCenter.Subscribe<App>(this, "Sleeping", (sender) =>
+            {
+                viewModel.ClosingCommand.Execute(null);
+            });
+            MessagingCenter.Subscribe<App>(this, "Resume", (sender) =>
+            {
+                viewModel.SubscribeDataCommand.Execute(null);
+            });
         }
         
-        protected override void OnAppearing()
-        {
-            base.OnAppearing();
+        //protected override void OnAppearing()
+        //{
+        //    base.OnAppearing();
 
-            if (String.IsNullOrEmpty(viewModel.HardwareDefinition.messageId.ToString()))
-                viewModel.IsBusy = true;
+        //    if (String.IsNullOrEmpty(viewModel.HardwareDefinition.messageId.ToString()))
+        //        viewModel.IsBusy = true;
                         
-        }
+        //}
 
         
-    
+
+
+
     }
 }
