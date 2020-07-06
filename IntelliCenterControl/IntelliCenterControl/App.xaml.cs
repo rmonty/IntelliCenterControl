@@ -19,14 +19,17 @@ namespace IntelliCenterControl
 
         protected override void OnStart()
         {
+            MessagingCenter.Send<App>(this, "Starting");
         }
 
         protected override void OnSleep()
         {
+            MessagingCenter.Send<App>(this, "Sleeping");
         }
 
         protected override void OnResume()
         {
+            MessagingCenter.Send<App>(this, "Resume");
         }
     }
 }

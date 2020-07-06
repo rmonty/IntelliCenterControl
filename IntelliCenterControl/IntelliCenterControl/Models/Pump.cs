@@ -10,6 +10,8 @@ namespace IntelliCenterControl.Models
 {
     public class Pump : Circuit
     {
+        public const string PumpKeys = "[\"RPM\", \"GPM\", \"PWR\",\"STATUS\"]";
+
         public enum PumpType
         {
             [Display(Name = "Single Speed")]
@@ -161,9 +163,7 @@ namespace IntelliCenterControl.Models
                 OnPropertyChanged();
             }
         }
-
-
-
+        
 
         public Pump(string name, string Hname) : base(name, CircuitType.PUMP, Hname)
         {

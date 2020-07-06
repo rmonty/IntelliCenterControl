@@ -6,9 +6,11 @@ namespace IntelliCenterControl.Services
 {
     public interface IDataInterface<T>
     {
-        Task<bool> UpdateItemAsync(string id, string prop, string data);
-        void GetItemAsync(string id, string type);
-        void GetItemsAsync(bool forceRefresh = false);
+        Task<bool> SendItemUpdateAsync(string id, string prop, string data);
+        Task<bool> SubscribeItemUpdateAsync(string id, string type);
+        Task<bool> UnSubscribeItemUpdate(string id);
+        Task<bool> UnSubscribeAllItemsUpdate();
+        Task<bool> GetItemsDefinitionAsync(bool forceRefresh = false);
         event EventHandler<string> DataReceived;
     }
 }

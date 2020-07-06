@@ -10,6 +10,8 @@ namespace IntelliCenterControl.Models
 {
     public class Sense : Circuit
     {
+        public const string SenseKeys = "[\"PROBE\", \"STATUS\"]";
+
         public enum SenseType
         {
             [Display(Name = "Air")]

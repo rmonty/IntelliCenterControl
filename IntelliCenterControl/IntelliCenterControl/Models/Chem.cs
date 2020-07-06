@@ -10,6 +10,8 @@ namespace IntelliCenterControl.Models
 {
     public class Chem : Circuit
     {
+        public const string ChemKeys = "[\"SALT\"]";
+
         public enum ChemType
         {
             [Display(Name = "IntelliChem")]

@@ -4,13 +4,17 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using IntelliCenterControl.Annotations;
 using IntelliCenterControl.Services;
+using Xamarin.Forms;
 
 namespace IntelliCenterControl.Models
 {
     public class Circuit : INotifyPropertyChanged
     {
+        public const string CircuitKeys = "[\"STATUS\", \"MODE\"]";
+
         public enum CircuitType
         {
             [Display(Name = "Body")]
@@ -62,14 +66,14 @@ namespace IntelliCenterControl.Models
 
         }
 
-        private CircuitType circuitDescription;
+        private CircuitType _circuitDescription;
 
         public CircuitType CircuitDescription
         {
-            get => circuitDescription;
+            get => _circuitDescription;
             set
             {
-                circuitDescription = value;
+                _circuitDescription = value;
                 OnPropertyChanged();
             }
         }
@@ -109,14 +113,9 @@ namespace IntelliCenterControl.Models
             {
                 if (_active == value) return;
                 _active = value;
-                if (DataInterface != null)
-                {
-                    var val = _active ? "ON" : "OFF";
-                    DataInterface.UpdateItemAsync(Hname, "STATUS", val);
-
-                }
+                
                 OnPropertyChanged();
-
+                ExecuteToggleCircuitCommand();
 
             }
         }
@@ -133,18 +132,27 @@ namespace IntelliCenterControl.Models
             }
         }
 
-        private IDataInterface<HardwareDefinition> _daaInterface;
-
         public IDataInterface<HardwareDefinition> DataInterface { get; private set; }
 
-        public Circuit(string name, CircuitType circuitType, string hName = "", IDataInterface<HardwareDefinition> dataInterface = null)
+        public Circuit(string name, CircuitType circuitType, string hName = "",
+            IDataInterface<HardwareDefinition> dataInterface = null)
         {
             DataInterface = dataInterface;
             Name = name;
             Hname = hName;
             CircuitDescription = circuitType;
         }
-        
+
+        private async Task ExecuteToggleCircuitCommand()
+        {
+            if (DataInterface != null)
+            {
+                await DataInterface.UnSubscribeItemUpdate(Hname);
+                var val = _active ? "ON" : "OFF";
+                await DataInterface.SendItemUpdateAsync(Hname, "STATUS", val);
+                await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

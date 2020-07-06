@@ -16,7 +16,7 @@
     <ContentPage.Resources>
        
     </ContentPage.Resources>
-    <RefreshView IsRefreshing="{Binding IsBusy, Mode=TwoWay}" Command="{Binding LoadHardwareDefinitionCommand}">
+    <RefreshView IsRefreshing="{Binding IsBusy, Mode=TwoWay}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition/>
