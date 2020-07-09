@@ -11,6 +11,7 @@ namespace IntelliCenterControl.Services
         Task<bool> UnSubscribeItemUpdate(string id);
         Task<bool> UnSubscribeAllItemsUpdate();
         Task<bool> GetItemsDefinitionAsync(bool forceRefresh = false);
+        Task<bool> GetScheduleDataAsync();
         event EventHandler<string> DataReceived;
     }
 }

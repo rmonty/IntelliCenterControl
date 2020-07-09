@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 using System.Text;
 using IntelliCenterControl.Annotations;
+using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.Models
 {
     public class Heater : Circuit
     {
+        public const string HeaterKeys = "[\"STATUS\", \"SUBTYP\", \"PERMIT\", \"TIMOUT\", \"READY\", \"HTMODE\", \"SHOMNU\", \"COOL\", \"COMUART\", \"BODY\", \"HNAME\", \"START\", \"STOP\", \"HEATING\",\"BOOST\",\"TIME\",\"DLY\"]";
+
         public enum HeaterType
         {
             [Display(Name = "Generic")]
@@ -40,7 +44,21 @@ namespace IntelliCenterControl.Models
             }
         }
 
-        public Heater(string name, HeaterType heaterType) : base(name, CircuitType.HEATER)
+        private IList<string> _bodies;
+
+        public IList<string> Bodies
+        {
+            get => _bodies;
+            set
+            {
+                _bodies = value;
+                OnPropertyChanged();
+            }
+        }
+
+
+
+        public Heater(string name, HeaterType heaterType, string hName, IDataInterface<HardwareDefinition> dataInterface) : base(name, CircuitType.HEATER, hName, dataInterface)
         {
             Type = heaterType;
         }

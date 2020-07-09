@@ -2,66 +2,73 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using IntelliCenterControl.Annotations;
+using System.Threading.Tasks;
+using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.Models
 {
     public class Light : Circuit
     {
+        public const string LightKeys = "[\"ACT\", \"USE\"]";
+
         public enum LightType
         {
             [Display(Name = "Dimmer")]
             [Color(false)]
+            [Dimming(true)]
             DIMMER,
             [Display(Name = "GloBrite")]
             [Color(true)]
+            [Dimming(false)]
             GLOW,
             [Display(Name = "GloBrite White")]
             [Color(false)]
+            [Dimming(true)]
             GLOWT,
             [Display(Name = "IntelliBrite")]
             [Color(true)]
+            [Dimming(false)]
             INTELLI,
             [Display(Name = "Light")]
             [Color(false)]
+            [Dimming(false)]
             LIGHT,
             [Display(Name = "Magic Stream")]
             [Color(true)]
+            [Dimming(false)]
             MAGIC2,
             [Display(Name = "Color Cascade")]
             [Color(true)]
+            [Dimming(false)]
             CLRCASC
         }
 
         public enum LightColors
         {
-            [Display(Name = "SAm")]
+            [Description("SAm")]
             SAMMOD,
-            [Display(Name = "Party")]
+            [Description("Party")]
             PARTY,
-            [Display(Name = "Romance")]
+            [Description("Romance")]
             ROMAN,
-            [Display(Name = "Caribbean")]
+            [Description("Caribbean")]
             CARIB,
-            [Display(Name = "American")]
+            [Description("American")]
             AMERCA,
-            [Display(Name = "Sunset")]
+            [Description("Sunset")]
             SSET,
-            [Display(Name = "Royal")]
+            [Description("Royal")]
             ROYAL,
-            [Display(Name = "Blue")]
+            [Description("Blue")]
             BLUER,
-            [Display(Name = "Green")]
+            [Description("Green")]
             GREENR,
-            [Display(Name = "Red")]
+            [Description("Red")]
             REDR,
-            [Display(Name = "White")]
+            [Description("White")]
             WHITER,
-            [Display(Name = "Magenta")]
+            [Description("Magenta")]
             MAGNTAR
         }
 
@@ -77,6 +84,8 @@ namespace IntelliCenterControl.Models
             }
         }
 
+        public List<string> ColorNames => GetDescriptions(typeof(LightColors)).ToList();
+
         private LightColors _color = LightColors.WHITER;
 
         public LightColors Color
@@ -85,16 +94,111 @@ namespace IntelliCenterControl.Models
             set
             {
                 if (!SupportsColor) return;
+                if (_color == value) return;
                 _color = value;
+                OnPropertyChanged();
+                ExecuteLightColorCommand();
+            }
+        }
+
+        private int _dimmingValue = 30;
+
+        public int DimmingValue
+        {
+            get => _dimmingValue;
+            set
+            {
+                if (!SupportsDimming) return;
+                if (_dimmingValue == value) return;
+                _dimmingValue = value < MinDimmingValue ? MinDimmingValue : value;
+
+                OnPropertyChanged();
+                ExecuteDimmerValueCommand();
+            }
+        }
+
+        private int _minDimmingValue;
+
+        public int MinDimmingValue
+        {
+            get => _minDimmingValue;
+            set
+            {
+                _minDimmingValue = value;
                 OnPropertyChanged();
             }
         }
 
-        public bool SupportsColor => GetAttribute<ColorAttribute>(Color).SupportsColor;
+        private double _dimmingIncrement;
 
-        public Light(string name, LightType lightType) : base(name, Enum.Parse<CircuitType>(lightType.ToString()))
+        public double DimmingIncrement
+        {
+            get => _dimmingIncrement;
+            set
+            {
+                _dimmingIncrement = value;
+                OnPropertyChanged();
+            }
+        }
+
+
+
+        public bool SupportsColor => GetAttribute<ColorAttribute>(Type).SupportsColor;
+
+        public bool SupportsDimming => GetAttribute<DimmingAttribute>(Type).SupportsDimming;
+
+        public Light(string name, LightType lightType, string hName, IDataInterface<HardwareDefinition> dataInterface) : base(name, Enum.Parse<CircuitType>(lightType.ToString()), hName, dataInterface)
         {
             Type = lightType;
+
+            switch (lightType)
+            {
+                case LightType.DIMMER:
+                    MinDimmingValue = 30;
+                    DimmingIncrement = 10;
+                    break;
+                case LightType.GLOWT:
+                    MinDimmingValue = 50;
+                    DimmingIncrement = 25;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
+        protected override async Task ExecuteToggleCircuitCommand()
+        {
+            if (DataInterface != null)
+            {
+                await DataInterface.UnSubscribeItemUpdate(Hname);
+                var val = Active ? "ON" : "OFF";
+                await DataInterface.SendItemUpdateAsync(Hname, "STATUS", val);
+                await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
+                await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
+            }
+        }
+
+        protected async Task ExecuteLightColorCommand()
+        {
+            if (DataInterface != null)
+            {
+                await DataInterface.UnSubscribeItemUpdate(Hname);
+                await DataInterface.SendItemUpdateAsync(Hname, "ACT", Color.ToString());
+                await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
+                await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
+            }
+        }
+
+        protected async Task ExecuteDimmerValueCommand()
+        {
+            if (DataInterface != null)
+            {
+                await DataInterface.UnSubscribeItemUpdate(Hname);
+                await DataInterface.SendItemUpdateAsync(Hname, "ACT", DimmingValue.ToString());
+                await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
+                await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
+            }
         }
 
         internal class ColorAttribute : Attribute
@@ -107,6 +211,16 @@ namespace IntelliCenterControl.Models
             }
         }
 
+        internal class DimmingAttribute : Attribute
+        {
+            public bool SupportsDimming { get; private set; }
+
+            public DimmingAttribute(bool supportsDimming)
+            {
+                SupportsDimming = supportsDimming;
+            }
+        }
+
 
         public static TAttribute GetAttribute<TAttribute>(Enum value)
             where TAttribute : Attribute
@@ -115,5 +229,26 @@ namespace IntelliCenterControl.Models
             var name = Enum.GetName(enumType, value);
             return enumType.GetField(name).GetCustomAttributes(false).OfType<TAttribute>().SingleOrDefault();
         }
+
+        private static IEnumerable<string> GetDescriptions(Type type)
+        {
+            var descs = new List<string>();
+            var names = Enum.GetNames(type);
+            foreach (var name in names)
+            {
+                var field = type.GetField(name);
+                var fds = field.GetCustomAttributes(typeof(DescriptionAttribute), true);
+                foreach (DescriptionAttribute fd in fds)
+                {
+                    descs.Add(fd.Description);
+                }
+            }
+            return descs;
+        }
+
     }
+
+
+
+   
 }
