@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using IntelliCenterControl.Annotations;
 using IntelliCenterControl.Services;
 
@@ -11,7 +13,7 @@ namespace IntelliCenterControl.Models
 {
     public class Body : Circuit
     {
-        public const string BodyKeys = "[\"TEMP\",\"STATUS\",\"HTMODE\",\"MODE\",\"LSTTMP\"]";
+        public const string BodyKeys = "[\"TEMP\",\"STATUS\",\"HTMODE\",\"MODE\",\"LSTTMP\",\"HTSRC\", \"HITMP\", \"LOTMP\"]";
 
         public enum BodyType
         {
@@ -81,13 +83,75 @@ namespace IntelliCenterControl.Models
             }
         }
 
+        private int _selectedHeater;
+
+        public int SelectedHeater
+        {
+            get => _selectedHeater;
+            set
+            {
+                if (_selectedHeater == value) return;
+                _selectedHeater = value;
+                OnPropertyChanged();
+                ExecuteSelectedHeatSourceCommand();
+            }
+        }
+
+        private string _loTemp;
+
+        public string LOTemp
+        {
+            get => _loTemp;
+            set
+            {
+                if (_loTemp == value) return;
+                _loTemp = value;
+                OnPropertyChanged();
+                if(int.TryParse(_loTemp,out var iloTemp ))
+                {
+                    ExecuteHeatTempCommand(iloTemp);
+                }
+            }
+        }
+
+        private ObservableCollection<Heater> _heaters = new ObservableCollection<Heater>();
+
+        public ObservableCollection<Heater> Heaters
+        {
+            get => _heaters;
+            set
+            {
+                _heaters = value;
+                OnPropertyChanged();
+            }
+        }
 
 
 
-
-        public Body(string name, BodyType bodyType):base(name, CircuitType.BODY)
+        public Body(string name, BodyType bodyType, string hName, IDataInterface<HardwareDefinition> dataInterface) :base(name, CircuitType.BODY, hName, dataInterface)
         {
             Type = bodyType;
+        }
+
+        private async Task ExecuteSelectedHeatSourceCommand()
+        {
+            if (DataInterface != null)
+            {
+                await DataInterface.UnSubscribeItemUpdate(Hname);
+                var val = Heaters[SelectedHeater].Hname;
+                await DataInterface.SendItemUpdateAsync(Hname, "HEATER", val);
+                await DataInterface.SubscribeItemUpdateAsync(Hname, "BODY");
+            }
+        }
+
+        private async Task ExecuteHeatTempCommand(int temp)
+        {
+            if (DataInterface != null && temp >= 60 && temp <= 104)
+            {
+                await DataInterface.UnSubscribeItemUpdate(Hname);
+                await DataInterface.SendItemUpdateAsync(Hname, "LOTMP", temp.ToString());
+                await DataInterface.SubscribeItemUpdateAsync(Hname, "BODY");
+            }
         }
 
     }

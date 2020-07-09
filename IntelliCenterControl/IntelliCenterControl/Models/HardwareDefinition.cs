@@ -122,7 +122,11 @@ namespace IntelliCenterControl.Models
             public string Assign { get; set; }
             public string Dly { get; set; }
             public string Circuit { get; set; }
-            public string Su00000 { get; set; }
+            public string Start { get; set; }
+            public string Stop { get; set; }
+            public string COOL { get; set; }
+            public string BOOST { get; set; }
+            public string HTMODE { get; set; }
         }
 
         public partial class BodyObject

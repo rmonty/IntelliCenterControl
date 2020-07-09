@@ -16,15 +16,15 @@ namespace IntelliCenterControl.Views
     // Learn more about making custom code visible in the Xamarin.Forms previewer
     // by visiting https://aka.ms/xamarinforms-previewer
     [DesignTimeVisible(false)]
-    public partial class HardwareDefinitionPage : ContentPage
+    public partial class ControllerMainView : ContentPage
     {
-        HardwareDefinitionViewModel viewModel;
+        ControllerViewModel viewModel;
 
-        public HardwareDefinitionPage()
+        public ControllerMainView()
         {
             InitializeComponent();
 
-            BindingContext = viewModel = new HardwareDefinitionViewModel();
+            BindingContext = viewModel = new ControllerViewModel();
             
 
             MessagingCenter.Subscribe<App>(this, "Starting", (sender) =>

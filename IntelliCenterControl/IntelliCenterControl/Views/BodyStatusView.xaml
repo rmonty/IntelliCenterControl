@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ContentView xmlns="http://xamarin.com/schemas/2014/forms" 
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="IntelliCenterControl.Views.BodyStatus">
+    <ContentView.Content>
+        <Grid >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="35"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1.5*"/>
+                <ColumnDefinition Width="0.75*"/>
+                <ColumnDefinition Width="0.5*"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0"
+                                   Text="{Binding Name}"
+                                   FontAttributes="Bold" VerticalTextAlignment="Center"/>
+            <Switch Grid.Column="1" Grid.Row="0" IsToggled="{Binding Active}"
+                    VerticalOptions="Center">
+            </Switch>
+
+            <Picker Grid.Column="2" Grid.Row="0" FontSize="Micro" ItemsSource="{Binding Heaters}" Title="Heat Mode" SelectedIndex="{Binding SelectedHeater}" ItemDisplayBinding="{Binding Name}"/>
+                    <!--<Label Grid.Column="2" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+                               Text="{Binding LastTemp, StringFormat='{}{0}°'}"
+                               FontAttributes="Italic"/>-->
+            <Entry Grid.Column="3" Keyboard="Numeric" FontSize="Micro" Text="{Binding LOTemp}" HorizontalTextAlignment="Center"/>
+            <Image Grid.Column="4" Grid.Row="0" x:Name="HeatImage" HorizontalOptions="StartAndExpand" VerticalOptions="StartAndExpand" Aspect="AspectFill" Scale="0.5"/>
+            <Label Grid.Column="4" Grid.Row="0" x:Name="HeatMode" IsVisible="false" Text="{Binding HeatMode}" VerticalTextAlignment="Center"/>
+            
+
+        </Grid>
+    </ContentView.Content>
+</ContentView>

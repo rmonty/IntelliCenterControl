@@ -143,12 +143,13 @@ namespace IntelliCenterControl.Models
             CircuitDescription = circuitType;
         }
 
-        private async Task ExecuteToggleCircuitCommand()
+
+        protected virtual async Task ExecuteToggleCircuitCommand()
         {
             if (DataInterface != null)
             {
                 await DataInterface.UnSubscribeItemUpdate(Hname);
-                var val = _active ? "ON" : "OFF";
+                var val = Active ? "ON" : "OFF";
                 await DataInterface.SendItemUpdateAsync(Hname, "STATUS", val);
                 await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
             }

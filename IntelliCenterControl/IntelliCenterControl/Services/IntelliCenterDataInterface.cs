@@ -85,6 +85,26 @@ namespace IntelliCenterControl.Services
             return await Task.FromResult(false);
         }
 
+        public async Task<bool> GetScheduleDataAsync()
+        {
+            var g = Guid.NewGuid();
+            var cmd =
+                "{ \"command\": \"GETPARAMLIST\", \"condition\": \"OBJTYP=SCHED\", \"objectList\": [{ \"objnam\": \"ALL\", \"keys\": " + Schedule.ScheduleKeys + " }], \"messageID\": \"" +
+                g + "\" }";
+
+            try
+            {
+                await connection.InvokeAsync("Request", cmd);
+                return await Task.FromResult(true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            
+            return await Task.FromResult(false);
+        }
+
         
         public async Task<bool> SubscribeItemUpdateAsync(string id, string type)
         {
@@ -115,6 +135,18 @@ namespace IntelliCenterControl.Services
                         break;
                     case Circuit.CircuitType.CHEM:
                         key = Chem.ChemKeys;
+                        break;
+                    case Circuit.CircuitType.HEATER:
+                        key = Heater.HeaterKeys;
+                        break;
+                    case Circuit.CircuitType.INTELLI:
+                    case Circuit.CircuitType.GLOW:
+                    case Circuit.CircuitType.MAGIC2:
+                    case Circuit.CircuitType.CLRCASC:
+                    case Circuit.CircuitType.DIMMER:
+                    case Circuit.CircuitType.GLOWT:
+                    case Circuit.CircuitType.LIGHT:
+                        key = Light.LightKeys;
                         break;
                     default: break;
                 }
