@@ -21,8 +21,13 @@ namespace IntelliCenterControl.Services
 
         public IntelliCenterDataInterface()
         {
+            CreateConnectionAsync();
+        }
+
+        public async Task<bool> CreateConnectionAsync()
+        {
             connection = new HubConnectionBuilder()
-                .WithUrl("http://192.168.0.130:5000/stream")
+                .WithUrl(Settings.ServerURL)
                 .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
                 .Build();
 
@@ -60,8 +65,10 @@ namespace IntelliCenterControl.Services
 
             connection.StartAsync();//.ContinueWith(antecedent =>
             //{
-                DataSubscribe();
+            DataSubscribe();
             //});
+
+            return await Task.FromResult(true);
         }
 
         public async Task<bool> SendItemUpdateAsync(string id, string prop, string data)

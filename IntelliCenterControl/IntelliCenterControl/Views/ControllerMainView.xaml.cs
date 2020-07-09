@@ -39,18 +39,35 @@ namespace IntelliCenterControl.Views
             {
                 viewModel.SubscribeDataCommand.Execute(null);
             });
+            MessagingCenter.Subscribe<App>(this, "CleanUp", (sender) =>
+            {
+                viewModel.ClosingCommand.Execute(null);
+            });
         }
-        
+
+        private async void ConnectToolBarItem_Clicked(object sender, EventArgs e)
+        {
+            var result = await DisplayPromptAsync("Server URL", "Please Enter Server URL", initialValue : Settings.ServerURL);
+
+            bool validUrl = Uri.TryCreate(result, UriKind.Absolute, out var uriResult)
+                            && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            if (validUrl)
+            {
+                Settings.ServerURL = result;
+                viewModel.UpdateIPAddress();
+            }
+        }
+
         //protected override void OnAppearing()
         //{
         //    base.OnAppearing();
 
         //    if (String.IsNullOrEmpty(viewModel.HardwareDefinition.messageId.ToString()))
         //        viewModel.IsBusy = true;
-                        
+
         //}
 
-        
+
 
 
 

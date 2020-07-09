@@ -6,18 +6,23 @@
              mc:Ignorable="d"
              x:Class="IntelliCenterControl.Views.ScheduleView">
   <ContentView.Content>
-      <Grid >
-              <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-              </Grid.RowDefinitions>
+      <Grid Margin="2">
               <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto"/>
-                  <ColumnDefinition/>
+                  <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="7*"/>
               </Grid.ColumnDefinitions>
-              <Switch IsToggled="{Binding Active}" IsEnabled="False"/>
-              <Label Grid.Column="1"
-                     Text="{Binding Name}"
-                     FontAttributes="Bold" VerticalOptions="Center" FontSize="Micro" />
-          </Grid>
+            <Image Grid.Column="0" x:Name="ButtonImage" HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand" HeightRequest="25" Aspect="AspectFit" Source="radio_button_off_large.png"/>
+            <Switch Grid.Column="0" x:Name="ActiveToggle" IsToggled="{Binding Active}" IsVisible="false"/>
+            <StackLayout Grid.Column="1" Spacing="-3">
+            <Label 
+                   Text="{Binding Name}"
+                   FontAttributes="Bold" VerticalOptions="Center" FontSize="Caption" />
+                <StackLayout Orientation="Horizontal" Spacing="0">
+                    <Label Text="{Binding StartTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro"/>
+                    <Label Text=" to " FontSize="Micro"/>
+                    <Label Text="{Binding EndTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro"/>
+                </StackLayout>
+            </StackLayout>
+</Grid>
   </ContentView.Content>
 </ContentView>

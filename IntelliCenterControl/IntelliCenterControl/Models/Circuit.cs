@@ -132,6 +132,18 @@ namespace IntelliCenterControl.Models
             }
         }
 
+        private int _listOrd;
+
+        public int ListOrd
+        {
+            get => _listOrd;
+            set
+            {
+                _listOrd = value;
+                OnPropertyChanged();
+            }
+        }
+
         public IDataInterface<HardwareDefinition> DataInterface { get; private set; }
 
         public Circuit(string name, CircuitType circuitType, string hName = "",
