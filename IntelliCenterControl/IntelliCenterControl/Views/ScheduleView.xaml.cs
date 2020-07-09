@@ -15,6 +15,21 @@ namespace IntelliCenterControl.Views
         public ScheduleView()
         {
             InitializeComponent();
+
+            ActiveToggle.PropertyChanged += ActiveToggle_PropertyChanged;
+        }
+
+        private void ActiveToggle_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "IsToggled")
+            {
+                UpdateVisibility();
+            }
+        }
+        
+        private void UpdateVisibility()
+        {
+            ButtonImage.Source = ImageSource.FromFile(ActiveToggle.IsToggled ? "radio_button_on_large.png" : "radio_button_off_large.png");
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -12,6 +13,8 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Threading;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace IntelliCenterControl.ViewModels
 {
@@ -48,7 +51,7 @@ namespace IntelliCenterControl.ViewModels
         public ObservableCollection<Circuit> BodyHeaters { get; private set; }
         public ObservableCollection<Heater> Heaters { get; private set; }
         public ObservableCollection<Circuit> Schedules { get; private set; }
-        public Dictionary<string, Circuit> HardwareDictionary = new Dictionary<string, Circuit>();
+        public ConcurrentDictionary<string, Circuit> HardwareDictionary = new ConcurrentDictionary<string, Circuit>();
 
         private string _airTemp = "-";
         public string AirTemp
@@ -135,6 +138,18 @@ namespace IntelliCenterControl.ViewModels
             }));
         }
 
+        private DateTime _currentDateTime;
+
+        public DateTime CurrentDateTime
+        {
+            get => _currentDateTime;
+            set => SetProperty(ref _currentDateTime, value);
+        }
+
+
+        private Timer _dateTimeTimer; 
+
+        
 
         public ControllerViewModel()
         {
@@ -154,8 +169,21 @@ namespace IntelliCenterControl.ViewModels
             AllLightsOnCommand = new Command(async () => await ExecuteAllLightsOnCommand());
             AllLightsOffCommand = new Command(async () => await ExecuteAllLightsOffCommand());
             DataInterface.DataReceived += DataStoreDataReceived;
-            
+            _dateTimeTimer = new Timer(DateTimeTimerElapsed, this, 0, 1000);
 
+        }
+
+        public async Task UpdateIPAddress()
+        {
+            await ExecuteClosingCommand();
+            await DataInterface.CreateConnectionAsync();
+            await ExecuteLoadHardwareDefinitionCommand();
+        }
+
+        private static void DateTimeTimerElapsed(object state)
+        {
+            var cvm = (ControllerViewModel)state;
+            if(cvm != null) cvm.CurrentDateTime = DateTime.Now;
         }
 
         private async Task ExecuteAllLightsOnCommand()
@@ -204,7 +232,7 @@ namespace IntelliCenterControl.ViewModels
                                                             JsonConvert.DeserializeObject<HardwareDefinition>(e);
 
                                                         await LoadModels();
-                                                        await ExecuteSubscribeDataCommand();
+                                                        ExecuteSubscribeDataCommand();
                                                     }
                                                     finally
                                                     {
@@ -483,13 +511,26 @@ namespace IntelliCenterControl.ViewModels
                                     JsonConvert.DeserializeObject<SchedulesDefinition>(e);
                                 foreach (var sch in ScheduleDefinition.objectList)
                                 {
-                                    var s = new Schedule(sch.Params.SNAME, Circuit.CircuitType.SCHED, sch.objnam,
-                                        DataInterface)
+                                    var startTime = sch.Params.TIME.Split(',');
+                                    var endTime = sch.Params.TIMOUT.Split(',');
+                                    if (startTime.Length > 2 && endTime.Length > 2)
                                     {
-                                        Active = sch.Params.ACT == "ON"
-                                    };
-                                    Schedules.Add(s);
-                                    HardwareDictionary[s.Hname] = s;
+                                        var date = DateTime.Now;
+                                        var start = new DateTime(date.Year, date.Month, date.Day, int.Parse(startTime[0]),
+                                            int.Parse(startTime[1]), int.Parse(startTime[2]));
+                                        var end = new DateTime(date.Year, date.Month, date.Day, int.Parse(endTime[0]),
+                                            int.Parse(endTime[1]), int.Parse(endTime[2]));
+
+                                        var s = new Schedule(sch.Params.SNAME, Circuit.CircuitType.SCHED, sch.objnam,
+                                            DataInterface)
+                                        {
+                                            Active = sch.Params.ACT == "ON",
+                                            StartTime = start,
+                                            EndTime = end
+                                        };
+                                        Schedules.Add(s);
+                                        HardwareDictionary[s.Hname] = s;
+                                    }
                                 }
 
                             }
@@ -516,7 +557,7 @@ namespace IntelliCenterControl.ViewModels
             try
             {
                 await DataInterface.GetItemsDefinitionAsync(true);
-                await DataInterface.GetScheduleDataAsync();
+                //await DataInterface.GetScheduleDataAsync();
             }
             catch (Exception ex)
             {
@@ -535,22 +576,22 @@ namespace IntelliCenterControl.ViewModels
                 switch (kvp.Value.CircuitDescription)
                 {
                     case Circuit.CircuitType.BODY:
-                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "BODY");
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "BODY");
                         break;
                     case Circuit.CircuitType.CHEM:
-                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CHEM");
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CHEM");
                         break;
                     case Circuit.CircuitType.CIRCGRP:
-                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCGRP");
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCGRP");
                         break;
                     case Circuit.CircuitType.GENERIC:
-                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
                         break;
                     case Circuit.CircuitType.PUMP:
-                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "PUMP");
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "PUMP");
                         break;
                     case Circuit.CircuitType.SENSE:
-                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "SENSE");
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "SENSE");
                         break;
                     case Circuit.CircuitType.INTELLI:
                     case Circuit.CircuitType.GLOW:
@@ -559,11 +600,11 @@ namespace IntelliCenterControl.ViewModels
                     case Circuit.CircuitType.DIMMER:
                     case Circuit.CircuitType.GLOWT:
                     case Circuit.CircuitType.LIGHT:
-                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
-                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, kvp.Value.CircuitDescription.ToString());
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, kvp.Value.CircuitDescription.ToString());
                         break;
                     case Circuit.CircuitType.HEATER:
-                        await DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "HEATER");
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "HEATER");
                         break;
                     default:
                         break;
@@ -592,19 +633,19 @@ namespace IntelliCenterControl.ViewModels
                 switch (kvp.Value.CircuitDescription)
                 {
                     case Circuit.CircuitType.BODY:
-                        Bodies.Add(kvp.Value);
+                        Bodies.InsertInPlace(kvp.Value, o=>o.ListOrd);
                         break;
                     case Circuit.CircuitType.CHEM:
                         Chems.Add(kvp.Value);
                         break;
                     case Circuit.CircuitType.CIRCGRP:
-                        CircuitGroup.Add(kvp.Value);
+                        CircuitGroup.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
                     case Circuit.CircuitType.GENERIC:
-                        Circuits.Add(kvp.Value);
+                        Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
                     case Circuit.CircuitType.PUMP:
-                        Pumps.Add(kvp.Value);
+                        Pumps.InsertInPlace(kvp.Value, o => o.Hname);
                         break;
                     case Circuit.CircuitType.SENSE:
                         break;
@@ -615,7 +656,7 @@ namespace IntelliCenterControl.ViewModels
                     case Circuit.CircuitType.DIMMER:
                     case Circuit.CircuitType.GLOWT:
                     case Circuit.CircuitType.LIGHT:
-                        Lights.Add(kvp.Value);
+                        Lights.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
                     case Circuit.CircuitType.HEATER:
                         var htr = (Heater)kvp.Value;
@@ -627,6 +668,7 @@ namespace IntelliCenterControl.ViewModels
                     default:
                         break;
                 }
+
             }
 
             foreach (var bodyCircuit in Bodies)
@@ -676,9 +718,12 @@ namespace IntelliCenterControl.ViewModels
                                             if (Enum.TryParse<Body.BodyType>(moduleCircuit.Params.Subtyp,
                                                 out var bodyType))
                                             {
+                                                int.TryParse(moduleCircuit.Params.Listord,
+                                                    out var listOrder);
                                                 var b = new Body(moduleCircuit.Params.Sname, bodyType, moduleCircuit.Objnam, DataInterface)
                                                 {
-                                                    LastTemp = "-"
+                                                    LastTemp = "-",
+                                                    ListOrd = listOrder
                                                 };
 
                                                 HardwareDictionary[b.Hname] = b;
@@ -728,8 +773,13 @@ namespace IntelliCenterControl.ViewModels
                                                             if (Enum.TryParse<Light.LightType>(moduleCircuit.Params.Subtyp,
                                                                   out var lightType))
                                                             {
+                                                                int.TryParse(moduleCircuit.Params.Listord,
+                                                                    out var listOrder);
                                                                 var l = new Light(moduleCircuit.Params.Sname, lightType,
-                                                                    moduleCircuit.Objnam, DataInterface);
+                                                                    moduleCircuit.Objnam, DataInterface)
+                                                                {
+                                                                    ListOrd = listOrder
+                                                                };
 
                                                                 HardwareDictionary[l.Hname] = l;
                                                             }
@@ -788,16 +838,27 @@ namespace IntelliCenterControl.ViewModels
                                             {
                                                 if (obj.Params.Featr == "ON")
                                                 {
+                                                    int.TryParse(obj.Params.Listord,
+                                                        out var listOrder);
                                                     var c = new Circuit(obj.Params.Sname, Circuit.CircuitType.GENERIC,
-                                                        obj.Params.Hname, DataInterface);
+                                                        obj.Params.Hname, DataInterface)
+                                                    {
+                                                        ListOrd = listOrder
+                                                    };
+
                                                     HardwareDictionary[c.Hname] = c;
                                                 }
                                             }
                                             break;
                                         case Circuit.CircuitType.CIRCGRP:
                                             {
+                                                int.TryParse(obj.Params.Listord,
+                                                    out var listOrder);
                                                 var c = new Circuit(obj.Params.Sname, Circuit.CircuitType.CIRCGRP,
-                                                    obj.Params.Hname, DataInterface);
+                                                    obj.Params.Hname, DataInterface)
+                                                {
+                                                    ListOrd = listOrder
+                                                };
                                                 HardwareDictionary[c.Hname] = c;
                                             }
                                             break;

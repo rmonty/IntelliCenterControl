@@ -12,7 +12,7 @@ namespace IntelliCenterControl
         public App()
         {
             InitializeComponent();
-
+            Device.SetFlags(new string[] { "CarouselView_Experimental", "RadioButton_Experimental", "SwipeView_Experimental" });
             DependencyService.Register<IntelliCenterDataInterface>();
             MainPage = new MainPage();
         }
@@ -30,6 +30,12 @@ namespace IntelliCenterControl
         protected override void OnResume()
         {
             MessagingCenter.Send<App>(this, "Resume");
+        }
+
+        protected override void CleanUp()
+        {
+            MessagingCenter.Send<App>(this, "CleanUp");
+            base.CleanUp();
         }
     }
 }

@@ -6,6 +6,7 @@ namespace IntelliCenterControl.Services
 {
     public interface IDataInterface<T>
     {
+        Task<bool> CreateConnectionAsync();
         Task<bool> SendItemUpdateAsync(string id, string prop, string data);
         Task<bool> SubscribeItemUpdateAsync(string id, string type);
         Task<bool> UnSubscribeItemUpdate(string id);
