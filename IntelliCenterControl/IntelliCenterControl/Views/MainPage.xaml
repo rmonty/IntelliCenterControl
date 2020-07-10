@@ -8,7 +8,7 @@
             x:Class="IntelliCenterControl.Views.MainPage">
 
     <TabbedPage.Children>
-        <NavigationPage Title="Status">
+        <NavigationPage Title="Controller">
             <x:Arguments>
                 <views:ControllerMainView />
             </x:Arguments><NavigationPage.Icon>
@@ -18,7 +18,6 @@
             </NavigationPage.Icon>
             
         </NavigationPage>
-        
         <NavigationPage Title="About">
             <x:Arguments>
                 <views:AboutPage />
