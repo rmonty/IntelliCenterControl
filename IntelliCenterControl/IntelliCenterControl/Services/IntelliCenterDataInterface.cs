@@ -167,7 +167,7 @@ namespace IntelliCenterControl.Services
                             "{ \"command\": \"RequestParamList\", \"objectList\": [{ \"objnam\": \"" + id +
                             "\", \"keys\": " + key + " }], \"messageID\": \"" +
                             g.ToString() + "\" }";
-                        await connection.InvokeAsync("Request", cmd);
+                        connection.InvokeAsync("Request", cmd);
                         return await Task.FromResult(true);
                     }
                     catch (Exception ex)

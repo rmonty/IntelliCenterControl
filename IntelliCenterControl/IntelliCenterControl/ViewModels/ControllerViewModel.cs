@@ -95,49 +95,6 @@ namespace IntelliCenterControl.ViewModels
 
         private double _heatTemp = 60;
 
-        public double HeatTemp
-        {
-            get => _heatTemp;
-            set => SetProperty(ref _heatTemp, value, "HeatTemp", new Action(async () =>
-            {
-                var element = BodyHeaters.ElementAtOrDefault<Circuit>(SelectedHeater);
-                if (element != null)
-                {
-                    //await DataInterface.SendItemUpdateAsync(BodySelected, "HTSRC", element.Hname);
-                }
-            }));
-        }
-
-        private bool _heatOn;
-
-        public bool HeatOn
-        {
-            get => _heatOn;
-            set => SetProperty(ref _heatOn, value, "HeatOn", new Action(async () =>
-            {
-                var element = BodyHeaters.ElementAtOrDefault<Circuit>(SelectedHeater);
-                if (element != null)
-                {
-                    //await DataInterface.SendItemUpdateAsync(BodySelected, "HTSRC", element.Hname);
-                }
-            }));
-        }
-
-        private int _selectedHeater;
-
-        public int SelectedHeater
-        {
-            get => _selectedHeater;
-            set => SetProperty(ref _selectedHeater, value, "SelectedHeater", new Action(async () =>
-            {
-                var element = BodyHeaters.ElementAtOrDefault<Circuit>(value);
-                if (element != null)
-                {
-                    //await DataInterface.SendItemUpdateAsync(BodySelected, "HTSRC", element.Hname);
-                }
-            }));
-        }
-
         private DateTime _currentDateTime;
 
         public DateTime CurrentDateTime
@@ -224,7 +181,7 @@ namespace IntelliCenterControl.ViewModels
                                             {
                                                 if (Guid.TryParse(g.ToString(), out _hardwareDefinitionMessageId))
                                                 {
-                                                    await semaphoreSlim.WaitAsync();
+                                                    //await semaphoreSlim.WaitAsync();
                                                     try
                                                     {
                                                         //Console.WriteLine(e);
@@ -234,10 +191,14 @@ namespace IntelliCenterControl.ViewModels
                                                         await LoadModels();
                                                         ExecuteSubscribeDataCommand();
                                                     }
-                                                    finally
+                                                    catch(Exception hwEx)
                                                     {
-                                                        semaphoreSlim.Release();
+                                                        Console.WriteLine(hwEx);
                                                     }
+                                                    //finally
+                                                    //{
+                                                    //    semaphoreSlim.Release();
+                                                    //}
                                                 }
                                             }
                                         }
@@ -322,8 +283,6 @@ namespace IntelliCenterControl.ViewModels
                                                             if (body.Active)
                                                             {
                                                                 WaterTemp = body.Temp == 0 ? "-" : body.Temp.ToString();
-                                                                BodySelected = body.Hname;
-                                                                
                                                             }
                                                         }
 
@@ -333,7 +292,6 @@ namespace IntelliCenterControl.ViewModels
                                                             if (Enum.IsDefined(typeof(Body.HeatModes), hm))
                                                             {
                                                                 body.HeatMode = (Body.HeatModes) hm;
-                                                                
                                                             }
                                                             else
                                                             {
@@ -503,7 +461,7 @@ namespace IntelliCenterControl.ViewModels
                             }
                             break;
                         case "SendParamList":
-                            await semaphoreSlim.WaitAsync();
+                            //await semaphoreSlim.WaitAsync();
                             try
                             {
                                 Schedules.Clear();
@@ -511,25 +469,44 @@ namespace IntelliCenterControl.ViewModels
                                     JsonConvert.DeserializeObject<SchedulesDefinition>(e);
                                 foreach (var sch in ScheduleDefinition.objectList)
                                 {
-                                    var startTime = sch.Params.TIME.Split(',');
-                                    var endTime = sch.Params.TIMOUT.Split(',');
-                                    if (startTime.Length > 2 && endTime.Length > 2)
+                                    var date = DateTime.Now;
+                                    var days = sch.Params.DAY;
+                                    var isToday = date.DayOfWeek switch
                                     {
-                                        var date = DateTime.Now;
-                                        var start = new DateTime(date.Year, date.Month, date.Day, int.Parse(startTime[0]),
-                                            int.Parse(startTime[1]), int.Parse(startTime[2]));
-                                        var end = new DateTime(date.Year, date.Month, date.Day, int.Parse(endTime[0]),
-                                            int.Parse(endTime[1]), int.Parse(endTime[2]));
-
-                                        var s = new Schedule(sch.Params.SNAME, Circuit.CircuitType.SCHED, sch.objnam,
-                                            DataInterface)
+                                        DayOfWeek.Monday => days.Contains('M'),
+                                        DayOfWeek.Friday => days.Contains('F'),
+                                        DayOfWeek.Saturday => days.Contains('A'),
+                                        DayOfWeek.Sunday => days.Contains('U'),
+                                        DayOfWeek.Thursday => days.Contains('R'),
+                                        DayOfWeek.Tuesday => days.Contains('T'),
+                                        DayOfWeek.Wednesday => days.Contains('W'),
+                                        _ => false,
+                                    };
+                                    if (isToday)
+                                    {
+                                        var startTime = sch.Params.TIME.Split(',');
+                                        var endTime = sch.Params.TIMOUT.Split(',');
+                                        if (startTime.Length > 2 && endTime.Length > 2)
                                         {
-                                            Active = sch.Params.ACT == "ON",
-                                            StartTime = start,
-                                            EndTime = end
-                                        };
-                                        Schedules.Add(s);
-                                        HardwareDictionary[s.Hname] = s;
+
+                                            var start = new DateTime(date.Year, date.Month, date.Day,
+                                                int.Parse(startTime[0]),
+                                                int.Parse(startTime[1]), int.Parse(startTime[2]));
+                                            var end = new DateTime(date.Year, date.Month, date.Day,
+                                                int.Parse(endTime[0]),
+                                                int.Parse(endTime[1]), int.Parse(endTime[2]));
+
+                                            var s = new Schedule(sch.Params.SNAME, Circuit.CircuitType.SCHED,
+                                                sch.objnam,
+                                                DataInterface)
+                                            {
+                                                Active = sch.Params.ACT == "ON",
+                                                StartTime = start,
+                                                EndTime = end
+                                            };
+                                            Schedules.Add(s);
+                                            HardwareDictionary[s.Hname] = s;
+                                        }
                                     }
                                 }
 
@@ -538,14 +515,14 @@ namespace IntelliCenterControl.ViewModels
                             {
                                 Console.WriteLine(scheduleEx);
                             }
-                            finally
-                            {
-                                semaphoreSlim.Release();
-                            }
+                            //finally
+                            //{
+                            //    semaphoreSlim.Release();
+                            //}
 
                             break;
                         default:
-                            Console.WriteLine(e);
+                            //Console.WriteLine(e);
                             break;
                     }
                 }
@@ -557,7 +534,6 @@ namespace IntelliCenterControl.ViewModels
             try
             {
                 await DataInterface.GetItemsDefinitionAsync(true);
-                //await DataInterface.GetScheduleDataAsync();
             }
             catch (Exception ex)
             {
@@ -601,10 +577,11 @@ namespace IntelliCenterControl.ViewModels
                     case Circuit.CircuitType.GLOWT:
                     case Circuit.CircuitType.LIGHT:
                         DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, kvp.Value.CircuitDescription.ToString());
+                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname,
+                            kvp.Value.CircuitDescription.ToString());
                         break;
                     case Circuit.CircuitType.HEATER:
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "HEATER");
+                        //DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "HEATER");
                         break;
                     default:
                         break;
@@ -613,7 +590,6 @@ namespace IntelliCenterControl.ViewModels
 
             await DataInterface.GetScheduleDataAsync();
             IsBusy = false;
-
         }
 
         private async Task PopulateModels()

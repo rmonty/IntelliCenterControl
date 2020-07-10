@@ -4,6 +4,8 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <PackageIcon>IntelliCenterControl_icon.png</PackageIcon>
+    <Version>1.0.1</Version>
+    <Company>MCXS</Company>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
