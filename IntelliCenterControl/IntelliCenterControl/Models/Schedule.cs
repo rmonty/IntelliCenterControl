@@ -11,7 +11,7 @@ using Xamarin.Forms;
 
 namespace IntelliCenterControl.Models
 {
-    public class Schedule : Circuit
+    public class Schedule : Circuit<IntelliCenterConnection>
     {
         public const string ScheduleKeys = "[\"OBJNAM : OBJTYP : LISTORD : CIRCUIT : SNAME : DAY : SINGLE : START : TIME : STOP : TIMOUT : GROUP : HEATER : COOLING : LOTMP : SMTSRT : VACFLO : STATUS : DNTSTP : ACT : MODE\"]";
 
@@ -41,7 +41,7 @@ namespace IntelliCenterControl.Models
 
 
 
-        public Schedule(string name, CircuitType circuitType, string hName, IDataInterface<HardwareDefinition> dataInterface):base(name,circuitType,hName,dataInterface)
+        public Schedule(string name, CircuitType circuitType, string hName, IDataInterface<IntelliCenterConnection> dataInterface):base(name,circuitType,hName,dataInterface)
         {
            
         }

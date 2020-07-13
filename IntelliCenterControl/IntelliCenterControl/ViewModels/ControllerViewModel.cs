@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -12,13 +11,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Threading;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
 
 namespace IntelliCenterControl.ViewModels
 {
-    public class ControllerViewModel : BaseViewModel<HardwareDefinition>
+    public class ControllerViewModel : BaseViewModel<IntelliCenterConnection>
     {
         private HardwareDefinition _hardwareDefinition = new HardwareDefinition();
         public HardwareDefinition HardwareDefinition
@@ -42,16 +38,16 @@ namespace IntelliCenterControl.ViewModels
         public Command AllLightsOnCommand { get; set; }
         public Command AllLightsOffCommand { get; set; }
 
-        public ObservableCollection<Circuit> Circuits { get; private set; }
-        public ObservableCollection<Circuit> CircuitGroup { get; private set; }
-        public ObservableCollection<Circuit> Pumps { get; private set; }
-        public ObservableCollection<Circuit> Bodies { get; private set; }
-        public ObservableCollection<Circuit> Chems { get; private set; }
-        public ObservableCollection<Circuit> Lights { get; private set; }
-        public ObservableCollection<Circuit> BodyHeaters { get; private set; }
+        public ObservableCollection<Circuit<IntelliCenterConnection>> Circuits { get; private set; }
+        public ObservableCollection<Circuit<IntelliCenterConnection>> CircuitGroup { get; private set; }
+        public ObservableCollection<Circuit<IntelliCenterConnection>> Pumps { get; private set; }
+        public ObservableCollection<Circuit<IntelliCenterConnection>> Bodies { get; private set; }
+        public ObservableCollection<Circuit<IntelliCenterConnection>> Chems { get; private set; }
+        public ObservableCollection<Circuit<IntelliCenterConnection>> Lights { get; private set; }
+        public ObservableCollection<Circuit<IntelliCenterConnection>> BodyHeaters { get; private set; }
         public ObservableCollection<Heater> Heaters { get; private set; }
-        public ObservableCollection<Circuit> Schedules { get; private set; }
-        public ConcurrentDictionary<string, Circuit> HardwareDictionary = new ConcurrentDictionary<string, Circuit>();
+        public ObservableCollection<Circuit<IntelliCenterConnection>> Schedules { get; private set; }
+        public ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> HardwareDictionary = new ConcurrentDictionary<string, Circuit<IntelliCenterConnection>>();
 
         private string _airTemp = "-";
         public string AirTemp
@@ -93,9 +89,7 @@ namespace IntelliCenterControl.ViewModels
         }
 
 
-        private double _heatTemp = 60;
-
-        private DateTime _currentDateTime;
+        private DateTime _currentDateTime = new DateTime();
 
         public DateTime CurrentDateTime
         {
@@ -103,31 +97,52 @@ namespace IntelliCenterControl.ViewModels
             set => SetProperty(ref _currentDateTime, value);
         }
 
-
+        private bool _isConnected;
         private Timer _dateTimeTimer; 
 
         
 
         public ControllerViewModel()
         {
-            Title = "Pool";
-            Circuits = new ObservableCollection<Circuit>();
-            CircuitGroup = new ObservableCollection<Circuit>();
-            Pumps = new ObservableCollection<Circuit>();
-            Bodies = new ObservableCollection<Circuit>();
-            Chems = new ObservableCollection<Circuit>();
-            Lights = new ObservableCollection<Circuit>();
-            BodyHeaters = new ObservableCollection<Circuit>();
+            Title = "Pool Control";
+            Circuits = new ObservableCollection<Circuit<IntelliCenterConnection>>();
+            CircuitGroup = new ObservableCollection<Circuit<IntelliCenterConnection>>();
+            Pumps = new ObservableCollection<Circuit<IntelliCenterConnection>>();
+            Bodies = new ObservableCollection<Circuit<IntelliCenterConnection>>();
+            Chems = new ObservableCollection<Circuit<IntelliCenterConnection>>();
+            Lights = new ObservableCollection<Circuit<IntelliCenterConnection>>();
+            BodyHeaters = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Heaters = new ObservableCollection<Heater>();
-            Schedules = new ObservableCollection<Circuit>();
+            Schedules = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             LoadHardwareDefinitionCommand = new Command(async () => await ExecuteLoadHardwareDefinitionCommand());
             ClosingCommand = new Command(async () => await ExecuteClosingCommand());
             SubscribeDataCommand = new Command(async () => await ExecuteSubscribeDataCommand());
             AllLightsOnCommand = new Command(async () => await ExecuteAllLightsOnCommand());
             AllLightsOffCommand = new Command(async () => await ExecuteAllLightsOffCommand());
             DataInterface.DataReceived += DataStoreDataReceived;
+            DataInterface.ConnectionChanged += DataInterface_ConnectionChanged;
             _dateTimeTimer = new Timer(DateTimeTimerElapsed, this, 0, 1000);
 
+        }
+
+        private void DataInterface_ConnectionChanged(object sender, IntelliCenterConnection e)
+        {
+            if (e.State == IntelliCenterConnection.ConnectionState.Connected)
+            {
+                _isConnected = true;
+                try
+                {
+                    DataInterface.GetItemsDefinitionAsync(true);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            }
+            else
+            {
+                _isConnected = false;
+            }
         }
 
         public async Task UpdateIPAddress()
@@ -181,7 +196,7 @@ namespace IntelliCenterControl.ViewModels
                                             {
                                                 if (Guid.TryParse(g.ToString(), out _hardwareDefinitionMessageId))
                                                 {
-                                                    //await semaphoreSlim.WaitAsync();
+                                                    await semaphoreSlim.WaitAsync();
                                                     try
                                                     {
                                                         //Console.WriteLine(e);
@@ -189,16 +204,17 @@ namespace IntelliCenterControl.ViewModels
                                                             JsonConvert.DeserializeObject<HardwareDefinition>(e);
 
                                                         await LoadModels();
+                                                        await PopulateModels();
                                                         ExecuteSubscribeDataCommand();
                                                     }
                                                     catch(Exception hwEx)
                                                     {
                                                         Console.WriteLine(hwEx);
                                                     }
-                                                    //finally
-                                                    //{
-                                                    //    semaphoreSlim.Release();
-                                                    //}
+                                                    finally
+                                                    {
+                                                        semaphoreSlim.Release();
+                                                    }
                                                 }
                                             }
                                         }
@@ -221,7 +237,7 @@ namespace IntelliCenterControl.ViewModels
                                         {
                                             switch (circuit.CircuitDescription)
                                             {
-                                                case Circuit.CircuitType.PUMP:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                                                     var pump = (Pump) circuit;
                                                     if (notifyList.TryGetValue("params", out var pumpValues))
                                                     {
@@ -254,7 +270,7 @@ namespace IntelliCenterControl.ViewModels
                                                     }
 
                                                     break;
-                                                case Circuit.CircuitType.BODY:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.BODY:
                                                     if (notifyList.TryGetValue("params", out var bodyValues))
                                                     {
                                                         //Console.WriteLine(bodyValues);
@@ -323,7 +339,7 @@ namespace IntelliCenterControl.ViewModels
                                                     }
 
                                                     break;
-                                                case Circuit.CircuitType.SENSE:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
                                                     if (notifyList.TryGetValue("params", out var senseValues))
                                                     {
                                                         var sv = (JObject) senseValues;
@@ -350,7 +366,7 @@ namespace IntelliCenterControl.ViewModels
                                                     }
 
                                                     break;
-                                                case Circuit.CircuitType.GENERIC:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
                                                     if (notifyList.TryGetValue("params", out var circuitValues))
                                                     {
                                                         var cv = (JObject) circuitValues;
@@ -370,7 +386,7 @@ namespace IntelliCenterControl.ViewModels
                                                     }
 
                                                     break;
-                                                case Circuit.CircuitType.CIRCGRP:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
                                                     if (notifyList.TryGetValue("params", out var groupValues))
                                                     {
                                                         var gv = (JObject) groupValues;
@@ -390,7 +406,7 @@ namespace IntelliCenterControl.ViewModels
                                                     }
 
                                                     break;
-                                                case Circuit.CircuitType.CHEM:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
                                                     if (notifyList.TryGetValue("params", out var chemValues))
                                                     {
                                                         var cv = (JObject) chemValues;
@@ -404,13 +420,13 @@ namespace IntelliCenterControl.ViewModels
                                                     }
 
                                                     break;
-                                                case Circuit.CircuitType.INTELLI:
-                                                case Circuit.CircuitType.GLOW:
-                                                case Circuit.CircuitType.MAGIC2:
-                                                case Circuit.CircuitType.CLRCASC:
-                                                case Circuit.CircuitType.DIMMER:
-                                                case Circuit.CircuitType.GLOWT:
-                                                case Circuit.CircuitType.LIGHT:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
                                                     if (notifyList.TryGetValue("params", out var lightValues))
                                                     {
                                                         var lv = (JObject) lightValues;
@@ -439,7 +455,7 @@ namespace IntelliCenterControl.ViewModels
                                                     }
 
                                                     break;
-                                                case Circuit.CircuitType.HEATER:
+                                                case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
                                                     if (notifyList.TryGetValue("params", out var heaterValues))
                                                     {
                                                         //Console.WriteLine(heaterValues);
@@ -461,7 +477,7 @@ namespace IntelliCenterControl.ViewModels
                             }
                             break;
                         case "SendParamList":
-                            //await semaphoreSlim.WaitAsync();
+                            await semaphoreSlim.WaitAsync();
                             try
                             {
                                 Schedules.Clear();
@@ -496,7 +512,7 @@ namespace IntelliCenterControl.ViewModels
                                                 int.Parse(endTime[0]),
                                                 int.Parse(endTime[1]), int.Parse(endTime[2]));
 
-                                            var s = new Schedule(sch.Params.SNAME, Circuit.CircuitType.SCHED,
+                                            var s = new Schedule(sch.Params.SNAME, Circuit<IntelliCenterConnection>.CircuitType.SCHED,
                                                 sch.objnam,
                                                 DataInterface)
                                             {
@@ -515,10 +531,10 @@ namespace IntelliCenterControl.ViewModels
                             {
                                 Console.WriteLine(scheduleEx);
                             }
-                            //finally
-                            //{
-                            //    semaphoreSlim.Release();
-                            //}
+                            finally
+                            {
+                                semaphoreSlim.Release();
+                            }
 
                             break;
                         default:
@@ -533,7 +549,7 @@ namespace IntelliCenterControl.ViewModels
         {
             try
             {
-                await DataInterface.GetItemsDefinitionAsync(true);
+                await DataInterface.CreateConnectionAsync();
             }
             catch (Exception ex)
             {
@@ -544,43 +560,47 @@ namespace IntelliCenterControl.ViewModels
 
         private async Task ExecuteSubscribeDataCommand()
         {
-            IsBusy = true;
-            await PopulateModels();
+            if (!_isConnected)
+            {
+                await DataInterface.CreateConnectionAsync();
+            }
 
+            IsBusy = true;
+            
             foreach (var kvp in HardwareDictionary)
             {
                 switch (kvp.Value.CircuitDescription)
                 {
-                    case Circuit.CircuitType.BODY:
+                    case Circuit<IntelliCenterConnection>.CircuitType.BODY:
                         DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "BODY");
                         break;
-                    case Circuit.CircuitType.CHEM:
+                    case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
                         DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CHEM");
                         break;
-                    case Circuit.CircuitType.CIRCGRP:
+                    case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
                         DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCGRP");
                         break;
-                    case Circuit.CircuitType.GENERIC:
+                    case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
                         DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
                         break;
-                    case Circuit.CircuitType.PUMP:
+                    case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                         DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "PUMP");
                         break;
-                    case Circuit.CircuitType.SENSE:
+                    case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
                         DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "SENSE");
                         break;
-                    case Circuit.CircuitType.INTELLI:
-                    case Circuit.CircuitType.GLOW:
-                    case Circuit.CircuitType.MAGIC2:
-                    case Circuit.CircuitType.CLRCASC:
-                    case Circuit.CircuitType.DIMMER:
-                    case Circuit.CircuitType.GLOWT:
-                    case Circuit.CircuitType.LIGHT:
+                    case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
+                    case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
+                    case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
+                    case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
+                    case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
+                    case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
+                    case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
                         DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
                         DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname,
                             kvp.Value.CircuitDescription.ToString());
                         break;
-                    case Circuit.CircuitType.HEATER:
+                    case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
                         //DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "HEATER");
                         break;
                     default:
@@ -608,33 +628,33 @@ namespace IntelliCenterControl.ViewModels
             {
                 switch (kvp.Value.CircuitDescription)
                 {
-                    case Circuit.CircuitType.BODY:
+                    case Circuit<IntelliCenterConnection>.CircuitType.BODY:
                         Bodies.InsertInPlace(kvp.Value, o=>o.ListOrd);
                         break;
-                    case Circuit.CircuitType.CHEM:
+                    case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
                         Chems.Add(kvp.Value);
                         break;
-                    case Circuit.CircuitType.CIRCGRP:
+                    case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
                         CircuitGroup.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
-                    case Circuit.CircuitType.GENERIC:
+                    case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
                         Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
-                    case Circuit.CircuitType.PUMP:
+                    case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                         Pumps.InsertInPlace(kvp.Value, o => o.Hname);
                         break;
-                    case Circuit.CircuitType.SENSE:
+                    case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
                         break;
-                    case Circuit.CircuitType.INTELLI:
-                    case Circuit.CircuitType.GLOW:
-                    case Circuit.CircuitType.MAGIC2:
-                    case Circuit.CircuitType.CLRCASC:
-                    case Circuit.CircuitType.DIMMER:
-                    case Circuit.CircuitType.GLOWT:
-                    case Circuit.CircuitType.LIGHT:
+                    case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
+                    case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
+                    case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
+                    case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
+                    case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
+                    case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
+                    case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
                         Lights.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
-                    case Circuit.CircuitType.HEATER:
+                    case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
                         var htr = (Heater)kvp.Value;
                         if (htr != null)
                         {
@@ -678,19 +698,19 @@ namespace IntelliCenterControl.ViewModels
 
             foreach (var obj in HardwareDefinition.answer.SelectMany(answer => answer.Params.Objlist))
             {
-                if (Enum.TryParse<Circuit.CircuitType>(obj.Params.Objtyp, out var circuitType))
+                if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(obj.Params.Objtyp, out var circuitType))
                 {
                     switch (circuitType)
                     {
-                        case Circuit.CircuitType.MODULE:
+                        case Circuit<IntelliCenterConnection>.CircuitType.MODULE:
                             foreach (var moduleCircuit in obj.Params.Circuits)
                             {
-                                if (Enum.TryParse<Circuit.CircuitType>(moduleCircuit.Params.Objtyp,
+                                if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(moduleCircuit.Params.Objtyp,
                                     out var objType))
                                 {
                                     switch (objType)
                                     {
-                                        case Circuit.CircuitType.BODY:
+                                        case Circuit<IntelliCenterConnection>.CircuitType.BODY:
                                             if (Enum.TryParse<Body.BodyType>(moduleCircuit.Params.Subtyp,
                                                 out var bodyType))
                                             {
@@ -707,13 +727,13 @@ namespace IntelliCenterControl.ViewModels
 
                                             foreach (var bodyParam in moduleCircuit.Params.Objlist)
                                             {
-                                                if (Enum.TryParse<Circuit.CircuitType>(
+                                                if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(
                                                     bodyParam.Params.Objtyp.ToString(),
                                                     out var cktType))
                                                 {
                                                     switch (cktType)
                                                     {
-                                                        case Circuit.CircuitType.CHEM:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
                                                             if (Enum.TryParse<Chem.ChemType>(
                                                                 bodyParam.Params.Subtyp, out var chemType))
                                                             {
@@ -732,20 +752,20 @@ namespace IntelliCenterControl.ViewModels
                                             }
 
                                             break;
-                                        case Circuit.CircuitType.CIRCUIT:
+                                        case Circuit<IntelliCenterConnection>.CircuitType.CIRCUIT:
                                             {
-                                                if (Enum.TryParse<Circuit.CircuitType>(moduleCircuit.Params.Subtyp,
+                                                if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(moduleCircuit.Params.Subtyp,
                                                     out var subType))
                                                 {
                                                     switch (subType)
                                                     {
-                                                        case Circuit.CircuitType.INTELLI:
-                                                        case Circuit.CircuitType.GLOW:
-                                                        case Circuit.CircuitType.MAGIC2:
-                                                        case Circuit.CircuitType.CLRCASC:
-                                                        case Circuit.CircuitType.DIMMER:
-                                                        case Circuit.CircuitType.GLOWT:
-                                                        case Circuit.CircuitType.LIGHT:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
                                                             if (Enum.TryParse<Light.LightType>(moduleCircuit.Params.Subtyp,
                                                                   out var lightType))
                                                             {
@@ -766,7 +786,7 @@ namespace IntelliCenterControl.ViewModels
                                                 }
                                             }
                                             break;
-                                        case Circuit.CircuitType.HEATER:
+                                        case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
                                             if (Enum.TryParse<Heater.HeaterType>(moduleCircuit.Params.Subtyp,
                                                 out var htrType))
                                             {
@@ -787,7 +807,7 @@ namespace IntelliCenterControl.ViewModels
                             }
 
                             break;
-                        case Circuit.CircuitType.SENSE:
+                        case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
                             {
                                 if (Enum.TryParse<Sense.SenseType>(obj.Params.Subtyp, out var senseType))
                                 {
@@ -803,20 +823,20 @@ namespace IntelliCenterControl.ViewModels
                                 }
                             }
                             break;
-                        case Circuit.CircuitType.CIRCUIT:
+                        case Circuit<IntelliCenterConnection>.CircuitType.CIRCUIT:
                             {
-                                if (Enum.TryParse<Circuit.CircuitType>(obj.Params.Subtyp,
+                                if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(obj.Params.Subtyp,
                                     out var subType))
                                 {
                                     switch (subType)
                                     {
-                                        case Circuit.CircuitType.GENERIC:
+                                        case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
                                             {
                                                 if (obj.Params.Featr == "ON")
                                                 {
                                                     int.TryParse(obj.Params.Listord,
                                                         out var listOrder);
-                                                    var c = new Circuit(obj.Params.Sname, Circuit.CircuitType.GENERIC,
+                                                    var c = new Circuit<IntelliCenterConnection>(obj.Params.Sname, Circuit<IntelliCenterConnection>.CircuitType.GENERIC,
                                                         obj.Params.Hname, DataInterface)
                                                     {
                                                         ListOrd = listOrder
@@ -826,11 +846,11 @@ namespace IntelliCenterControl.ViewModels
                                                 }
                                             }
                                             break;
-                                        case Circuit.CircuitType.CIRCGRP:
+                                        case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
                                             {
                                                 int.TryParse(obj.Params.Listord,
                                                     out var listOrder);
-                                                var c = new Circuit(obj.Params.Sname, Circuit.CircuitType.CIRCGRP,
+                                                var c = new Circuit<IntelliCenterConnection>(obj.Params.Sname, Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP,
                                                     obj.Params.Hname, DataInterface)
                                                 {
                                                     ListOrd = listOrder
@@ -844,7 +864,7 @@ namespace IntelliCenterControl.ViewModels
 
                             }
                             break;
-                        case Circuit.CircuitType.PUMP:
+                        case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                             {
                                 if (Enum.TryParse<Pump.PumpType>(obj.Params.Subtyp,
                                     out var subType))

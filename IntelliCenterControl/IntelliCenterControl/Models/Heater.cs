@@ -10,7 +10,7 @@ using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.Models
 {
-    public class Heater : Circuit
+    public class Heater : Circuit<IntelliCenterConnection>
     {
         public const string HeaterKeys = "[\"STATUS\", \"SUBTYP\", \"PERMIT\", \"TIMOUT\", \"READY\", \"HTMODE\", \"SHOMNU\", \"COOL\", \"COMUART\", \"BODY\", \"HNAME\", \"START\", \"STOP\", \"HEATING\",\"BOOST\",\"TIME\",\"DLY\"]";
 
@@ -58,7 +58,7 @@ namespace IntelliCenterControl.Models
 
 
 
-        public Heater(string name, HeaterType heaterType, string hName, IDataInterface<HardwareDefinition> dataInterface) : base(name, CircuitType.HEATER, hName, dataInterface)
+        public Heater(string name, HeaterType heaterType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) : base(name, CircuitType.HEATER, hName, dataInterface)
         {
             Type = heaterType;
         }

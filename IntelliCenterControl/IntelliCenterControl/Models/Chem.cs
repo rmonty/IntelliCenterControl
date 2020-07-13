@@ -8,7 +8,7 @@ using IntelliCenterControl.Annotations;
 
 namespace IntelliCenterControl.Models
 {
-    public class Chem : Circuit
+    public class Chem : Circuit<IntelliCenterConnection>
     {
         public const string ChemKeys = "[\"SALT\"]";
 

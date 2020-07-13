@@ -10,6 +10,7 @@ using Xamarin.Forms.Xaml;
 using IntelliCenterControl.Models;
 using IntelliCenterControl.Views;
 using IntelliCenterControl.ViewModels;
+using Plugin.Toast;
 
 namespace IntelliCenterControl.Views
 {
@@ -25,7 +26,8 @@ namespace IntelliCenterControl.Views
             InitializeComponent();
 
             BindingContext = viewModel = new ControllerViewModel();
-            
+
+            viewModel.DataInterface.ConnectionChanged += DataInterface_ConnectionChanged;
 
             MessagingCenter.Subscribe<App>(this, "Starting", (sender) =>
             {
@@ -37,25 +39,33 @@ namespace IntelliCenterControl.Views
             });
             MessagingCenter.Subscribe<App>(this, "Resume", (sender) =>
             {
-                viewModel.SubscribeDataCommand.Execute(null);
+                viewModel.SubscribeDataCommand.Execute(true);
             });
-            MessagingCenter.Subscribe<App>(this, "CleanUp", (sender) =>
-            {
-                viewModel.ClosingCommand.Execute(null);
-            });
+
         }
 
-        private async void ConnectToolBarItem_Clicked(object sender, EventArgs e)
+        private void DataInterface_ConnectionChanged(object sender, IntelliCenterConnection e)
+        {
+            CrossToastPopUp.Current.ShowToastMessage(e.State.ToString() + "...");
+        }
+
+        private async void UpdateIP_Clicked(object sender, EventArgs e)
         {
             var result = await DisplayPromptAsync("Server URL", "Please Enter Server URL", initialValue : Settings.ServerURL);
 
-            bool validUrl = Uri.TryCreate(result, UriKind.Absolute, out var uriResult)
-                            && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            var validUrl = Uri.TryCreate(result, UriKind.Absolute, out var uriResult);
+                           // && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
             if (validUrl)
             {
                 Settings.ServerURL = result;
                 viewModel.UpdateIPAddress();
             }
+            
+        }
+
+        private void RefreshConnection_Clicked(object sender, EventArgs e)
+        {
+            viewModel.LoadHardwareDefinitionCommand.Execute(true);
         }
 
         //protected override void OnAppearing()

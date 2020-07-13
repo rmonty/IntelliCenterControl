@@ -29,5 +29,7 @@ namespace IntelliCenterControl.Droid
 
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+
+       
     }
 }

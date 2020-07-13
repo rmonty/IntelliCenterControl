@@ -8,7 +8,7 @@ using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.Models
 {
-    public class Light : Circuit
+    public class Light : Circuit<IntelliCenterConnection>
     {
         public const string LightKeys = "[\"ACT\", \"USE\"]";
 
@@ -147,7 +147,7 @@ namespace IntelliCenterControl.Models
 
         public bool SupportsDimming => GetAttribute<DimmingAttribute>(Type).SupportsDimming;
 
-        public Light(string name, LightType lightType, string hName, IDataInterface<HardwareDefinition> dataInterface) : base(name, Enum.Parse<CircuitType>(lightType.ToString()), hName, dataInterface)
+        public Light(string name, LightType lightType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) : base(name, Enum.Parse<CircuitType>(lightType.ToString()), hName, dataInterface)
         {
             Type = lightType;
 
