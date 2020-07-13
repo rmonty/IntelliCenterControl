@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Plugin.Settings;
+﻿using Plugin.Settings;
 using Plugin.Settings.Abstractions;
 
 namespace IntelliCenterControl
@@ -19,8 +16,8 @@ namespace IntelliCenterControl
         #region Setting Constants
 
         private const string ServerURLKey = "server_url_key";
+        //private static readonly string ServerURLDefault = "ws://192.168.0.114:6680/";
         private static readonly string ServerURLDefault = "http://192.168.0.130:5000/stream";
-
         #endregion
 
 

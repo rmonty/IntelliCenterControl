@@ -10,22 +10,29 @@ using Newtonsoft.Json.Linq;
 
 namespace IntelliCenterControl.Services
 {
-    public class IntelliCenterDataInterface : IDataInterface<HardwareDefinition>
+    public class IntelliCenterDataInterface : IDataInterface<IntelliCenterConnection>
     {
-        HubConnection connection;
-        
+        private HubConnection connection;
+        private IntelliCenterConnection _intelliCenterConnection = new IntelliCenterConnection();
         public event EventHandler<string> DataReceived;
-        
+        public event EventHandler<IntelliCenterConnection> ConnectionChanged;
+
         public Dictionary<string, string> Subscriptions = new Dictionary<string, string>();
         public Dictionary<Guid, string> UnsubscribeMessages = new Dictionary<Guid, string>();
 
         public IntelliCenterDataInterface()
         {
-            CreateConnectionAsync();
+            
+            
         }
 
         public async Task<bool> CreateConnectionAsync()
         {
+            //connection = new HubConnectionBuilder()
+            //    .WithUrl("ws://192.168.0.114:6680/")
+            //    .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
+            //    .Build();
+
             connection = new HubConnectionBuilder()
                 .WithUrl(Settings.ServerURL)
                 .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
@@ -36,7 +43,8 @@ namespace IntelliCenterControl.Services
             connection.Reconnecting += error =>
             {
                 Debug.Assert(connection.State == HubConnectionState.Reconnecting);
-
+                _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState)connection.State;
+                OnConnectionChanged();
                 // Notify users the connection was lost and the client is reconnecting.
                 // Start queuing or dropping messages.
 
@@ -46,7 +54,8 @@ namespace IntelliCenterControl.Services
             connection.Reconnected += connectionId =>
             {
                 Debug.Assert(connection.State == HubConnectionState.Connected);
-
+                _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState)connection.State;
+                OnConnectionChanged();
                 // Notify users the connection was reestablished.
                 // Start dequeuing messages queued while reconnecting if any.
 
@@ -56,19 +65,21 @@ namespace IntelliCenterControl.Services
             connection.Closed += error =>
             {
                 Debug.Assert(connection.State == HubConnectionState.Disconnected);
-
+                _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState)connection.State;
+                OnConnectionChanged();
                 // Notify users the connection has been closed or manually try to restart the connection.
 
                 return Task.CompletedTask;
             };
 
+            await connection.StartAsync();
 
-            connection.StartAsync();//.ContinueWith(antecedent =>
-            //{
-            DataSubscribe();
-            //});
+            if(connection.State == HubConnectionState.Connected) DataSubscribe();
+            
+            _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState)connection.State;
+            OnConnectionChanged();
 
-            return await Task.FromResult(true);
+            return await Task.FromResult(connection.State != HubConnectionState.Disconnected);
         }
 
         public async Task<bool> SendItemUpdateAsync(string id, string prop, string data)
@@ -79,9 +90,12 @@ namespace IntelliCenterControl.Services
             {
                 try
                 {
-                    await connection.InvokeAsync("Request", message);
-                    return await Task.FromResult(true);
-                    //Console.WriteLine(message);
+                    if (connection.State == HubConnectionState.Connected)
+                    {
+                        await connection.InvokeAsync("Request", message);
+                        return await Task.FromResult(true);
+                        //Console.WriteLine(message);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -101,8 +115,11 @@ namespace IntelliCenterControl.Services
 
             try
             {
-                await connection.InvokeAsync("Request", cmd);
-                return await Task.FromResult(true);
+                if (connection.State == HubConnectionState.Connected)
+                {
+                    await connection.InvokeAsync("Request", cmd);
+                    return await Task.FromResult(true);
+                }
             }
             catch (Exception ex)
             {
@@ -115,44 +132,44 @@ namespace IntelliCenterControl.Services
         
         public async Task<bool> SubscribeItemUpdateAsync(string id, string type)
         {
-            if (Enum.TryParse<Circuit.CircuitType>(type, out var result))
+            if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(type, out var result))
             {
                 var g = Guid.NewGuid();
                 var key = String.Empty;
 
                 switch (result)
                 {
-                    case Circuit.CircuitType.PUMP:
+                    case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                         key = Pump.PumpKeys;
                         break;
-                    case Circuit.CircuitType.BODY:
+                    case Circuit<IntelliCenterConnection>.CircuitType.BODY:
                         key = Body.BodyKeys;
                         break;
-                    case Circuit.CircuitType.SENSE:
+                    case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
                         key = Sense.SenseKeys;
                         break;
-                    case Circuit.CircuitType.CIRCUIT:
-                        key = Circuit.CircuitKeys;
+                    case Circuit<IntelliCenterConnection>.CircuitType.CIRCUIT:
+                        key = Circuit<IntelliCenterConnection>.CircuitKeys;
                         break;
-                    case Circuit.CircuitType.GENERIC:
-                        key = Circuit.CircuitKeys;
+                    case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
+                        key = Circuit<IntelliCenterConnection>.CircuitKeys;
                         break;
-                    case Circuit.CircuitType.CIRCGRP:
-                        key = Circuit.CircuitKeys;
+                    case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
+                        key = Circuit<IntelliCenterConnection>.CircuitKeys;
                         break;
-                    case Circuit.CircuitType.CHEM:
+                    case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
                         key = Chem.ChemKeys;
                         break;
-                    case Circuit.CircuitType.HEATER:
+                    case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
                         key = Heater.HeaterKeys;
                         break;
-                    case Circuit.CircuitType.INTELLI:
-                    case Circuit.CircuitType.GLOW:
-                    case Circuit.CircuitType.MAGIC2:
-                    case Circuit.CircuitType.CLRCASC:
-                    case Circuit.CircuitType.DIMMER:
-                    case Circuit.CircuitType.GLOWT:
-                    case Circuit.CircuitType.LIGHT:
+                    case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
+                    case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
+                    case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
+                    case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
+                    case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
+                    case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
+                    case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
                         key = Light.LightKeys;
                         break;
                     default: break;
@@ -167,8 +184,11 @@ namespace IntelliCenterControl.Services
                             "{ \"command\": \"RequestParamList\", \"objectList\": [{ \"objnam\": \"" + id +
                             "\", \"keys\": " + key + " }], \"messageID\": \"" +
                             g.ToString() + "\" }";
-                        connection.InvokeAsync("Request", cmd);
-                        return await Task.FromResult(true);
+                        if (connection.State == HubConnectionState.Connected)
+                        {
+                            await connection.InvokeAsync("Request", cmd);
+                            return await Task.FromResult(true);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -193,9 +213,12 @@ namespace IntelliCenterControl.Services
                 {
                     try
                     {
-                        await connection.InvokeAsync("Request", cmd);
-                        UnsubscribeMessages[g] = id;
-                        return await Task.FromResult(true);
+                        if (connection.State == HubConnectionState.Connected)
+                        {
+                            await connection.InvokeAsync("Request", cmd);
+                            UnsubscribeMessages[g] = id;
+                            return await Task.FromResult(true);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -218,8 +241,11 @@ namespace IntelliCenterControl.Services
                 {
                     try
                     {
-                        await connection.InvokeAsync("Request", cmd);
-                        return await Task.FromResult(true);
+                        if (connection.State == HubConnectionState.Connected)
+                        {
+                            await connection.InvokeAsync("Request", cmd);
+                            return await Task.FromResult(true);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -228,6 +254,12 @@ namespace IntelliCenterControl.Services
                 }
             }
             return await Task.FromResult(false);
+        }
+
+        protected virtual void OnConnectionChanged()
+        {
+            EventHandler<IntelliCenterConnection> handler = ConnectionChanged;
+            handler?.Invoke(this, _intelliCenterConnection);
         }
 
         protected virtual void OnDataReceived(string message)
@@ -246,8 +278,11 @@ namespace IntelliCenterControl.Services
                     g.ToString() + "\" }";
                 try
                 {
-                    await connection.InvokeAsync("Request", cmd);
-                    return await Task.FromResult(true);
+                    if (connection.State == HubConnectionState.Connected)
+                    {
+                        await connection.InvokeAsync("Request", cmd);
+                        return await Task.FromResult(true);
+                    }
                 }
                 catch (Exception ex)
                 {

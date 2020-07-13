@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelliCenterControl.Androi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelliCenterControl.iOS", "IntelliCenterControl\IntelliCenterControl.iOS\IntelliCenterControl.iOS.csproj", "{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntelliCenterControl", "IntelliCenterControl\IntelliCenterControl\IntelliCenterControl.csproj", "{A6D069D2-152F-4A52-B3D8-8C8153490BAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntelliCenterControl", "IntelliCenterControl\IntelliCenterControl\IntelliCenterControl.csproj", "{A6D069D2-152F-4A52-B3D8-8C8153490BAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,8 +38,6 @@ Global
 		{5D8570A6-2DD8-4927-867A-FE81E10FFF2E}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
 		{5D8570A6-2DD8-4927-867A-FE81E10FFF2E}.Release|iPhoneSimulator.Deploy.0 = Release|Any CPU
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Debug|Any CPU.ActiveCfg = Debug|iPhone
-		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Debug|Any CPU.Build.0 = Debug|iPhone
-		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Debug|Any CPU.Deploy.0 = Debug|iPhone
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Debug|iPhone.ActiveCfg = Debug|iPhone
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Debug|iPhone.Build.0 = Debug|iPhone
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Debug|iPhone.Deploy.0 = Debug|iPhone
@@ -47,8 +45,6 @@ Global
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Debug|iPhoneSimulator.Deploy.0 = Debug|iPhoneSimulator
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Release|Any CPU.ActiveCfg = Release|iPhone
-		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Release|Any CPU.Build.0 = Release|iPhone
-		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Release|Any CPU.Deploy.0 = Release|iPhone
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Release|iPhone.ActiveCfg = Release|iPhone
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Release|iPhone.Build.0 = Release|iPhone
 		{F8F78EF4-9423-4C86-8A65-DFE3BF72058D}.Release|iPhone.Deploy.0 = Release|iPhone

@@ -8,7 +8,7 @@ using IntelliCenterControl.Annotations;
 
 namespace IntelliCenterControl.Models
 {
-    public class Pump : Circuit
+    public class Pump : Circuit<IntelliCenterConnection>
     {
         public const string PumpKeys = "[\"RPM\", \"GPM\", \"PWR\",\"STATUS\"]";
 

@@ -8,7 +8,7 @@ using IntelliCenterControl.Annotations;
 
 namespace IntelliCenterControl.Models
 {
-    public class Sense : Circuit
+    public class Sense : Circuit<IntelliCenterConnection>
     {
         public const string SenseKeys = "[\"PROBE\", \"STATUS\"]";
 

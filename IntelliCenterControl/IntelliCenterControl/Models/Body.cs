@@ -11,7 +11,7 @@ using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.Models
 {
-    public class Body : Circuit
+    public class Body : Circuit<IntelliCenterConnection>
     {
         public const string BodyKeys = "[\"TEMP\",\"STATUS\",\"HTMODE\",\"MODE\",\"LSTTMP\",\"HTSRC\", \"HITMP\", \"LOTMP\"]";
 
@@ -128,7 +128,7 @@ namespace IntelliCenterControl.Models
 
 
 
-        public Body(string name, BodyType bodyType, string hName, IDataInterface<HardwareDefinition> dataInterface) :base(name, CircuitType.BODY, hName, dataInterface)
+        public Body(string name, BodyType bodyType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) :base(name, CircuitType.BODY, hName, dataInterface)
         {
             Type = bodyType;
         }

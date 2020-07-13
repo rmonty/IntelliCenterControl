@@ -25,43 +25,43 @@ namespace IntelliCenterControl.Views
             switch (color)
             {
                 case Light.LightColors.SAMMOD:
-                    ColorPicker.BackgroundColor = Color.LightGray;
+                    ColorBox.BackgroundColor = Color.LightGray;
                     break;
                 case Light.LightColors.PARTY:
-                    ColorPicker.BackgroundColor = Color.HotPink;
+                    ColorBox.BackgroundColor = Color.HotPink;
                     break;
                 case Light.LightColors.ROMAN:
-                    ColorPicker.BackgroundColor = Color.LightBlue;
+                    ColorBox.BackgroundColor = Color.LightBlue;
                     break;
                 case Light.LightColors.CARIB:
-                    ColorPicker.BackgroundColor = Color.GreenYellow;
+                    ColorBox.BackgroundColor = Color.GreenYellow;
                     break;
                 case Light.LightColors.AMERCA:
-                    ColorPicker.BackgroundColor = Color.BlueViolet;
+                    ColorBox.BackgroundColor = Color.BlueViolet;
                     break;
                 case Light.LightColors.SSET:
-                    ColorPicker.BackgroundColor = Color.OrangeRed;
+                    ColorBox.BackgroundColor = Color.OrangeRed;
                     break;
                 case Light.LightColors.ROYAL:
-                    ColorPicker.BackgroundColor = Color.RoyalBlue;
+                    ColorBox.BackgroundColor = Color.RoyalBlue;
                     break;
                 case Light.LightColors.BLUER:
-                    ColorPicker.BackgroundColor = Color.Blue;
+                    ColorBox.BackgroundColor = Color.Blue;
                     break;
                 case Light.LightColors.GREENR:
-                    ColorPicker.BackgroundColor = Color.Green;
+                    ColorBox.BackgroundColor = Color.Green;
                     break;
                 case Light.LightColors.REDR:
-                    ColorPicker.BackgroundColor = Color.Red;
+                    ColorBox.BackgroundColor = Color.Red;
                     break;
                 case Light.LightColors.WHITER:
-                    ColorPicker.BackgroundColor = Color.White;
+                    ColorBox.BackgroundColor = Color.White;
                     break;
                 case Light.LightColors.MAGNTAR:
-                    ColorPicker.BackgroundColor = Color.Magenta;
+                    ColorBox.BackgroundColor = Color.Magenta;
                     break;
                 default:
-                    ColorPicker.BackgroundColor = Color.Transparent;
+                    ColorBox.BackgroundColor = Color.Transparent;
                     break;
             }
         }

@@ -8,7 +8,7 @@ using IntelliCenterControl.Annotations;
 
 namespace IntelliCenterControl.Models
 {
-    public class Remote : Circuit
+    public class Remote : Circuit<IntelliCenterConnection>
     {
         public enum RemoteType
         {

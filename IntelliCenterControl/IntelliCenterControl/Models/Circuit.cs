@@ -11,7 +11,7 @@ using Xamarin.Forms;
 
 namespace IntelliCenterControl.Models
 {
-    public class Circuit : INotifyPropertyChanged
+    public class Circuit<T> : INotifyPropertyChanged
     {
         public const string CircuitKeys = "[\"STATUS\", \"MODE\"]";
 
@@ -144,10 +144,10 @@ namespace IntelliCenterControl.Models
             }
         }
 
-        public IDataInterface<HardwareDefinition> DataInterface { get; private set; }
+        public IDataInterface<T> DataInterface { get; private set; }
 
         public Circuit(string name, CircuitType circuitType, string hName = "",
-            IDataInterface<HardwareDefinition> dataInterface = null)
+            IDataInterface<T> dataInterface = null)
         {
             DataInterface = dataInterface;
             Name = name;

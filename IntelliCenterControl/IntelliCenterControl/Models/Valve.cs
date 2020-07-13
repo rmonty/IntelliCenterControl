@@ -8,7 +8,7 @@ using IntelliCenterControl.Annotations;
 
 namespace IntelliCenterControl.Models
 {
-    public class Valve : Circuit
+    public class Valve : Circuit<IntelliCenterConnection>
     {
         public enum ValveType
         {

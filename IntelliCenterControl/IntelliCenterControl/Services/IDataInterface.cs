@@ -14,5 +14,6 @@ namespace IntelliCenterControl.Services
         Task<bool> GetItemsDefinitionAsync(bool forceRefresh = false);
         Task<bool> GetScheduleDataAsync();
         event EventHandler<string> DataReceived;
+        event EventHandler<T> ConnectionChanged;
     }
 }
