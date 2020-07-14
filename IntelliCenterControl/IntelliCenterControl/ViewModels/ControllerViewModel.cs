@@ -591,11 +591,6 @@ namespace IntelliCenterControl.ViewModels
 
         private async Task ExecuteSubscribeDataCommand()
         {
-            if (!_isConnected)
-            {
-                await DataInterface.CreateConnectionAsync();
-            }
-
             IsBusy = true;
             foreach (var kvp in HardwareDictionary)
             {
