@@ -22,11 +22,11 @@ using Android.App;
 //      Minor Version 
 //      Build Number
 //      Revision
-[assembly: AssemblyVersion("1.0.7499.0")]
-[assembly: AssemblyFileVersion("1.0.7499.0")]
+[assembly: AssemblyVersion("1.0.7499.11")]
+[assembly: AssemblyFileVersion("1.0.7499.11")]
 
 // Add some common permissions, these can be removed if not needed
 [assembly: UsesPermission(Android.Manifest.Permission.Internet)]
 [assembly: UsesPermission(Android.Manifest.Permission.WriteExternalStorage)]
 
-[assembly: AssemblyInformationalVersion("1.0.1-beta-48")]
+[assembly: AssemblyInformationalVersion("1.0.1-beta-59")]

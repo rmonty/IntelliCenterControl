@@ -171,11 +171,11 @@ namespace IntelliCenterControl.Models
         {
             if (DataInterface != null)
             {
-                await DataInterface.UnSubscribeItemUpdate(Hname);
+               // await DataInterface.UnSubscribeItemUpdate(Hname);
                 var val = Active ? "ON" : "OFF";
-                await DataInterface.SendItemUpdateAsync(Hname, "STATUS", val);
-                await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
-                await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
+                await DataInterface.SendItemParamsUpdateAsync(Hname, "STATUS", val);
+                //await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
+                //await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
             }
         }
 
@@ -183,10 +183,10 @@ namespace IntelliCenterControl.Models
         {
             if (DataInterface != null)
             {
-                await DataInterface.UnSubscribeItemUpdate(Hname);
-                await DataInterface.SendItemUpdateAsync(Hname, "ACT", Color.ToString());
-                await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
-                await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
+                //await DataInterface.UnSubscribeItemUpdate(Hname);
+                await DataInterface.SendItemParamsUpdateAsync(Hname, "ACT", Color.ToString());
+                //await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
+                await DataInterface.GetItemUpdateAsync(Hname, CircuitDescription.ToString());
             }
         }
 
@@ -194,10 +194,10 @@ namespace IntelliCenterControl.Models
         {
             if (DataInterface != null)
             {
-                await DataInterface.UnSubscribeItemUpdate(Hname);
-                await DataInterface.SendItemUpdateAsync(Hname, "ACT", DimmingValue.ToString());
-                await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
-                await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
+                //await DataInterface.UnSubscribeItemUpdate(Hname);
+                await DataInterface.SendItemParamsUpdateAsync(Hname, "ACT", DimmingValue.ToString());
+                //await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
+                await DataInterface.GetItemUpdateAsync(Hname, CircuitDescription.ToString());
             }
         }
 

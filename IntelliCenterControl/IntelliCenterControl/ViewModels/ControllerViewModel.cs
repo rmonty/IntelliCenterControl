@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -44,7 +45,6 @@ namespace IntelliCenterControl.ViewModels
         public ObservableCollection<Circuit<IntelliCenterConnection>> Bodies { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Chems { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Lights { get; private set; }
-        public ObservableCollection<Circuit<IntelliCenterConnection>> BodyHeaters { get; private set; }
         public ObservableCollection<Heater> Heaters { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Schedules { get; private set; }
         public ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> HardwareDictionary = new ConcurrentDictionary<string, Circuit<IntelliCenterConnection>>();
@@ -98,9 +98,9 @@ namespace IntelliCenterControl.ViewModels
         }
 
         private bool _isConnected;
-        private Timer _dateTimeTimer; 
+        private Timer _dateTimeTimer;
 
-        
+
 
         public ControllerViewModel()
         {
@@ -111,7 +111,6 @@ namespace IntelliCenterControl.ViewModels
             Bodies = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Chems = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Lights = new ObservableCollection<Circuit<IntelliCenterConnection>>();
-            BodyHeaters = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Heaters = new ObservableCollection<Heater>();
             Schedules = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             LoadHardwareDefinitionCommand = new Command(async () => await ExecuteLoadHardwareDefinitionCommand());
@@ -132,6 +131,7 @@ namespace IntelliCenterControl.ViewModels
                 _isConnected = true;
                 try
                 {
+                    DataInterface.UnSubscribeAllItemsUpdate();
                     DataInterface.GetItemsDefinitionAsync(true);
                 }
                 catch (Exception ex)
@@ -142,6 +142,13 @@ namespace IntelliCenterControl.ViewModels
             else
             {
                 _isConnected = false;
+                Circuits.Clear();
+                CircuitGroup.Clear();
+                Pumps.Clear();
+                Bodies.Clear();
+                Chems.Clear();
+                Lights.Clear();
+                Heaters.Clear();
             }
         }
 
@@ -155,17 +162,17 @@ namespace IntelliCenterControl.ViewModels
         private static void DateTimeTimerElapsed(object state)
         {
             var cvm = (ControllerViewModel)state;
-            if(cvm != null) cvm.CurrentDateTime = DateTime.Now;
+            if (cvm != null) cvm.CurrentDateTime = DateTime.Now;
         }
 
         private async Task ExecuteAllLightsOnCommand()
         {
-            await DataInterface.SendItemUpdateAsync("_A111", "STATUS", "ON");
+            await DataInterface.SendItemParamsUpdateAsync("_A111", "STATUS", "ON");
         }
 
         private async Task ExecuteAllLightsOffCommand()
         {
-            await DataInterface.SendItemUpdateAsync("_A110", "STATUS", "OFF");
+            await DataInterface.SendItemParamsUpdateAsync("_A110", "STATUS", "OFF");
         }
 
         private Guid _hardwareDefinitionMessageId;
@@ -181,365 +188,385 @@ namespace IntelliCenterControl.ViewModels
 
                 if (jData.TryGetValue("command", out var commandValue))
                 {
-                    switch (commandValue.ToString())
+                    semaphoreSlim.Wait(DataInterface.Cts.Token);
+                    try
                     {
-                        case "SendQuery":
-                            if (jData.TryGetValue("queryName", out var queryNameValue))
-                            {
-                                if (queryNameValue.ToString() == "GetHardwareDefinition")
+                        switch (commandValue.ToString())
+                        {
+                            case "SendQuery":
+                                if (jData.TryGetValue("queryName", out var queryNameValue))
                                 {
-                                    if (jData.TryGetValue("messageID", out var g))
+                                    if (queryNameValue.ToString() == "GetHardwareDefinition")
                                     {
-                                        if (Guid.TryParse(g.ToString(), out var tempGuid))
+                                        if (jData.TryGetValue("messageID", out var g))
                                         {
-                                            if (_hardwareDefinitionMessageId != tempGuid)
+                                            if (Guid.TryParse(g.ToString(), out var tempGuid))
                                             {
-                                                if (Guid.TryParse(g.ToString(), out _hardwareDefinitionMessageId))
+                                                if (_hardwareDefinitionMessageId != tempGuid)
                                                 {
-                                                    await semaphoreSlim.WaitAsync();
-                                                    try
+                                                    if (Guid.TryParse(g.ToString(), out _hardwareDefinitionMessageId))
                                                     {
+
                                                         //Console.WriteLine(e);
                                                         HardwareDefinition =
                                                             JsonConvert.DeserializeObject<HardwareDefinition>(e);
 
-                                                        await LoadModels();
-                                                        await PopulateModels();
+                                                        LoadModels();
+                                                        PopulateModels();
                                                         ExecuteSubscribeDataCommand();
-                                                    }
-                                                    catch(Exception hwEx)
-                                                    {
-                                                        Console.WriteLine(hwEx);
-                                                    }
-                                                    finally
-                                                    {
-                                                        semaphoreSlim.Release();
+
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
-                            break;
-                        case "NotifyList":
-                            if (jData.TryGetValue("objectList", out var objectListValue))
-                            {
-                                var jDataArray = (JArray)objectListValue;
-
-                                if (jDataArray != null && jDataArray.Count >= 1)
+                                break;
+                            case "NotifyList":
+                            case "SendParamList":
+                                if (jData.TryGetValue("objectList", out var objectListValue))
                                 {
-                                    var notifyList = (JObject)jDataArray[0];
+                                    var jDataArray = (JArray)objectListValue;
 
-                                    if (notifyList.TryGetValue("objnam", out var objName))
+                                    if (jDataArray != null)
                                     {
-                                        if (HardwareDictionary.TryGetValue(objName.ToString(), out var circuit))
+                                        foreach (var jToken in jDataArray)
                                         {
-                                            switch (circuit.CircuitDescription)
+                                            var notifyList = (JObject)jToken;
+                                            if (notifyList.TryGetValue("objnam", out var objName))
                                             {
-                                                case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
-                                                    var pump = (Pump) circuit;
-                                                    if (notifyList.TryGetValue("params", out var pumpValues))
+                                                if (HardwareDictionary.TryGetValue(objName.ToString(), out var circuit))
+                                                {
+                                                    switch (circuit.CircuitDescription)
                                                     {
-                                                        var pv = (JObject) pumpValues;
-                                                        if (pv.TryGetValue("RPM", out var rpm))
-                                                        {
-                                                            pump.RPM = rpm.ToString() == "0" ? "-" : rpm.ToString();
-                                                        }
-
-                                                        if (pv.TryGetValue("GPM", out var flow))
-                                                        {
-                                                            pump.GPM = flow.ToString() == "0" ? "-" : flow.ToString();
-                                                        }
-
-                                                        if (pv.TryGetValue("PWR", out var power))
-                                                        {
-                                                            pump.Power = power.ToString() == "0"
-                                                                ? "-"
-                                                                : power.ToString();
-                                                        }
-
-                                                        if (pv.TryGetValue("STATUS", out var status))
-                                                        {
-                                                            var ps = (int) status;
-                                                            if (Enum.IsDefined(typeof(Pump.PumpStatus), ps))
-                                                                pump.Status = (Pump.PumpStatus) ps;
-                                                            else
-                                                                pump.Status = Pump.PumpStatus.OFF;
-                                                        }
-                                                    }
-
-                                                    break;
-                                                case Circuit<IntelliCenterConnection>.CircuitType.BODY:
-                                                    if (notifyList.TryGetValue("params", out var bodyValues))
-                                                    {
-                                                        //Console.WriteLine(bodyValues);
-                                                        var bv = (JObject) bodyValues;
-                                                        var body = (Body) circuit;
-                                                        if (bv.TryGetValue("TEMP", out var temp))
-                                                        {
-                                                            if (int.TryParse(temp.ToString(), out var bTemp))
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
+                                                            var pump = (Pump)circuit;
+                                                            if (notifyList.TryGetValue("params", out var pumpValues))
                                                             {
-                                                                body.Temp = bTemp;
-                                                            }
+                                                                var pv = (JObject)pumpValues;
+                                                                if (pv.TryGetValue("RPM", out var rpm))
+                                                                {
+                                                                    pump.RPM = rpm.ToString() == "0" ? "-" : rpm.ToString();
+                                                                }
 
-                                                        }
+                                                                if (pv.TryGetValue("GPM", out var flow))
+                                                                {
+                                                                    pump.GPM = flow.ToString() == "0" ? "-" : flow.ToString();
+                                                                }
 
-                                                        if (bv.TryGetValue("LSTTMP", out var lsttemp))
-                                                        {
-                                                            body.LastTemp = lsttemp.ToString() == "0"
-                                                                ? "-"
-                                                                : lsttemp.ToString();
-                                                            ;
-                                                        }
-
-                                                        if (bv.TryGetValue("STATUS", out var status))
-                                                        {
-                                                            body.Active = status.ToString() == "ON";
-                                                            if (body.Active)
-                                                            {
-                                                                WaterTemp = body.Temp == 0 ? "-" : body.Temp.ToString();
-                                                            }
-                                                        }
-
-                                                        if (bv.TryGetValue("HTMODE", out var htmode))
-                                                        {
-                                                            var hm = (int) htmode;
-                                                            if (Enum.IsDefined(typeof(Body.HeatModes), hm))
-                                                            {
-                                                                body.HeatMode = (Body.HeatModes) hm;
-                                                            }
-                                                            else
-                                                            {
-                                                                body.HeatMode = Body.HeatModes.Off;
-                                                            }
-
-                                                        }
-
-                                                        if (bv.TryGetValue("HTSRC", out var htSource))
-                                                        {
-                                                            var selectedHeater =
-                                                                body.Heaters.FirstOrDefault<Heater>(h =>
-                                                                    h.Hname == htSource.ToString());
-
-                                                            if (selectedHeater != null)
-                                                            {
-                                                                body.SelectedHeater = body.Heaters.Contains(selectedHeater) ? body.Heaters.IndexOf(selectedHeater) : 0;
-                                                            }
-                                                            else
-                                                            {
-                                                                body.SelectedHeater = 0;
-                                                            }
-                                                        }
-
-                                                        if (bv.TryGetValue("LOTMP", out var lTemp))
-                                                        {
-                                                            body.LOTemp = lTemp.ToString();
-                                                        }
-                                                    }
-
-                                                    break;
-                                                case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
-                                                    if (notifyList.TryGetValue("params", out var senseValues))
-                                                    {
-                                                        var sv = (JObject) senseValues;
-                                                        var sensor = (Sense) circuit;
-                                                        if (sv.TryGetValue("PROBE", out var temp))
-                                                        {
-                                                            switch (sensor.Type)
-                                                            {
-                                                                case Sense.SenseType.AIR:
-                                                                    AirTemp = temp.ToString() == "0"
+                                                                if (pv.TryGetValue("PWR", out var power))
+                                                                {
+                                                                    pump.Power = power.ToString() == "0"
                                                                         ? "-"
-                                                                        : temp.ToString();
-                                                                    break;
-                                                                case Sense.SenseType.POOL:
-                                                                    WaterTemp = temp.ToString() == "0"
+                                                                        : power.ToString();
+                                                                }
+
+                                                                if (pv.TryGetValue("STATUS", out var status))
+                                                                {
+                                                                    var ps = (int)status;
+                                                                    if (Enum.IsDefined(typeof(Pump.PumpStatus), ps))
+                                                                        pump.Status = (Pump.PumpStatus)ps;
+                                                                    else
+                                                                        pump.Status = Pump.PumpStatus.OFF;
+                                                                }
+
+                                                            }
+
+                                                            break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.BODY:
+                                                            if (notifyList.TryGetValue("params", out var bodyValues))
+                                                            {
+                                                                //Console.WriteLine(bodyValues);
+                                                                var bv = (JObject)bodyValues;
+                                                                var body = (Body)circuit;
+                                                                if (bv.TryGetValue("TEMP", out var temp))
+                                                                {
+                                                                    if (int.TryParse(temp.ToString(), out var bTemp))
+                                                                    {
+                                                                        body.Temp = bTemp;
+                                                                    }
+
+                                                                }
+
+                                                                if (bv.TryGetValue("LSTTMP", out var lsttemp))
+                                                                {
+                                                                    body.LastTemp = lsttemp.ToString() == "0"
                                                                         ? "-"
-                                                                        : temp.ToString();
-                                                                    break;
-                                                                case Sense.SenseType.SOLAR:
-                                                                    break;
-                                                                default: break;
-                                                            }
-                                                        }
-                                                    }
+                                                                        : lsttemp.ToString();
+                                                                    ;
+                                                                }
 
-                                                    break;
-                                                case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                                                    if (notifyList.TryGetValue("params", out var circuitValues))
-                                                    {
-                                                        var cv = (JObject) circuitValues;
-                                                        if (cv.TryGetValue("STATUS", out var stat))
-                                                        {
-                                                            switch (stat.ToString())
+                                                                if (bv.TryGetValue("STATUS", out var status))
+                                                                {
+                                                                    body.Active = status.ToString() == "ON";
+                                                                    if (body.Active)
+                                                                    {
+                                                                        WaterTemp = body.Temp == 0 ? "-" : body.Temp.ToString();
+                                                                    }
+                                                                }
+
+                                                                if (bv.TryGetValue("HTMODE", out var htmode))
+                                                                {
+                                                                    var hm = (int)htmode;
+                                                                    if (Enum.IsDefined(typeof(Body.HeatModes), hm))
+                                                                    {
+                                                                        body.HeatMode = (Body.HeatModes)hm;
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        body.HeatMode = Body.HeatModes.Off;
+                                                                    }
+
+                                                                }
+
+                                                                if (bv.TryGetValue("HTSRC", out var htSource))
+                                                                {
+                                                                    var selectedHeater =
+                                                                        body.Heaters.FirstOrDefault<Heater>(h =>
+                                                                            h.Hname == htSource.ToString());
+
+                                                                    if (selectedHeater != null)
+                                                                    {
+                                                                        body.SelectedHeater =
+                                                                            body.Heaters.Contains(selectedHeater)
+                                                                                ? body.Heaters.IndexOf(selectedHeater)
+                                                                                : 0;
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        body.SelectedHeater = 0;
+                                                                    }
+                                                                }
+
+                                                                if (bv.TryGetValue("LOTMP", out var lTemp))
+                                                                {
+                                                                    body.LOTemp = lTemp.ToString();
+                                                                }
+                                                            }
+
+                                                            break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
+                                                            if (notifyList.TryGetValue("params", out var senseValues))
                                                             {
-                                                                case "ON":
-                                                                    circuit.Active = true;
-                                                                    break;
-                                                                case "OFF":
-                                                                    circuit.Active = false;
-                                                                    break;
-                                                                default: break;
+                                                                var sv = (JObject)senseValues;
+                                                                var sensor = (Sense)circuit;
+                                                                if (sv.TryGetValue("PROBE", out var temp))
+                                                                {
+                                                                    switch (sensor.Type)
+                                                                    {
+                                                                        case Sense.SenseType.AIR:
+                                                                            AirTemp = temp.ToString() == "0"
+                                                                                ? "-"
+                                                                                : temp.ToString();
+                                                                            break;
+                                                                        case Sense.SenseType.POOL:
+                                                                            WaterTemp = temp.ToString() == "0"
+                                                                                ? "-"
+                                                                                : temp.ToString();
+                                                                            break;
+                                                                        case Sense.SenseType.SOLAR:
+                                                                            break;
+                                                                        default: break;
+                                                                    }
+                                                                }
                                                             }
-                                                        }
-                                                    }
 
-                                                    break;
-                                                case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
-                                                    if (notifyList.TryGetValue("params", out var groupValues))
-                                                    {
-                                                        var gv = (JObject) groupValues;
-                                                        if (gv.TryGetValue("STATUS", out var stat))
-                                                        {
-                                                            switch (stat.ToString())
+                                                            break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
+                                                            if (notifyList.TryGetValue("params", out var circuitValues))
                                                             {
-                                                                case "ON":
-                                                                    circuit.Active = true;
-                                                                    break;
-                                                                case "OFF":
-                                                                    circuit.Active = false;
-                                                                    break;
-                                                                default: break;
+                                                                var cv = (JObject)circuitValues;
+                                                                if (cv.TryGetValue("STATUS", out var stat))
+                                                                {
+                                                                    switch (stat.ToString())
+                                                                    {
+                                                                        case "ON":
+                                                                            circuit.Active = true;
+                                                                            break;
+                                                                        case "OFF":
+                                                                            circuit.Active = false;
+                                                                            break;
+                                                                        default: break;
+                                                                    }
+                                                                }
                                                             }
-                                                        }
-                                                    }
 
-                                                    break;
-                                                case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
-                                                    if (notifyList.TryGetValue("params", out var chemValues))
-                                                    {
-                                                        var cv = (JObject) chemValues;
-                                                        var chem = (Chem) circuit;
-                                                        if (cv.TryGetValue("SALT", out var salt))
-                                                        {
-                                                            ChemInstalled = true;
-                                                            chem.Salt = salt.ToString() == "0" ? "-" : salt.ToString();
-                                                            SaltLevel = chem.Salt;
-                                                        }
-                                                    }
-
-                                                    break;
-                                                case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
-                                                case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
-                                                case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
-                                                case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
-                                                case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
-                                                case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
-                                                case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
-                                                    if (notifyList.TryGetValue("params", out var lightValues))
-                                                    {
-                                                        var lv = (JObject) lightValues;
-                                                        var light = (Light)circuit;
-                                                        if (lv.TryGetValue("STATUS", out var stat))
-                                                        {
-                                                            switch (stat.ToString())
+                                                            break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
+                                                            if (notifyList.TryGetValue("params", out var groupValues))
                                                             {
-                                                                case "ON":
-                                                                    circuit.Active = true;
-                                                                    break;
-                                                                case "OFF":
-                                                                    circuit.Active = false;
-                                                                    break;
-                                                                default: break;
+                                                                var gv = (JObject)groupValues;
+                                                                if (gv.TryGetValue("STATUS", out var stat))
+                                                                {
+                                                                    switch (stat.ToString())
+                                                                    {
+                                                                        case "ON":
+                                                                            circuit.Active = true;
+                                                                            break;
+                                                                        case "OFF":
+                                                                            circuit.Active = false;
+                                                                            break;
+                                                                        default: break;
+                                                                    }
+                                                                }
                                                             }
-                                                        }
 
-                                                        if (lv.TryGetValue("USE", out var lightColor))
-                                                        {
-                                                            if(Enum.TryParse<Light.LightColors>(lightColor.ToString(), out var color))
+                                                            break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
+                                                            if (notifyList.TryGetValue("params", out var chemValues))
                                                             {
-                                                                light.Color = color;
+                                                                var cv = (JObject)chemValues;
+                                                                var chem = (Chem)circuit;
+                                                                if (cv.TryGetValue("SALT", out var salt))
+                                                                {
+                                                                    ChemInstalled = true;
+                                                                    chem.Salt = salt.ToString() == "0" ? "-" : salt.ToString();
+                                                                    SaltLevel = chem.Salt;
+                                                                }
+                                                            }
+
+                                                            break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
+                                                            if (notifyList.TryGetValue("params", out var lightValues))
+                                                            {
+                                                                var lv = (JObject)lightValues;
+                                                                var light = (Light)circuit;
+                                                                if (lv.TryGetValue("STATUS", out var stat))
+                                                                {
+                                                                    switch (stat.ToString())
+                                                                    {
+                                                                        case "ON":
+                                                                            circuit.Active = true;
+                                                                            break;
+                                                                        case "OFF":
+                                                                            circuit.Active = false;
+                                                                            break;
+                                                                        default: break;
+                                                                    }
+                                                                }
+
+                                                                if (lv.TryGetValue("USE", out var lightColor))
+                                                                {
+                                                                    if (Enum.TryParse<Light.LightColors>(lightColor.ToString(),
+                                                                        out var color))
+                                                                    {
+                                                                        light.Color = color;
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
+                                                            if (notifyList.TryGetValue("params", out var heaterValues))
+                                                            {
+                                                                //Console.WriteLine(heaterValues);
+                                                                //var hv = (JObject)heaterValues;
+                                                                //var heaterCircuit = (Heater)circuit;
+                                                                //if (hv.TryGetValue("BODY", out var bodies))
+                                                                //{
+
+                                                                //}
+                                                            }
+
+                                                            break;
+                                                        default:
+                                                            //Console.WriteLine(notifyList);
+                                                            break;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (notifyList.TryGetValue("params", out var paramValues))
+                                                    {
+                                                        var paramArray = (JObject)paramValues;
+                                                        if (paramArray.TryGetValue("OBJTYP", out var objType))
+                                                        {
+                                                            if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(objType.ToString(),
+                                                                out var cktType))
+                                                            {
+                                                                switch (cktType)
+                                                                {
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType.SCHED:
+
+                                                                        Schedules.Clear();
+                                                                        ScheduleDefinition =
+                                                                            JsonConvert.DeserializeObject<SchedulesDefinition>(e);
+                                                                        foreach (var sch in ScheduleDefinition.objectList)
+                                                                        {
+                                                                            var date = DateTime.Now;
+                                                                            var days = sch.Params.DAY;
+                                                                            var isToday = date.DayOfWeek switch
+                                                                            {
+                                                                                DayOfWeek.Monday => days.Contains('M'),
+                                                                                DayOfWeek.Friday => days.Contains('F'),
+                                                                                DayOfWeek.Saturday => days.Contains('A'),
+                                                                                DayOfWeek.Sunday => days.Contains('U'),
+                                                                                DayOfWeek.Thursday => days.Contains('R'),
+                                                                                DayOfWeek.Tuesday => days.Contains('T'),
+                                                                                DayOfWeek.Wednesday => days.Contains('W'),
+                                                                                _ => false,
+                                                                            };
+                                                                            if (isToday)
+                                                                            {
+                                                                                var startTime = sch.Params.TIME.Split(',');
+                                                                                var endTime = sch.Params.TIMOUT.Split(',');
+                                                                                if (startTime.Length > 2 && endTime.Length > 2)
+                                                                                {
+
+                                                                                    var start = new DateTime(date.Year, date.Month, date.Day,
+                                                                                        int.Parse(startTime[0]),
+                                                                                        int.Parse(startTime[1]), int.Parse(startTime[2]));
+                                                                                    var end = new DateTime(date.Year, date.Month, date.Day,
+                                                                                        int.Parse(endTime[0]),
+                                                                                        int.Parse(endTime[1]), int.Parse(endTime[2]));
+
+                                                                                    var s = new Schedule(sch.Params.SNAME, Circuit<IntelliCenterConnection>.CircuitType.SCHED,
+                                                                                        sch.objnam,
+                                                                                        DataInterface)
+                                                                                    {
+                                                                                        Active = sch.Params.ACT == "ON",
+                                                                                        StartTime = start,
+                                                                                        EndTime = end
+                                                                                    };
+                                                                                    Schedules.Add(s);
+                                                                                    HardwareDictionary[s.Hname] = s;
+                                                                                }
+                                                                            }
+                                                                        }
+
+
+                                                                        return;
+                                                                    default:
+                                                                        break;
+                                                                }
                                                             }
                                                         }
                                                     }
+                                                }
 
-                                                    break;
-                                                case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
-                                                    if (notifyList.TryGetValue("params", out var heaterValues))
-                                                    {
-                                                        //Console.WriteLine(heaterValues);
-                                                        //var hv = (JObject)heaterValues;
-                                                        //var heaterCircuit = (Heater)circuit;
-                                                        //if (hv.TryGetValue("BODY", out var bodies))
-                                                        //{
-                                                            
-                                                        //}
-                                                    }
-                                                    break;
-                                                default:
-                                                    //Console.WriteLine(notifyList);
-                                                    break;
                                             }
                                         }
                                     }
                                 }
-                            }
-                            break;
-                        case "SendParamList":
-                            await semaphoreSlim.WaitAsync();
-                            try
-                            {
-                                Schedules.Clear();
-                                ScheduleDefinition =
-                                    JsonConvert.DeserializeObject<SchedulesDefinition>(e);
-                                foreach (var sch in ScheduleDefinition.objectList)
-                                {
-                                    var date = DateTime.Now;
-                                    var days = sch.Params.DAY;
-                                    var isToday = date.DayOfWeek switch
-                                    {
-                                        DayOfWeek.Monday => days.Contains('M'),
-                                        DayOfWeek.Friday => days.Contains('F'),
-                                        DayOfWeek.Saturday => days.Contains('A'),
-                                        DayOfWeek.Sunday => days.Contains('U'),
-                                        DayOfWeek.Thursday => days.Contains('R'),
-                                        DayOfWeek.Tuesday => days.Contains('T'),
-                                        DayOfWeek.Wednesday => days.Contains('W'),
-                                        _ => false,
-                                    };
-                                    if (isToday)
-                                    {
-                                        var startTime = sch.Params.TIME.Split(',');
-                                        var endTime = sch.Params.TIMOUT.Split(',');
-                                        if (startTime.Length > 2 && endTime.Length > 2)
-                                        {
-
-                                            var start = new DateTime(date.Year, date.Month, date.Day,
-                                                int.Parse(startTime[0]),
-                                                int.Parse(startTime[1]), int.Parse(startTime[2]));
-                                            var end = new DateTime(date.Year, date.Month, date.Day,
-                                                int.Parse(endTime[0]),
-                                                int.Parse(endTime[1]), int.Parse(endTime[2]));
-
-                                            var s = new Schedule(sch.Params.SNAME, Circuit<IntelliCenterConnection>.CircuitType.SCHED,
-                                                sch.objnam,
-                                                DataInterface)
-                                            {
-                                                Active = sch.Params.ACT == "ON",
-                                                StartTime = start,
-                                                EndTime = end
-                                            };
-                                            Schedules.Add(s);
-                                            HardwareDictionary[s.Hname] = s;
-                                        }
-                                    }
-                                }
-
-                            }
-                            catch (Exception scheduleEx)
-                            {
-                                Console.WriteLine(scheduleEx);
-                            }
-                            finally
-                            {
-                                semaphoreSlim.Release();
-                            }
-
-                            break;
-                        default:
-                            //Console.WriteLine(e);
-                            break;
+                                break;
+                            default:
+                                //Console.WriteLine(e);
+                                break;
+                        }
+                    }
+                    catch (Exception messageEx)
+                    {
+                        Console.WriteLine(messageEx);
+                    }
+                    finally
+                    {
+                        semaphoreSlim.Release();
                     }
                 }
             }
@@ -549,7 +576,7 @@ namespace IntelliCenterControl.ViewModels
         {
             try
             {
-                await DataInterface.CreateConnectionAsync();
+                DataInterface.CreateConnectionAsync();
             }
             catch (Exception ex)
             {
@@ -562,11 +589,10 @@ namespace IntelliCenterControl.ViewModels
         {
             if (!_isConnected)
             {
-                await DataInterface.CreateConnectionAsync();
+                DataInterface.CreateConnectionAsync();
             }
 
             IsBusy = true;
-            
             foreach (var kvp in HardwareDictionary)
             {
                 switch (kvp.Value.CircuitDescription)
@@ -612,7 +638,7 @@ namespace IntelliCenterControl.ViewModels
             IsBusy = false;
         }
 
-        private async Task PopulateModels()
+        private void PopulateModels()
         {
             Circuits.Clear();
             CircuitGroup.Clear();
@@ -620,27 +646,29 @@ namespace IntelliCenterControl.ViewModels
             Bodies.Clear();
             Chems.Clear();
             Lights.Clear();
-            BodyHeaters.Clear();
             Heaters.Clear();
-
 
             foreach (var kvp in HardwareDictionary)
             {
                 switch (kvp.Value.CircuitDescription)
                 {
                     case Circuit<IntelliCenterConnection>.CircuitType.BODY:
-                        Bodies.InsertInPlace(kvp.Value, o=>o.ListOrd);
+                        //Bodies.Add(kvp.Value);
+                        Bodies.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
                     case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
                         Chems.Add(kvp.Value);
                         break;
                     case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
+                        //CircuitGroup.Add(kvp.Value);
                         CircuitGroup.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
                     case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
+                        //Circuits.Add(kvp.Value);
                         Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
                     case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
+                        //Pumps.Add(kvp.Value);
                         Pumps.InsertInPlace(kvp.Value, o => o.Hname);
                         break;
                     case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
@@ -652,6 +680,7 @@ namespace IntelliCenterControl.ViewModels
                     case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
                     case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
                     case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
+                        //Lights.Add(kvp.Value);
                         Lights.InsertInPlace(kvp.Value, o => o.ListOrd);
                         break;
                     case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
@@ -673,7 +702,7 @@ namespace IntelliCenterControl.ViewModels
                 if (body != null)
                 {
                     body.Heaters.Clear();
-                    body.Heaters.Add(new Heater("Heat Off",Heater.HeaterType.GENERIC, "00000", DataInterface));
+                    body.Heaters.Add(new Heater("Heat Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
 
                     foreach (var heater in Heaters)
                     {
@@ -691,9 +720,9 @@ namespace IntelliCenterControl.ViewModels
             await DataInterface.UnSubscribeAllItemsUpdate();
         }
 
-        private async Task LoadModels()
+        private void LoadModels()
         {
-            await DataInterface.UnSubscribeAllItemsUpdate();
+            DataInterface.UnSubscribeAllItemsUpdate();
             HardwareDictionary.Clear();
 
             foreach (var obj in HardwareDefinition.answer.SelectMany(answer => answer.Params.Objlist))
@@ -780,7 +809,20 @@ namespace IntelliCenterControl.ViewModels
                                                                 HardwareDictionary[l.Hname] = l;
                                                             }
                                                             break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
+                                                            if (moduleCircuit.Params.Featr == "ON")
+                                                            {
+                                                                int.TryParse(moduleCircuit.Params.Listord,
+                                                                    out var listOrder);
+                                                                var gc = new Circuit<IntelliCenterConnection>(moduleCircuit.Params.Sname, Circuit<IntelliCenterConnection>.CircuitType.GENERIC,
+                                                                    moduleCircuit.Objnam, DataInterface)
+                                                                {
+                                                                    ListOrd = listOrder
+                                                                };
 
+                                                                HardwareDictionary[gc.Hname] = gc;
+                                                            }
+                                                            break;
                                                         default: break;
                                                     }
                                                 }

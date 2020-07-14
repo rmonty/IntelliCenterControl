@@ -133,14 +133,23 @@ namespace IntelliCenterControl.Models
             Type = bodyType;
         }
 
+        protected override async Task ExecuteToggleCircuitCommand()
+        {
+            if (DataInterface != null)
+            {
+                var val = Active ? "ON" : "OFF";
+                await DataInterface.SendItemCommandUpdateAsync(Hname, "SETBODYSTATE", val);
+            }
+        }
+
         private async Task ExecuteSelectedHeatSourceCommand()
         {
             if (DataInterface != null)
             {
-                await DataInterface.UnSubscribeItemUpdate(Hname);
+                //await DataInterface.UnSubscribeItemUpdate(Hname);
                 var val = Heaters[SelectedHeater].Hname;
-                await DataInterface.SendItemUpdateAsync(Hname, "HEATER", val);
-                await DataInterface.SubscribeItemUpdateAsync(Hname, "BODY");
+                await DataInterface.SendItemParamsUpdateAsync(Hname, "HEATER", val);
+                //await DataInterface.SubscribeItemUpdateAsync(Hname, "BODY");
             }
         }
 
@@ -148,9 +157,9 @@ namespace IntelliCenterControl.Models
         {
             if (DataInterface != null && temp >= 60 && temp <= 104)
             {
-                await DataInterface.UnSubscribeItemUpdate(Hname);
-                await DataInterface.SendItemUpdateAsync(Hname, "LOTMP", temp.ToString());
-                await DataInterface.SubscribeItemUpdateAsync(Hname, "BODY");
+                //await DataInterface.UnSubscribeItemUpdate(Hname);
+                await DataInterface.SendItemParamsUpdateAsync(Hname, "LOTMP", temp.ToString());
+                //await DataInterface.SubscribeItemUpdateAsync(Hname, "BODY");
             }
         }
 
