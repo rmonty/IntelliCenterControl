@@ -24,6 +24,6 @@ namespace IntelliCenterControl.Services
         Task<bool> GetScheduleDataAsync();
         event EventHandler<string> DataReceived;
         event EventHandler<T> ConnectionChanged;
-        public CancellationTokenSource Cts { get; set; }
+        CancellationTokenSource Cts { get; set; }
     }
 }

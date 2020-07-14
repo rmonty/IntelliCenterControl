@@ -147,7 +147,7 @@ namespace IntelliCenterControl.Models
 
         public bool SupportsDimming => GetAttribute<DimmingAttribute>(Type).SupportsDimming;
 
-        public Light(string name, LightType lightType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) : base(name, Enum.Parse<CircuitType>(lightType.ToString()), hName, dataInterface)
+        public Light(string name, LightType lightType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) : base(name, (CircuitType)Enum.Parse(typeof(CircuitType),lightType.ToString()), hName, dataInterface)
         {
             Type = lightType;
 

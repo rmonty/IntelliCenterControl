@@ -501,17 +501,35 @@ namespace IntelliCenterControl.ViewModels
                                                                         {
                                                                             var date = DateTime.Now;
                                                                             var days = sch.Params.DAY;
-                                                                            var isToday = date.DayOfWeek switch
+                                                                            bool isToday;
+                                                                            switch (date.DayOfWeek)
                                                                             {
-                                                                                DayOfWeek.Monday => days.Contains('M'),
-                                                                                DayOfWeek.Friday => days.Contains('F'),
-                                                                                DayOfWeek.Saturday => days.Contains('A'),
-                                                                                DayOfWeek.Sunday => days.Contains('U'),
-                                                                                DayOfWeek.Thursday => days.Contains('R'),
-                                                                                DayOfWeek.Tuesday => days.Contains('T'),
-                                                                                DayOfWeek.Wednesday => days.Contains('W'),
-                                                                                _ => false,
-                                                                            };
+                                                                                case DayOfWeek.Friday:
+                                                                                    isToday = days.Contains('F');
+                                                                                    break;
+                                                                                case DayOfWeek.Monday:
+                                                                                    isToday = days.Contains('M');
+                                                                                    break;
+                                                                                case DayOfWeek.Saturday:
+                                                                                    isToday = days.Contains('A');
+                                                                                    break;
+                                                                                case DayOfWeek.Sunday:
+                                                                                    isToday = days.Contains('U');
+                                                                                    break;
+                                                                                case DayOfWeek.Thursday:
+                                                                                    isToday = days.Contains('R');
+                                                                                    break;
+                                                                                case DayOfWeek.Tuesday:
+                                                                                    isToday = days.Contains('T');
+                                                                                    break;
+                                                                                case DayOfWeek.Wednesday:
+                                                                                    isToday = days.Contains('W');
+                                                                                    break;
+                                                                                default:
+                                                                                    isToday = false;
+                                                                                    break;
+                                                                            }
+                                                                            
                                                                             if (isToday)
                                                                             {
                                                                                 var startTime = sch.Params.TIME.Split(',');
@@ -836,7 +854,7 @@ namespace IntelliCenterControl.ViewModels
                                             if (Enum.TryParse<Heater.HeaterType>(moduleCircuit.Params.Subtyp,
                                                 out var htrType))
                                             {
-                                                var bodies = moduleCircuit.Params.Body.Split(" ");
+                                                var bodies = moduleCircuit.Params.Body.Split(' ');
                                                 var h = new Heater(moduleCircuit.Params.Sname, htrType,
                                                     moduleCircuit.Objnam, DataInterface)
                                                 {

@@ -103,17 +103,27 @@ namespace IntelliCenterControl.Services
 
                 if (socketConnection.State == WebSocketState.Open) DataSubscribe();
 
-                _intelliCenterConnection.State = socketConnection.State switch
+                switch (socketConnection.State)
                 {
-                    WebSocketState.Aborted => IntelliCenterConnection.ConnectionState.Disconnected,
-                    WebSocketState.Closed => IntelliCenterConnection.ConnectionState.Disconnected,
-                    WebSocketState.CloseReceived => IntelliCenterConnection.ConnectionState.Disconnected,
-                    WebSocketState.CloseSent => IntelliCenterConnection.ConnectionState.Disconnected,
-                    WebSocketState.None => IntelliCenterConnection.ConnectionState.Disconnected,
-                    WebSocketState.Connecting => IntelliCenterConnection.ConnectionState.Connecting,
-                    WebSocketState.Open => IntelliCenterConnection.ConnectionState.Connected,
-                    _ => IntelliCenterConnection.ConnectionState.Disconnected
-                };
+                    case WebSocketState.Aborted:
+                    case WebSocketState.Closed:
+                    case WebSocketState.CloseReceived:
+                    case WebSocketState.CloseSent:
+                    case WebSocketState.None:
+                        _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
+                        break;
+                    case WebSocketState.Connecting:
+                        _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Connecting;
+                        break;
+                    case WebSocketState.Open:
+                        _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Connected;
+                        break;
+                    default:
+                        _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
+                        break;
+                }
+
+
             }
 
             OnConnectionChanged();
@@ -457,7 +467,7 @@ namespace IntelliCenterControl.Services
                     // Wait for any previous send commands to finish and release the semaphore
                     // This throttles our commands
                     await _sendRateLimit.WaitAsync(Cts.Token);
-                    var byteMessage = Encoding.UTF8.GetBytes(message);
+                    ArraySegment<byte> byteMessage = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
                     await socketConnection.SendAsync(byteMessage, WebSocketMessageType.Text, true, Cts.Token);
                     // Block other commands until our timeout to prevent flooding
                     await Task.Delay(_sendRate, Cts.Token);
@@ -494,7 +504,7 @@ namespace IntelliCenterControl.Services
                         {
                             try
                             {
-                                if (count.StartsWith('{'))
+                                if (count.StartsWith("{"))
                                 {
                                     var data = JsonConvert.DeserializeObject(count);
                                     if (data != null)
@@ -567,52 +577,56 @@ namespace IntelliCenterControl.Services
             var message = new ArraySegment<byte>(new byte[4096]);
             try
             {
-                await using var ms = new MemoryStream();
-                do
+                using (var ms = new MemoryStream())
                 {
-                    result = await socketConnection.ReceiveAsync(message, Cts.Token);
-                    if (result.MessageType != WebSocketMessageType.Text)
-                        return;
-                    ms.Write(message.Array ?? throw new InvalidOperationException(), message.Offset, result.Count);
-                } while (!result.EndOfMessage);
-
-                ms.Seek(0, SeekOrigin.Begin);
-                using var reader = new StreamReader(ms, Encoding.UTF8);
-                var receivedMessage = reader.ReadToEnd();
-                //Console.WriteLine(receivedMessage);
-                if (receivedMessage.StartsWith('{'))
-                {
-                    var data = JsonConvert.DeserializeObject(receivedMessage);
-                    if (data != null)
+                    do
                     {
-                        var jData = (JObject)data;
-                        if (jData.TryGetValue("command", out var commandValue))
-                        {
-                            switch (commandValue.ToString())
-                            {
-                                case "ClearParam":
-                                    Subscriptions.Clear();
-                                    UnsubscribeMessages.Clear();
-                                    break;
-                                case "ReleaseParamList":
-                                    if (jData.TryGetValue("messageID", out var g))
-                                    {
-                                        var gid = (Guid)g;
-                                        if (UnsubscribeMessages.TryGetValue(gid, out var id))
-                                        {
-                                            Subscriptions.Remove(id);
-                                            UnsubscribeMessages.Remove(gid);
-                                        }
-                                    }
+                        result = await socketConnection.ReceiveAsync(message, Cts.Token);
+                        if (result.MessageType != WebSocketMessageType.Text)
+                            return;
+                        ms.Write(message.Array ?? throw new InvalidOperationException(), message.Offset, result.Count);
+                    } while (!result.EndOfMessage);
 
-                                    break;
-                                default:
-                                    OnDataReceived(receivedMessage);
-                                    break;
+                    ms.Seek(0, SeekOrigin.Begin);
+                    using (var reader = new StreamReader(ms, Encoding.UTF8))
+                    {
+                        var receivedMessage = reader.ReadToEnd();
+                        //Console.WriteLine(receivedMessage);
+                        if (receivedMessage.StartsWith("{"))
+                        {
+                            var data = JsonConvert.DeserializeObject(receivedMessage);
+                            if (data != null)
+                            {
+                                var jData = (JObject) data;
+                                if (jData.TryGetValue("command", out var commandValue))
+                                {
+                                    switch (commandValue.ToString())
+                                    {
+                                        case "ClearParam":
+                                            Subscriptions.Clear();
+                                            UnsubscribeMessages.Clear();
+                                            break;
+                                        case "ReleaseParamList":
+                                            if (jData.TryGetValue("messageID", out var g))
+                                            {
+                                                var gid = (Guid) g;
+                                                if (UnsubscribeMessages.TryGetValue(gid, out var id))
+                                                {
+                                                    Subscriptions.Remove(id);
+                                                    UnsubscribeMessages.Remove(gid);
+                                                }
+                                            }
+
+                                            break;
+                                        default:
+                                            OnDataReceived(receivedMessage);
+                                            break;
+                                    }
+                                }
                             }
+
                         }
                     }
-                    
                 }
 
             }
