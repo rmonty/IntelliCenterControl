@@ -53,9 +53,9 @@ namespace IntelliCenterControl.Views
         {
             var result = await DisplayPromptAsync("Server URL", "Please Enter Server URL", initialValue : Settings.ServerURL);
 
-            var validUrl = Uri.TryCreate(result, UriKind.Absolute, out var uriResult);
+            //var validUrl = Uri.TryCreate(result, UriKind.Absolute, out var uriResult);
                            // && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-            if (validUrl)
+            if (!String.IsNullOrEmpty(result))
             {
                 Settings.ServerURL = result;
                 viewModel.UpdateIPAddress();

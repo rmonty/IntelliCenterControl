@@ -160,10 +160,11 @@ namespace IntelliCenterControl.Models
         {
             if (DataInterface != null)
             {
-                await DataInterface.UnSubscribeItemUpdate(Hname);
                 var val = Active ? "ON" : "OFF";
-                await DataInterface.SendItemUpdateAsync(Hname, "STATUS", val);
-                await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
+                if (!await DataInterface.SendItemParamsUpdateAsync(Hname, "STATUS", val))
+                {
+                    Active = false;
+                }
             }
         }
 
