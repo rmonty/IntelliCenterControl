@@ -39,7 +39,7 @@ namespace IntelliCenterControl.Views
             });
             MessagingCenter.Subscribe<App>(this, "Resume", (sender) =>
             {
-                viewModel.SubscribeDataCommand.Execute(true);
+                viewModel.LoadHardwareDefinitionCommand.Execute(true);
             });
 
         }

@@ -20,6 +20,8 @@ namespace IntelliCenterControl.Services
         private HubConnection connection;
         private ClientWebSocket socketConnection;
         private IntelliCenterConnection _intelliCenterConnection = new IntelliCenterConnection();
+        private readonly SemaphoreSlim _sendRateLimit = new SemaphoreSlim(1);
+        private TimeSpan _sendRate = new TimeSpan(0, 0, 0, 0, 50);
 
         public event EventHandler<string> DataReceived;
         public event EventHandler<IntelliCenterConnection> ConnectionChanged;
@@ -42,7 +44,8 @@ namespace IntelliCenterControl.Services
                 await socketConnection.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token);
             }
 
-
+            _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
+            
             if (Settings.ServerURL.StartsWith("http"))
             {
                 connection = new HubConnectionBuilder()
@@ -93,7 +96,9 @@ namespace IntelliCenterControl.Services
             }
             else if (Settings.ServerURL.StartsWith("ws"))
             {
+
                 socketConnection = new ClientWebSocket();
+                
                 await socketConnection.ConnectAsync(new Uri(Settings.ServerURL), Cts.Token);
 
                 if (socketConnection.State == WebSocketState.Open) DataSubscribe();
@@ -449,14 +454,26 @@ namespace IntelliCenterControl.Services
                 }
                 else if (socketConnection != null && socketConnection.State == WebSocketState.Open)
                 {
+                    // Wait for any previous send commands to finish and release the semaphore
+                    // This throttles our commands
+                    await _sendRateLimit.WaitAsync(Cts.Token);
                     var byteMessage = Encoding.UTF8.GetBytes(message);
                     await socketConnection.SendAsync(byteMessage, WebSocketMessageType.Text, true, Cts.Token);
+                    // Block other commands until our timeout to prevent flooding
+                    await Task.Delay(_sendRate, Cts.Token);
+                    // Exit our semaphore
+                    _sendRateLimit.Release();
                     return await Task.FromResult(true);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
+            }
+            finally
+            {
+                // Exit our semaphore
+                _sendRateLimit.Release();
             }
 
             return await Task.FromResult(false);
