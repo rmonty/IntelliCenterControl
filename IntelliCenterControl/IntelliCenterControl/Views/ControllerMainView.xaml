@@ -67,7 +67,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <CollectionView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" x:Name="BodyView" ItemsSource="{Binding Bodies}">
+            <CollectionView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" x:Name="BodyView" ItemsSource="{Binding Bodies}" IsEnabled="{Binding IsEnabled}">
                 <CollectionView.Header>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -95,13 +95,13 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" HeightRequest="35" Text="All Lights On" VerticalOptions="Center" BackgroundColor="LightGreen"
-                            FontSize="Micro" FontAttributes="Bold" Command="{Binding AllLightsOnCommand}"/>
+                            FontSize="Micro" FontAttributes="Bold" Command="{Binding AllLightsOnCommand}" IsEnabled="{Binding IsEnabled}"/>
                 <Button Grid.Column="1" HeightRequest="35" Text="All Lights Off" VerticalOptions="Center" BackgroundColor="LightCoral"
-                            FontSize="Micro" FontAttributes="Bold" Command="{Binding AllLightsOffCommand}"/>
+                            FontSize="Micro" FontAttributes="Bold" Command="{Binding AllLightsOffCommand}" IsEnabled="{Binding IsEnabled}"/>
             </Grid>
         </Grid>
         <Frame Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" BackgroundColor="White" CornerRadius="5" />
-        <CollectionView Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="5" x:Name="CircuitGroupView" ItemsSource="{Binding CircuitGroup}">
+        <CollectionView Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="5" x:Name="CircuitGroupView" ItemsSource="{Binding CircuitGroup}" IsEnabled="{Binding IsEnabled}">
             <CollectionView.ItemsLayout>
                 <GridItemsLayout Orientation="Vertical"
                                          Span="2" />
@@ -114,7 +114,7 @@
         </CollectionView>
 
         <Frame Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
-        <CollectionView Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="5" x:Name="CircuitView" ItemsSource="{Binding Circuits}" >
+        <CollectionView Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="5" x:Name="CircuitView" ItemsSource="{Binding Circuits}" IsEnabled="{Binding IsEnabled}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <views:CircuitView/>
@@ -122,7 +122,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
         <Frame Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
-        <CollectionView Grid.Row="3" Grid.Column="0" Margin="5" Grid.ColumnSpan="2" x:Name="LightView" ItemsSource="{Binding Lights}" >
+        <CollectionView Grid.Row="3" Grid.Column="0" Margin="5" Grid.ColumnSpan="2" x:Name="LightView" ItemsSource="{Binding Lights}" IsEnabled="{Binding IsEnabled}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <views:LightView/>
