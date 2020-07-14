@@ -534,7 +534,11 @@ namespace IntelliCenterControl.ViewModels
                                                                                         StartTime = start,
                                                                                         EndTime = end
                                                                                     };
-                                                                                    Schedules.Add(s);
+
+                                                                                    Device.BeginInvokeOnMainThread(() =>
+                                                                                    {
+                                                                                        Schedules.Add(s);
+                                                                                    });
                                                                                     HardwareDictionary[s.Hname] = s;
                                                                                 }
                                                                             }
@@ -576,7 +580,7 @@ namespace IntelliCenterControl.ViewModels
         {
             try
             {
-                DataInterface.CreateConnectionAsync();
+                await DataInterface.CreateConnectionAsync();
             }
             catch (Exception ex)
             {
@@ -589,7 +593,7 @@ namespace IntelliCenterControl.ViewModels
         {
             if (!_isConnected)
             {
-                DataInterface.CreateConnectionAsync();
+                await DataInterface.CreateConnectionAsync();
             }
 
             IsBusy = true;
@@ -635,84 +639,89 @@ namespace IntelliCenterControl.ViewModels
             }
 
             await DataInterface.GetScheduleDataAsync();
+
             IsBusy = false;
         }
 
         private void PopulateModels()
         {
-            Circuits.Clear();
-            CircuitGroup.Clear();
-            Pumps.Clear();
-            Bodies.Clear();
-            Chems.Clear();
-            Lights.Clear();
-            Heaters.Clear();
-
-            foreach (var kvp in HardwareDictionary)
+            Device.BeginInvokeOnMainThread(() =>
             {
-                switch (kvp.Value.CircuitDescription)
+                Circuits.Clear();
+                CircuitGroup.Clear();
+                Pumps.Clear();
+                Bodies.Clear();
+                Chems.Clear();
+                Lights.Clear();
+                Heaters.Clear();
+
+                foreach (var kvp in HardwareDictionary)
                 {
-                    case Circuit<IntelliCenterConnection>.CircuitType.BODY:
-                        //Bodies.Add(kvp.Value);
-                        Bodies.InsertInPlace(kvp.Value, o => o.ListOrd);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
-                        Chems.Add(kvp.Value);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
-                        //CircuitGroup.Add(kvp.Value);
-                        CircuitGroup.InsertInPlace(kvp.Value, o => o.ListOrd);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                        //Circuits.Add(kvp.Value);
-                        Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
-                        //Pumps.Add(kvp.Value);
-                        Pumps.InsertInPlace(kvp.Value, o => o.Hname);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
-                    case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
-                    case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
-                    case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
-                    case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
-                    case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
-                    case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
-                        //Lights.Add(kvp.Value);
-                        Lights.InsertInPlace(kvp.Value, o => o.ListOrd);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
-                        var htr = (Heater)kvp.Value;
-                        if (htr != null)
-                        {
-                            Heaters.Add(htr);
-                        }
-                        break;
-                    default:
-                        break;
+                    switch (kvp.Value.CircuitDescription)
+                    {
+                        case Circuit<IntelliCenterConnection>.CircuitType.BODY:
+                            //Bodies.Add(kvp.Value);
+                            Bodies.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
+                            Chems.Add(kvp.Value);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
+                            //CircuitGroup.Add(kvp.Value);
+                            CircuitGroup.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
+                            //Circuits.Add(kvp.Value);
+                            Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
+                            //Pumps.Add(kvp.Value);
+                            Pumps.InsertInPlace(kvp.Value, o => o.Hname);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
+                        case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
+                        case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
+                        case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
+                        case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
+                        case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
+                        case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
+                            //Lights.Add(kvp.Value);
+                            Lights.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
+                            var htr = (Heater) kvp.Value;
+                            if (htr != null)
+                            {
+                                Heaters.Add(htr);
+                            }
+
+                            break;
+                        default:
+                            break;
+                    }
+
                 }
 
-            }
-
-            foreach (var bodyCircuit in Bodies)
-            {
-                var body = (Body)bodyCircuit;
-                if (body != null)
+                foreach (var bodyCircuit in Bodies)
                 {
-                    body.Heaters.Clear();
-                    body.Heaters.Add(new Heater("Heat Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
-
-                    foreach (var heater in Heaters)
+                    var body = (Body) bodyCircuit;
+                    if (body != null)
                     {
-                        if (heater.Bodies.Contains(body.Hname))
+                        body.Heaters.Clear();
+                        body.Heaters.Add(new Heater("Heat Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
+
+                        foreach (var heater in Heaters)
                         {
-                            body.Heaters.Add(heater);
+                            if (heater.Bodies.Contains(body.Hname))
+                            {
+                                body.Heaters.Add(heater);
+                            }
                         }
                     }
                 }
-            }
+            });
         }
 
         private async Task ExecuteClosingCommand()

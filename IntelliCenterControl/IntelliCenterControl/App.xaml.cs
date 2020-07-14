@@ -12,7 +12,7 @@ namespace IntelliCenterControl
 
         public App()
         {
-            AppCenter.Start("android=94ace755-cc3f-4f64-91a7-6c7956267bf8;" ,
+            AppCenter.Start("94ace755-cc3f-4f64-91a7-6c7956267bf8",
                 typeof(Analytics), typeof(Crashes));
             InitializeComponent();
             DependencyService.Register<IntelliCenterDataInterface>();

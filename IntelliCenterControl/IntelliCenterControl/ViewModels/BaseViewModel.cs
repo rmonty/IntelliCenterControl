@@ -18,7 +18,18 @@ namespace IntelliCenterControl.ViewModels
         public bool IsBusy
         {
             get => _isBusy;
-            set => SetProperty(ref _isBusy, value);
+            set
+            {
+                SetProperty(ref _isBusy, value);
+                IsEnabled = !_isBusy;
+            } 
+        }
+
+        bool _isEnabled = true;
+        public bool IsEnabled
+        {
+            get => _isEnabled;
+            set => SetProperty(ref _isEnabled, value);
         }
 
         int _loading = 0;
