@@ -486,8 +486,8 @@ namespace IntelliCenterControl.Services
             }
             catch (Exception ex)
             {
-                this._logService.LogError(ex.ToString());
-                this._cloudLogService.LogError(ex);
+                //this._logService.LogError(ex.ToString());
+                //this._cloudLogService.LogError(ex);
             }
             finally
             {
@@ -545,8 +545,6 @@ namespace IntelliCenterControl.Services
                                             }
                                         }
                                     }
-
-                                    //Console.WriteLine($"{count}");
                                 }
                             }
                             catch (Exception e)
@@ -560,7 +558,7 @@ namespace IntelliCenterControl.Services
                 catch (Exception e)
                 {
                     this._logService.LogError(e.ToString());
-                    this._cloudLogService.LogError(e);
+                    //this._cloudLogService.LogError(e);
                 }
             }
             else if (socketConnection != null && socketConnection.State == WebSocketState.Open)
@@ -603,7 +601,6 @@ namespace IntelliCenterControl.Services
                     using (var reader = new StreamReader(ms, Encoding.UTF8))
                     {
                         var receivedMessage = reader.ReadToEnd();
-                        //Console.WriteLine(receivedMessage);
                         if (receivedMessage.StartsWith("{"))
                         {
                             var data = JsonConvert.DeserializeObject(receivedMessage);

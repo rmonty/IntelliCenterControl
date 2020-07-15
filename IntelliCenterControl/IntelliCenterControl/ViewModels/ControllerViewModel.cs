@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 using Xamarin.Forms;
@@ -94,7 +92,7 @@ namespace IntelliCenterControl.ViewModels
         }
 
 
-        private DateTime _currentDateTime = new DateTime();
+        private DateTime _currentDateTime;
 
         public DateTime CurrentDateTime
         {
@@ -160,7 +158,7 @@ namespace IntelliCenterControl.ViewModels
             }
         }
 
-        public async Task UpdateIPAddress()
+        public async Task UpdateIpAddress()
         {
             await ExecuteClosingCommand();
             await DataInterface.CreateConnectionAsync();
@@ -189,7 +187,7 @@ namespace IntelliCenterControl.ViewModels
 
         private async void DataStoreDataReceived(object sender, string e)
         {
-            if (!String.IsNullOrEmpty(e))
+            if (!string.IsNullOrEmpty(e))
             {
                 var data = JsonConvert.DeserializeObject(e);
                 var jData = (JObject)(data);
@@ -301,7 +299,6 @@ namespace IntelliCenterControl.ViewModels
                                                                     body.LastTemp = lsttemp.ToString() == "0"
                                                                         ? "-"
                                                                         : lsttemp.ToString();
-                                                                    ;
                                                                 }
 
                                                                 if (bv.TryGetValue("STATUS", out var status))
@@ -330,7 +327,7 @@ namespace IntelliCenterControl.ViewModels
                                                                 if (bv.TryGetValue("HTSRC", out var htSource))
                                                                 {
                                                                     var selectedHeater =
-                                                                        body.Heaters.FirstOrDefault<Heater>(h =>
+                                                                        body.Heaters.FirstOrDefault(h =>
                                                                             h.Hname == htSource.ToString());
 
                                                                     if (selectedHeater != null)
@@ -374,7 +371,6 @@ namespace IntelliCenterControl.ViewModels
                                                                             break;
                                                                         case Sense.SenseType.SOLAR:
                                                                             break;
-                                                                        default: break;
                                                                     }
                                                                 }
                                                             }
@@ -394,7 +390,6 @@ namespace IntelliCenterControl.ViewModels
                                                                         case "OFF":
                                                                             circuit.Active = false;
                                                                             break;
-                                                                        default: break;
                                                                     }
                                                                 }
                                                             }
@@ -414,7 +409,6 @@ namespace IntelliCenterControl.ViewModels
                                                                         case "OFF":
                                                                             circuit.Active = false;
                                                                             break;
-                                                                        default: break;
                                                                     }
                                                                 }
                                                             }
@@ -455,7 +449,6 @@ namespace IntelliCenterControl.ViewModels
                                                                         case "OFF":
                                                                             circuit.Active = false;
                                                                             break;
-                                                                        default: break;
                                                                     }
                                                                 }
 
@@ -471,20 +464,17 @@ namespace IntelliCenterControl.ViewModels
 
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
-                                                            if (notifyList.TryGetValue("params", out var heaterValues))
-                                                            {
-                                                                //Console.WriteLine(heaterValues);
-                                                                //var hv = (JObject)heaterValues;
-                                                                //var heaterCircuit = (Heater)circuit;
-                                                                //if (hv.TryGetValue("BODY", out var bodies))
-                                                                //{
+                                                            //if (notifyList.TryGetValue("params", out var heaterValues))
+                                                            //{
+                                                            //    //Console.WriteLine(heaterValues);
+                                                            //    //var hv = (JObject)heaterValues;
+                                                            //    //var heaterCircuit = (Heater)circuit;
+                                                            //    //if (hv.TryGetValue("BODY", out var bodies))
+                                                            //    //{
 
-                                                                //}
-                                                            }
+                                                            //    //}
+                                                            //}
 
-                                                            break;
-                                                        default:
-                                                            //Console.WriteLine(notifyList);
                                                             break;
                                                     }
                                                 }
@@ -572,8 +562,6 @@ namespace IntelliCenterControl.ViewModels
 
 
                                                                         return;
-                                                                    default:
-                                                                        break;
                                                                 }
                                                             }
                                                         }
@@ -584,9 +572,6 @@ namespace IntelliCenterControl.ViewModels
                                         }
                                     }
                                 }
-                                break;
-                            default:
-                                //Console.WriteLine(e);
                                 break;
                         }
                     }
@@ -656,8 +641,6 @@ namespace IntelliCenterControl.ViewModels
                     case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
                         //DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "HEATER");
                         break;
-                    default:
-                        break;
                 }
             }
 
@@ -721,8 +704,6 @@ namespace IntelliCenterControl.ViewModels
                             }
 
                             break;
-                        default:
-                            break;
                     }
 
                 }
@@ -756,7 +737,7 @@ namespace IntelliCenterControl.ViewModels
         {
             DataInterface.UnSubscribeAllItemsUpdate();
             HardwareDictionary.Clear();
-
+            
             foreach (var obj in HardwareDefinition.answer.SelectMany(answer => answer.Params.Objlist))
             {
                 if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(obj.Params.Objtyp, out var circuitType))
@@ -786,28 +767,30 @@ namespace IntelliCenterControl.ViewModels
                                                 HardwareDictionary[b.Hname] = b;
                                             }
 
-                                            foreach (var bodyParam in moduleCircuit.Params.Objlist)
+                                            if (moduleCircuit.Params.Objlist != null)
                                             {
-                                                if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(
-                                                    bodyParam.Params.Objtyp.ToString(),
-                                                    out var cktType))
+                                                foreach (var bodyParam in moduleCircuit.Params.Objlist)
                                                 {
-                                                    switch (cktType)
+                                                    if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(
+                                                        bodyParam.Params.Objtyp,
+                                                        out var cktType))
                                                     {
-                                                        case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
-                                                            if (Enum.TryParse<Chem.ChemType>(
-                                                                bodyParam.Params.Subtyp, out var chemType))
-                                                            {
-                                                                var c = new Chem(bodyParam.Params.Sname, chemType)
+                                                        switch (cktType)
+                                                        {
+                                                            case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
+                                                                if (Enum.TryParse<Chem.ChemType>(
+                                                                    bodyParam.Params.Subtyp, out var chemType))
                                                                 {
-                                                                    Hname = bodyParam.Objnam
-                                                                };
+                                                                    var c = new Chem(bodyParam.Params.Sname, chemType)
+                                                                    {
+                                                                        Hname = bodyParam.Objnam
+                                                                    };
 
-                                                                HardwareDictionary[c.Hname] = c;
-                                                            }
+                                                                    HardwareDictionary[c.Hname] = c;
+                                                                }
 
-                                                            break;
-                                                        default: break;
+                                                                break;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -855,7 +838,6 @@ namespace IntelliCenterControl.ViewModels
                                                                 HardwareDictionary[gc.Hname] = gc;
                                                             }
                                                             break;
-                                                        default: break;
                                                     }
                                                 }
                                             }
@@ -873,8 +855,6 @@ namespace IntelliCenterControl.ViewModels
 
                                                 HardwareDictionary[h.Hname] = h;
                                             }
-                                            break;
-                                        default:
                                             break;
                                     }
                                 }
@@ -932,7 +912,6 @@ namespace IntelliCenterControl.ViewModels
                                                 HardwareDictionary[c.Hname] = c;
                                             }
                                             break;
-                                        default: break;
                                     }
                                 }
 
@@ -941,7 +920,7 @@ namespace IntelliCenterControl.ViewModels
                         case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                             {
                                 if (Enum.TryParse<Pump.PumpType>(obj.Params.Subtyp,
-                                    out var subType))
+                                    out _))
                                 {
                                     var p = new Pump(obj.Params.Sname, obj.Objnam)
                                     {
@@ -953,8 +932,6 @@ namespace IntelliCenterControl.ViewModels
                                     HardwareDictionary[p.Hname] = p;
                                 }
                             }
-                            break;
-                        default:
                             break;
                     }
 

@@ -59,7 +59,7 @@ namespace IntelliCenterControl.Views
             if (!String.IsNullOrEmpty(result))
             {
                 Settings.ServerURL = result;
-                viewModel.UpdateIPAddress();
+                viewModel.UpdateIpAddress();
             }
             
         }
