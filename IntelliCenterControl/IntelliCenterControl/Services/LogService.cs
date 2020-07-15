@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml;
@@ -15,10 +17,21 @@ namespace IntelliCenterControl.Services
 
         public void Initialize(Assembly assembly, string assemblyName)
         {
-            var location = $"{assemblyName}.NLog.config";
-            var stream = assembly.GetManifestResourceStream(location);
+            var stream = GetEmbeddedResourceStream(assembly, "NLog.config");
             LogManager.Configuration = new XmlLoggingConfiguration(XmlReader.Create(stream), null);
             this.logger = LogManager.GetCurrentClassLogger();
+        }
+
+        public static Stream GetEmbeddedResourceStream(Assembly assembly, string resourceFileName)
+        {
+            var resourcePaths = assembly.GetManifestResourceNames()
+                .Where(x => x.EndsWith(resourceFileName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            if (resourcePaths.Count == 1)
+            {
+                return assembly.GetManifestResourceStream(resourcePaths.Single());
+            }
+            return null;
         }
 
         public void LogDebug(string message)

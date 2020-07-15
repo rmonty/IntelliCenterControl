@@ -19,7 +19,10 @@ namespace IntelliCenterControl.ViewModels
     public class ControllerViewModel : BaseViewModel<IntelliCenterConnection>
     {
         private readonly ILogService _logService;
+        private readonly ICloudLogService _cloudLogService;
+        
         private HardwareDefinition _hardwareDefinition = new HardwareDefinition();
+
         public HardwareDefinition HardwareDefinition
         {
             get => _hardwareDefinition;
@@ -104,9 +107,10 @@ namespace IntelliCenterControl.ViewModels
 
 
 
-        public ControllerViewModel(ILogService logService)
+        public ControllerViewModel(ILogService logService, ICloudLogService cloudLogService)
         {
             _logService = logService;
+            _cloudLogService = cloudLogService;
             Title = "Pool Control";
             Circuits = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             CircuitGroup = new ObservableCollection<Circuit<IntelliCenterConnection>>();
@@ -140,6 +144,7 @@ namespace IntelliCenterControl.ViewModels
                 catch (Exception ex)
                 {
                     this._logService.LogError(ex.ToString());
+                    this._cloudLogService.LogError(ex);
                 }
             }
             else
@@ -588,6 +593,7 @@ namespace IntelliCenterControl.ViewModels
                     catch (Exception messageEx)
                     {
                         this._logService.LogError(messageEx.ToString());
+                        this._cloudLogService.LogError(messageEx);
                     }
                     finally
                     {
@@ -606,6 +612,7 @@ namespace IntelliCenterControl.ViewModels
             catch (Exception ex)
             {
                 this._logService.LogError(ex.ToString());
+                this._cloudLogService.LogError(ex);
             }
 
         }

@@ -18,6 +18,8 @@ namespace IntelliCenterControl.Services
     public class IntelliCenterDataInterface : IDataInterface<IntelliCenterConnection>
     {
         private ILogService _logService;
+        private readonly ICloudLogService _cloudLogService;
+
         private HubConnection connection;
         private ClientWebSocket socketConnection;
         private IntelliCenterConnection _intelliCenterConnection = new IntelliCenterConnection();
@@ -32,108 +34,109 @@ namespace IntelliCenterControl.Services
 
         public CancellationTokenSource Cts { get; set; } = new CancellationTokenSource();
 
-        public IntelliCenterDataInterface(ILogService logService)
+        public IntelliCenterDataInterface(ILogService logService, ICloudLogService cloudLogService)
         {
             _logService = logService;
+            _cloudLogService = cloudLogService;
         }
 
         public async Task<bool> CreateConnectionAsync()
         {
              if (connection != null && connection.State == HubConnectionState.Connected)
-            {
-                await connection.StopAsync(Cts.Token);
-            }
+             {
+                 await connection.StopAsync(Cts.Token);
+             }
 
-            if (socketConnection != null && socketConnection.State == WebSocketState.Open)
-            {
-                await socketConnection.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token);
-            }
+             if (socketConnection != null && socketConnection.State == WebSocketState.Open)
+             {
+                 await socketConnection.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token);
+             }
 
-            _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
+             _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
             
-            if (Settings.ServerURL.StartsWith("http"))
-            {
-                connection = new HubConnectionBuilder()
-                    .WithUrl(Settings.ServerURL)
-                    .WithAutomaticReconnect(new[] {TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20)})
-                    .Build();
+             if (Settings.ServerURL.StartsWith("http"))
+             {
+                 connection = new HubConnectionBuilder()
+                     .WithUrl(Settings.ServerURL)
+                     .WithAutomaticReconnect(new[] {TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20)})
+                     .Build();
 
 
-                connection.KeepAliveInterval = TimeSpan.FromSeconds(5);
+                 connection.KeepAliveInterval = TimeSpan.FromSeconds(5);
 
-                connection.Reconnecting += error =>
-                {
-                    Debug.Assert(connection.State == HubConnectionState.Reconnecting);
-                    _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState) connection.State;
-                    OnConnectionChanged();
-                    // Notify users the connection was lost and the client is reconnecting.
-                    // Start queuing or dropping messages.
+                 connection.Reconnecting += error =>
+                 {
+                     Debug.Assert(connection.State == HubConnectionState.Reconnecting);
+                     _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState) connection.State;
+                     OnConnectionChanged();
+                     // Notify users the connection was lost and the client is reconnecting.
+                     // Start queuing or dropping messages.
 
-                    return Task.CompletedTask;
-                };
+                     return Task.CompletedTask;
+                 };
 
-                connection.Reconnected += connectionId =>
-                {
-                    Debug.Assert(connection.State == HubConnectionState.Connected);
-                    _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState) connection.State;
-                    OnConnectionChanged();
-                    // Notify users the connection was reestablished.
-                    // Start dequeuing messages queued while reconnecting if any.
+                 connection.Reconnected += connectionId =>
+                 {
+                     Debug.Assert(connection.State == HubConnectionState.Connected);
+                     _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState) connection.State;
+                     OnConnectionChanged();
+                     // Notify users the connection was reestablished.
+                     // Start dequeuing messages queued while reconnecting if any.
 
-                    return Task.CompletedTask;
-                };
+                     return Task.CompletedTask;
+                 };
 
-                connection.Closed += error =>
-                {
-                    Debug.Assert(connection.State == HubConnectionState.Disconnected);
-                    _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState) connection.State;
-                    OnConnectionChanged();
-                    // Notify users the connection has been closed or manually try to restart the connection.
+                 connection.Closed += error =>
+                 {
+                     Debug.Assert(connection.State == HubConnectionState.Disconnected);
+                     _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState) connection.State;
+                     OnConnectionChanged();
+                     // Notify users the connection has been closed or manually try to restart the connection.
 
-                    return Task.CompletedTask;
-                };
+                     return Task.CompletedTask;
+                 };
 
-                await connection.StartAsync(Cts.Token);
+                 await connection.StartAsync(Cts.Token);
 
-                if (connection.State == HubConnectionState.Connected) DataSubscribe();
+                 if (connection.State == HubConnectionState.Connected) DataSubscribe();
 
-                _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState) connection.State;
-            }
-            else if (Settings.ServerURL.StartsWith("ws"))
-            {
+                 _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState) connection.State;
+             }
+             else if (Settings.ServerURL.StartsWith("ws"))
+             {
 
-                socketConnection = new ClientWebSocket();
+                 socketConnection = new ClientWebSocket();
                 
-                await socketConnection.ConnectAsync(new Uri(Settings.ServerURL), Cts.Token);
+                 await socketConnection.ConnectAsync(new Uri(Settings.ServerURL), Cts.Token);
 
-                if (socketConnection.State == WebSocketState.Open) DataSubscribe();
+                 if (socketConnection.State == WebSocketState.Open) DataSubscribe();
 
-                switch (socketConnection.State)
-                {
-                    case WebSocketState.Aborted:
-                    case WebSocketState.Closed:
-                    case WebSocketState.CloseReceived:
-                    case WebSocketState.CloseSent:
-                    case WebSocketState.None:
-                        _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
-                        break;
-                    case WebSocketState.Connecting:
-                        _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Connecting;
-                        break;
-                    case WebSocketState.Open:
-                        _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Connected;
-                        break;
-                    default:
-                        _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
-                        break;
-                }
+                 switch (socketConnection.State)
+                 {
+                     case WebSocketState.Aborted:
+                     case WebSocketState.Closed:
+                     case WebSocketState.CloseReceived:
+                     case WebSocketState.CloseSent:
+                     case WebSocketState.None:
+                         _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
+                         break;
+                     case WebSocketState.Connecting:
+                         _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Connecting;
+                         break;
+                     case WebSocketState.Open:
+                         _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Connected;
+                         break;
+                     default:
+                         _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
+                         break;
+                 }
 
 
-            }
+             }
 
-            OnConnectionChanged();
+             OnConnectionChanged();
             
-            return await Task.FromResult(_intelliCenterConnection.State != IntelliCenterConnection.ConnectionState.Disconnected);
+             return await Task.FromResult(_intelliCenterConnection.State != IntelliCenterConnection.ConnectionState.Disconnected);
         }
 
         public async Task<bool> SendItemParamsUpdateAsync(string id, string prop, string data)
@@ -484,6 +487,7 @@ namespace IntelliCenterControl.Services
             catch (Exception ex)
             {
                 this._logService.LogError(ex.ToString());
+                this._cloudLogService.LogError(ex);
             }
             finally
             {
@@ -548,6 +552,7 @@ namespace IntelliCenterControl.Services
                             catch (Exception e)
                             {
                                 this._logService.LogError(e.ToString());
+                                this._cloudLogService.LogError(e);
                             }
                         }
                     }
@@ -555,6 +560,7 @@ namespace IntelliCenterControl.Services
                 catch (Exception e)
                 {
                     this._logService.LogError(e.ToString());
+                    this._cloudLogService.LogError(e);
                 }
             }
             else if (socketConnection != null && socketConnection.State == WebSocketState.Open)
@@ -572,6 +578,7 @@ namespace IntelliCenterControl.Services
                 catch (Exception e)
                 {
                     this._logService.LogError(e.ToString());
+                    this._cloudLogService.LogError(e);
                 }
             }
         }
@@ -638,6 +645,7 @@ namespace IntelliCenterControl.Services
             catch (Exception e)
             {
                 this._logService.LogError(e.ToString());
+                this._cloudLogService.LogError(e);
             }
 
         }

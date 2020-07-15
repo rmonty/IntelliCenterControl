@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-
+using GalaSoft.MvvmLight.Ioc;
 using Xamarin.Forms;
 
 using IntelliCenterControl.Models;
@@ -12,7 +12,7 @@ namespace IntelliCenterControl.ViewModels
 {
     public class BaseViewModel<T> : INotifyPropertyChanged
     {
-        public IDataInterface<T> DataInterface => DependencyService.Get<IDataInterface<T>>();
+        public IDataInterface<T> DataInterface => SimpleIoc.Default.GetInstance<IDataInterface<T>>();
 
         bool _isBusy = false;
         public bool IsBusy
