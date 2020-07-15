@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GalaSoft.MvvmLight.Ioc;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -25,7 +26,7 @@ namespace IntelliCenterControl.Views
         {
             InitializeComponent();
 
-            BindingContext = viewModel = new ControllerViewModel();
+            BindingContext = viewModel = SimpleIoc.Default.GetInstance<ControllerViewModel>();
 
             viewModel.DataInterface.ConnectionChanged += DataInterface_ConnectionChanged;
 

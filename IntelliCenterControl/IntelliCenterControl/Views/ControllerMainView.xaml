@@ -62,7 +62,7 @@
             <Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding CurrentDateTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
         </Grid>
         <Frame Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
-        <Image Source="pool_water.png" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" VerticalOptions="CenterAndExpand" Opacity="0.1" Aspect="AspectFill"/>
+        <Image Source="pool_water.png" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" VerticalOptions="CenterAndExpand" Opacity="0.2" Aspect="AspectFill"/>
         <Grid Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="2*"/>
@@ -133,7 +133,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
         <Frame Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
-        <Image Source="light_background.png" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Opacity="0.1" Aspect="Fill"/>
+        <Image Source="light_background.png" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Opacity="0.2" Aspect="Fill"/>
         <CollectionView Grid.Row="3" Grid.Column="0" Margin="5" Grid.ColumnSpan="2" x:Name="LightView" ItemsSource="{Binding Lights}" IsEnabled="{Binding IsEnabled}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
@@ -164,7 +164,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
         <Frame Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" BackgroundColor="White" CornerRadius="5" />
-        <Image Source="water_splash.png" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Opacity="0.1" Aspect="Fill"/>
+        <Image Source="water_splash.png" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Opacity="0.2" Aspect="Fill"/>
         <Grid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>

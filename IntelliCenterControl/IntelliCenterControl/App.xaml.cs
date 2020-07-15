@@ -4,6 +4,8 @@ using IntelliCenterControl.Views;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
+using GalaSoft.MvvmLight.Ioc;
+using IntelliCenterControl.ViewModels;
 
 namespace IntelliCenterControl
 {
@@ -16,6 +18,8 @@ namespace IntelliCenterControl
                 typeof(Analytics), typeof(Crashes));
             InitializeComponent();
             DependencyService.Register<IntelliCenterDataInterface>();
+            SimpleIoc.Default.Register<ILogService, LogService>();
+            SimpleIoc.Default.Register<ControllerViewModel>();
             MainPage = new MainPage();
             
         }

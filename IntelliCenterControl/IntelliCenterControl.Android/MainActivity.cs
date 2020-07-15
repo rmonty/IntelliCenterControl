@@ -6,6 +6,8 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+using GalaSoft.MvvmLight.Ioc;
+using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.Droid
 {
@@ -21,6 +23,7 @@ namespace IntelliCenterControl.Droid
 
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
+            this.Bootstraping();
             LoadApplication(new App());
         }
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
@@ -30,6 +33,14 @@ namespace IntelliCenterControl.Droid
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
-       
+        private void Bootstraping()
+        {
+            var assembly = this.GetType().Assembly;
+            var assemblyName = assembly.GetName().Name;
+
+            SimpleIoc.Default.GetInstance<ILogService>().Initialize(assembly, assemblyName);
+        }
+    
+
     }
 }

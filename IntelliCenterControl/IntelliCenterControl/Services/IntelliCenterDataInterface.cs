@@ -17,6 +17,7 @@ namespace IntelliCenterControl.Services
 {
     public class IntelliCenterDataInterface : IDataInterface<IntelliCenterConnection>
     {
+        private ILogService _logService;
         private HubConnection connection;
         private ClientWebSocket socketConnection;
         private IntelliCenterConnection _intelliCenterConnection = new IntelliCenterConnection();
@@ -31,6 +32,10 @@ namespace IntelliCenterControl.Services
 
         public CancellationTokenSource Cts { get; set; } = new CancellationTokenSource();
 
+        public IntelliCenterDataInterface(ILogService logService)
+        {
+            _logService = logService;
+        }
 
         public async Task<bool> CreateConnectionAsync()
         {
@@ -478,7 +483,7 @@ namespace IntelliCenterControl.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                this._logService.LogError(ex.ToString());
             }
             finally
             {
@@ -542,14 +547,14 @@ namespace IntelliCenterControl.Services
                             }
                             catch (Exception e)
                             {
-                                Console.WriteLine(e);
+                                this._logService.LogError(e.ToString());
                             }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-
+                    this._logService.LogError(e.ToString());
                 }
             }
             else if (socketConnection != null && socketConnection.State == WebSocketState.Open)
@@ -566,7 +571,7 @@ namespace IntelliCenterControl.Services
                 }
                 catch (Exception e)
                 {
-
+                    this._logService.LogError(e.ToString());
                 }
             }
         }
@@ -632,7 +637,7 @@ namespace IntelliCenterControl.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                this._logService.LogError(e.ToString());
             }
 
         }
