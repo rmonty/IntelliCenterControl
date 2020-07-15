@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using IntelliCenterControl.Annotations;
 using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.Models
@@ -17,9 +11,9 @@ namespace IntelliCenterControl.Models
 
         public enum BodyType
         {
-            [Display(Name = "Pool")]
+            [Description( "Pool")]
             POOL,
-            [Display(Name = "Spa")]
+            [Description( "Spa")]
             SPA
         }
 

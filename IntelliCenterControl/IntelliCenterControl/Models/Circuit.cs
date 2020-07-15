@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using IntelliCenterControl.Annotations;
 using IntelliCenterControl.Services;
-using Xamarin.Forms;
 
 namespace IntelliCenterControl.Models
 {
@@ -17,51 +12,51 @@ namespace IntelliCenterControl.Models
 
         public enum CircuitType
         {
-            [Display(Name = "Body")]
+            [Description( "Body")]
             BODY,
-            [Display(Name = "Circuit")]
+            [Description( "Circuit")]
             CIRCUIT,
-            [Display(Name = "Heater")]
+            [Description( "Heater")]
             HEATER,
-            [Display(Name = "Remote")]
+            [Description( "Remote")]
             REMOTE,
-            [Display(Name = "Chem Relay")]
+            [Description( "Chem Relay")]
             CHEM,
-            [Display(Name = "Circuit Group")]
+            [Description( "Circuit Group")]
             CIRCGRP,
-            [Display(Name = "Generic")]
+            [Description( "Generic")]
             GENERIC,
-            [Display(Name = "Spillway")]
+            [Description( "Spillway")]
             SPILL,
-            [Display(Name = "Pump")]
+            [Description( "Pump")]
             PUMP,
-            [Display(Name = "Sense")]
+            [Description( "Sense")]
             SENSE,
-            [Display(Name = "Module")]
+            [Description( "Module")]
             MODULE,
-            [Display(Name = "Pool")]
+            [Description( "Pool")]
             POOL,
-            [Display(Name = "Dimmer")]
+            [Description( "Dimmer")]
             DIMMER,
-            [Display(Name = "GloBrite")]
+            [Description( "GloBrite")]
             GLOW,
-            [Display(Name = "GloBrite White")]
+            [Description( "GloBrite White")]
             GLOWT,
-            [Display(Name = "IntelliBrite")]
+            [Description( "IntelliBrite")]
             INTELLI,
-            [Display(Name = "Light")]
+            [Description( "Light")]
             LIGHT,
-            [Display(Name = "Magic Stream")]
+            [Description( "Magic Stream")]
             MAGIC2,
-            [Display(Name = "Color Cascade")]
+            [Description( "Color Cascade")]
             CLRCASC,
-            [Display(Name = "Schedule")]
+            [Description( "Schedule")]
             SCHED,
-            [Display(Name = "Panel")]
+            [Description( "Panel")]
             PANEL,
-            [Display(Name = "Relay")]
+            [Description( "Relay")]
             RLY,
-            [Display(Name = "Legacy")]
+            [Description( "Legacy")]
             LEGACY
 
         }

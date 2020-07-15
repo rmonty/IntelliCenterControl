@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
-using System.Text;
-using IntelliCenterControl.Annotations;
+﻿using System.ComponentModel;
 
 namespace IntelliCenterControl.Models
 {
@@ -14,9 +8,9 @@ namespace IntelliCenterControl.Models
 
         public enum ChemType
         {
-            [Display(Name = "IntelliChem")]
+            [Description( "IntelliChem")]
             ICHEM,
-            [Display(Name = "IntelliChlor")]
+            [Description( "IntelliChlor")]
             ICHLOR
         }
 

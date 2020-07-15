@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Ioc;
 using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
-
 using IntelliCenterControl.Models;
-using IntelliCenterControl.Views;
 using IntelliCenterControl.ViewModels;
 using Plugin.Toast;
+using Xamarin.Essentials;
 
 namespace IntelliCenterControl.Views
 {
@@ -42,6 +37,9 @@ namespace IntelliCenterControl.Views
             {
                 viewModel.LoadHardwareDefinitionCommand.Execute(true);
             });
+
+
+            Task.Run(async() => await CheckAndRequestStoragePermission());
 
         }
 
@@ -78,6 +76,27 @@ namespace IntelliCenterControl.Views
 
         //}
 
+        public async Task<PermissionStatus> CheckAndRequestStoragePermission()
+        {
+            var status = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
+
+            
+
+            if (status != PermissionStatus.Granted && !Settings.StorageAccessAsked)
+            {
+                var result = await DisplayAlert("Storage Access",
+                    @"This application uses storage for debug logging. These logs are not sent from your device and are only used for debugging purposes if you encounter a problem. Restricting access will not affect app usage.",
+                    "Yes", "No");
+                Settings.StorageAccessAsked = true;
+                
+                if (result)
+                {
+                    status = await Permissions.RequestAsync<Permissions.StorageWrite>();
+                }
+            }
+            
+            return status;
+        }
 
 
 

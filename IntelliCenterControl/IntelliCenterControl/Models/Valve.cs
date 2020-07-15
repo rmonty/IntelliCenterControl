@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
-using System.Text;
-using IntelliCenterControl.Annotations;
+﻿using System.ComponentModel;
 
 namespace IntelliCenterControl.Models
 {
@@ -12,9 +6,9 @@ namespace IntelliCenterControl.Models
     {
         public enum ValveType
         {
-            [Display(Name = "Legacy")]
+            [Description( "Legacy")]
             LEGACY,
-            [Display(Name = "Intellivalve")]
+            [Description( "Intellivalve")]
             INTELLI
         }
 

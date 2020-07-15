@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using IntelliCenterControl.Annotations;
 using IntelliCenterControl.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Newtonsoft.Json;

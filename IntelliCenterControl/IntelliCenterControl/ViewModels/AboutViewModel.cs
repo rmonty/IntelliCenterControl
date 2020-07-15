@@ -1,7 +1,4 @@
-﻿using IntelliCenterControl.Models;
-using System;
-using System.ComponentModel;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Windows.Input;
 using IntelliCenterControl.Views;
 using Xamarin.Essentials;

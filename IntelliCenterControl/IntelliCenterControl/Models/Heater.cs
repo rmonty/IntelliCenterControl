@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
-using System.Text;
-using IntelliCenterControl.Annotations;
 using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.Models
@@ -16,19 +10,19 @@ namespace IntelliCenterControl.Models
 
         public enum HeaterType
         {
-            [Display(Name = "Generic")]
+            [Description( "Generic")]
             GENERIC,
-            [Display(Name = "Solar")]
+            [Description( "Solar")]
             SOLAR,
-            [Display(Name = "Heat Pump")]
+            [Description( "Heat Pump")]
             HTPMP,
-            [Display(Name = "UltraTemp")]
+            [Description( "UltraTemp")]
             ULTRA,
-            [Display(Name = "MasterTemp")]
+            [Description( "MasterTemp")]
             MASTER,
-            [Display(Name = "Max-E-Therm")]
+            [Description( "Max-E-Therm")]
             MAX,
-            [Display(Name = "Hybrid")]
+            [Description( "Hybrid")]
             HCOMBO
         }
 

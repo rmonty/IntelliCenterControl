@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
-using System.Text;
-using IntelliCenterControl.Annotations;
+﻿using System.ComponentModel;
 
 namespace IntelliCenterControl.Models
 {
@@ -14,15 +8,15 @@ namespace IntelliCenterControl.Models
 
         public enum PumpType
         {
-            [Display(Name = "Single Speed")]
+            [Description( "Single Speed")]
             SINGLE,
-            [Display(Name = "Dual Speed")]
+            [Description( "Dual Speed")]
             DUAL,
-            [Display(Name = "Variable Speed")]
+            [Description( "Variable Speed")]
             SPEED,
-            [Display(Name = "Variable GPM")]
+            [Description( "Variable GPM")]
             FLOW,
-            [Display(Name = "Variable Speed and GPM")]
+            [Description( "Variable Speed and GPM")]
             VSF
         }
 

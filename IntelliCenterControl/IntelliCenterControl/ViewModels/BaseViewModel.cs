@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using GalaSoft.MvvmLight.Ioc;
-using Xamarin.Forms;
-
-using IntelliCenterControl.Models;
 using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.ViewModels

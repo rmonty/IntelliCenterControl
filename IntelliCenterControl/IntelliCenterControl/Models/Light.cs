@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using IntelliCenterControl.Services;
@@ -14,31 +13,31 @@ namespace IntelliCenterControl.Models
 
         public enum LightType
         {
-            [Display(Name = "Dimmer")]
+            [Description( "Dimmer")]
             [Color(false)]
             [Dimming(true)]
             DIMMER,
-            [Display(Name = "GloBrite")]
+            [Description( "GloBrite")]
             [Color(true)]
             [Dimming(false)]
             GLOW,
-            [Display(Name = "GloBrite White")]
+            [Description( "GloBrite White")]
             [Color(false)]
             [Dimming(true)]
             GLOWT,
-            [Display(Name = "IntelliBrite")]
+            [Description( "IntelliBrite")]
             [Color(true)]
             [Dimming(false)]
             INTELLI,
-            [Display(Name = "Light")]
+            [Description( "Light")]
             [Color(false)]
             [Dimming(false)]
             LIGHT,
-            [Display(Name = "Magic Stream")]
+            [Description( "Magic Stream")]
             [Color(true)]
             [Dimming(false)]
             MAGIC2,
-            [Display(Name = "Color Cascade")]
+            [Description("Color Cascade")]
             [Color(true)]
             [Dimming(false)]
             CLRCASC

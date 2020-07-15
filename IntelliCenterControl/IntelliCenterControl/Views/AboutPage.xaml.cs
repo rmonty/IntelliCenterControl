@@ -1,8 +1,5 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
-using Xamarin.Essentials;
 
 namespace IntelliCenterControl.Views
 {

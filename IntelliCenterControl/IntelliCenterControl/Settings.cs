@@ -18,6 +18,9 @@ namespace IntelliCenterControl
         private const string ServerURLKey = "server_url_key";
         //private static readonly string ServerURLDefault = "ws://192.168.0.114:6680/";
         private static readonly string ServerURLDefault = "http://192.168.0.130:5000/stream";
+
+        private const string StorageAccessAskedKey = "storage_access_key";
+        private static readonly bool StorageAccessAskedDefault = false;
         #endregion
 
 
@@ -26,5 +29,13 @@ namespace IntelliCenterControl
             get => AppSettings.GetValueOrDefault(ServerURLKey, ServerURLDefault);
             set => AppSettings.AddOrUpdateValue(ServerURLKey, value);
         }
+
+
+        public static bool StorageAccessAsked
+        {
+            get => AppSettings.GetValueOrDefault(StorageAccessAskedKey, StorageAccessAskedDefault);
+            set => AppSettings.AddOrUpdateValue(StorageAccessAskedKey, value);
+        }
+
     }
 }
