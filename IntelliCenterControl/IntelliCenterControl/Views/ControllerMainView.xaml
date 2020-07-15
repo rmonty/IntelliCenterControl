@@ -42,26 +42,27 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="0.5*"/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Image Source="temperature_icon.png" Aspect="AspectFill" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand"/>
+            <Image Source="temperature_icon.png" Aspect="AspectFill" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" VerticalOptions="CenterAndExpand" HorizontalOptions="StartAndExpand" Opacity="0.8"/>
             <Label Text="Water Temp"  Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"  FontAttributes="Bold"
                    HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontSize="Small" TextColor="DarkBlue"/>
-            <Frame Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" BorderColor="#000000"/>
+            <Frame Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" BorderColor="#000000" Opacity="0.7"/>
             <Label Text="{Binding WaterTemp, StringFormat='{}{0}°'}" FontAttributes="Bold,Italic" HorizontalTextAlignment="Center" 
                    VerticalTextAlignment="Center" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" FontSize="Body"
                    TextColor="DarkBlue"/>
             <Label Grid.Column="0" Text="Air Temp" Grid.Row="2" Grid.ColumnSpan="2" VerticalTextAlignment="Center"
                    FontSize="Small" TextColor="DarkGreen" HorizontalTextAlignment="End"/>
-            <Frame Grid.Row="2" Grid.Column="2" BorderColor="#000000"/>
+            <Frame Grid.Row="2" Grid.Column="2" BorderColor="#000000" Opacity="0.7"/>
             <Label Text="{Binding AirTemp, StringFormat='{}{0}°'}"  Grid.Row="2" Grid.Column="2" HorizontalTextAlignment="Center"
                    VerticalTextAlignment="Center" TextColor="DarkGreen" FontAttributes="Italic"/>
             <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding CurrentDateTime, StringFormat='{0:dddd, MMMM d, yyyy}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
             <Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding CurrentDateTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
         </Grid>
         <Frame Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
+        <Image Source="pool_water.png" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" VerticalOptions="CenterAndExpand" Opacity="0.1" Aspect="AspectFill"/>
         <Grid Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="2*"/>
@@ -92,6 +93,8 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+            
+            
             <Label Grid.Row="1" Grid.Column="0" Text="Salt Level" HorizontalTextAlignment="End" IsVisible="{Binding ChemInstalled}"
                    FontSize="Caption"/>
             <Label Grid.Row="1" Grid.Column="1" Text="{Binding SaltLevel}" HorizontalTextAlignment="Start" IsVisible="{Binding ChemInstalled}"
@@ -130,6 +133,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
         <Frame Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
+        <Image Source="light_background.png" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Opacity="0.1" Aspect="Fill"/>
         <CollectionView Grid.Row="3" Grid.Column="0" Margin="5" Grid.ColumnSpan="2" x:Name="LightView" ItemsSource="{Binding Lights}" IsEnabled="{Binding IsEnabled}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
@@ -160,6 +164,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
         <Frame Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" BackgroundColor="White" CornerRadius="5" />
+        <Image Source="water_splash.png" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Opacity="0.1" Aspect="Fill"/>
         <Grid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -172,7 +177,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="0.5*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
