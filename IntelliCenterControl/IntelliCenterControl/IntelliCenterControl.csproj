@@ -20,7 +20,7 @@
     <PackageReference Include="Microsoft.AppCenter" Version="3.3.0" />
     <PackageReference Include="Microsoft.AppCenter.Analytics" Version="3.3.0" />
     <PackageReference Include="Microsoft.AppCenter.Crashes" Version="3.3.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.6" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.0-preview.6.20312.15" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Plugin.Toast" Version="2.1.2" />
     <PackageReference Include="Xam.Plugins.Settings" Version="4.1.0-beta" />
