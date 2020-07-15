@@ -78,7 +78,7 @@ namespace IntelliCenterControl.Views
 
         public async Task<PermissionStatus> CheckAndRequestStoragePermission()
         {
-            var status = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
+            var status = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
 
             
 
@@ -91,7 +91,7 @@ namespace IntelliCenterControl.Views
                 
                 if (result)
                 {
-                    status = await Permissions.RequestAsync<Permissions.StorageWrite>();
+                    status = await Permissions.RequestAsync<Permissions.StorageRead>();
                 }
             }
             
