@@ -12,11 +12,13 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Threading;
+using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.ViewModels
 {
     public class ControllerViewModel : BaseViewModel<IntelliCenterConnection>
     {
+        private readonly ILogService _logService;
         private HardwareDefinition _hardwareDefinition = new HardwareDefinition();
         public HardwareDefinition HardwareDefinition
         {
@@ -102,8 +104,9 @@ namespace IntelliCenterControl.ViewModels
 
 
 
-        public ControllerViewModel()
+        public ControllerViewModel(ILogService logService)
         {
+            _logService = logService;
             Title = "Pool Control";
             Circuits = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             CircuitGroup = new ObservableCollection<Circuit<IntelliCenterConnection>>();
@@ -136,7 +139,7 @@ namespace IntelliCenterControl.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex);
+                    this._logService.LogError(ex.ToString());
                 }
             }
             else
@@ -584,7 +587,7 @@ namespace IntelliCenterControl.ViewModels
                     }
                     catch (Exception messageEx)
                     {
-                        Console.WriteLine(messageEx);
+                        this._logService.LogError(messageEx.ToString());
                     }
                     finally
                     {
@@ -602,7 +605,7 @@ namespace IntelliCenterControl.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex);
+                this._logService.LogError(ex.ToString());
             }
 
         }
