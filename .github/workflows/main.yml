@@ -16,7 +16,7 @@ jobs:
       - name: Artifacts
         run: |
           mkdir -p apks
-          cp ${{env.SOLUTION_NAME}}/apk/*.apk apks
+           cp ${{env.SOLUTION_NAME}}/${{env.ANDROID_PROJECT_NAME}}/bin/Debug/*.apk apks
       - name: Upload Artifacts
         uses: actions/upload-artifact@v1
         with:
