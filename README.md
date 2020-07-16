@@ -1,11 +1,10 @@
 # IntelliCenterControl
 
-Control for IntelliCenter - Works with [IntelliCenterGateway](https://github.com/mguinness/IntelliCenterGateway)
+Control for IntelliCenter - Works with [IntelliCenterGateway](https://github.com/mguinness/IntelliCenterGateway) or through web socket direct to the panel.
 
 ## Introduction
 
-A control developed using C# and Xamarin that connects to an IntelliCenter using IntelliCenterGateway
-to issue commands and subscribe to updates.
+A control developed using C# and Xamarin that connects to an IntelliCenter using IntelliCenterGateway or web sockets to issue commands and subscribe to updates.
 
 This control is still in development.
 
