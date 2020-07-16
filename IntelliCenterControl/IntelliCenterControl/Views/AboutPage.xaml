@@ -53,6 +53,10 @@
                                 <Span Text=" " />
                                 <Span Text="Xamarin Platform" FontAttributes="Bold" />
                                 <Span Text="." />
+                                <Span Text="Please visit the github site by clicking on the" />
+                                <Span Text=" " />
+                                <Span Text="learn more button below for questions" />
+                                <Span Text="." />
                             </FormattedString.Spans>
                         </FormattedString>
                     </Label.FormattedText>
