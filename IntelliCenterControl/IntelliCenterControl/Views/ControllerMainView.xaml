@@ -21,8 +21,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1.75*"/>
-            <RowDefinition Height="1.25*"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition x:Name="Row2" Height="0"/>
+            <RowDefinition x:Name="Row3" Height="0"/>
             <RowDefinition Height="1*"/>
             <RowDefinition Height="1.25*"/>
         </Grid.RowDefinitions>
@@ -32,8 +32,8 @@
             <ColumnDefinition Width="1.75*"/>
         </Grid.ColumnDefinitions>
         
-        <Frame Grid.Row="0" Grid.Column="0" Grid.RowSpan="1" BackgroundColor="White" CornerRadius="5" />
-        <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="1" Margin="5">
+        <Frame x:Name="TempFrame" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" BackgroundColor="White" CornerRadius="5" />
+        <Grid x:Name="TempGrid" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Margin="5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -61,9 +61,9 @@
             <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding CurrentDateTime, StringFormat='{0:dddd, MMMM d, yyyy}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
             <Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding CurrentDateTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
         </Grid>
-        <Frame Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
-        <Image Source="pool_water.png" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" VerticalOptions="CenterAndExpand" Opacity="0.2" Aspect="AspectFill"/>
-        <Grid Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="5">
+        <Frame x:Name="BodyFrame" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
+        <Image x:Name="BodyImage" Source="pool_water.png" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" VerticalOptions="CenterAndExpand" Opacity="0.2" Aspect="AspectFill"/>
+        <Grid x:Name="BodyGrid"  Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="2*"/>
                 <RowDefinition Height="Auto"/>
@@ -111,11 +111,10 @@
                             FontSize="Micro" FontAttributes="Bold" Command="{Binding AllLightsOffCommand}" IsEnabled="{Binding IsEnabled}"/>
             </Grid>
         </Grid>
-        <Frame Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" BackgroundColor="White" CornerRadius="5" />
-        <CollectionView Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="5" x:Name="CircuitGroupView" ItemsSource="{Binding CircuitGroup}" IsEnabled="{Binding IsEnabled}">
+        <Frame Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" BackgroundColor="White" CornerRadius="5" IsVisible="{Binding HasCircuitGroups}"/>
+        <CollectionView Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="5" x:Name="CircuitGroupView" ItemsSource="{Binding CircuitGroup}" IsEnabled="{Binding IsEnabled}" IsVisible="{Binding HasCircuitGroups}">
             <CollectionView.ItemsLayout>
-                <GridItemsLayout Orientation="Vertical"
-                                         Span="2" />
+                <GridItemsLayout Orientation="Vertical" Span="2" />
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
@@ -124,17 +123,17 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Frame Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
-        <CollectionView Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="5" x:Name="CircuitView" ItemsSource="{Binding Circuits}" IsEnabled="{Binding IsEnabled}">
+        <Frame x:Name="CircuitFrame" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" IsVisible="{Binding HasCircuits}"/>
+        <CollectionView Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="5" x:Name="CircuitView" ItemsSource="{Binding Circuits}" IsEnabled="{Binding IsEnabled}" IsVisible="{Binding HasCircuits}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <views:CircuitView/>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-        <Frame Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
-        <Image Source="light_background.png" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Opacity="0.2" Aspect="Fill"/>
-        <CollectionView Grid.Row="3" Grid.Column="0" Margin="5" Grid.ColumnSpan="2" x:Name="LightView" ItemsSource="{Binding Lights}" IsEnabled="{Binding IsEnabled}">
+        <Frame Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="2" BackgroundColor="White" CornerRadius="5" x:Name="LightFrame"/>
+        <Image Source="light_background.png" Grid.Row="2" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Opacity="0.2" Aspect="Fill" x:Name="LightImage"/>
+        <CollectionView Grid.Row="2" Grid.RowSpan="2" Grid.Column="0" Margin="5" Grid.ColumnSpan="2" x:Name="LightView" ItemsSource="{Binding Lights}" IsEnabled="{Binding IsEnabled}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <views:LightView/>

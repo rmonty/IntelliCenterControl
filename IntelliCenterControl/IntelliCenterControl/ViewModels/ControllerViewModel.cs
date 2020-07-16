@@ -83,13 +83,22 @@ namespace IntelliCenterControl.ViewModels
 
         }
 
-        private string _bodySelected;
+        private bool _hasCircuits;
 
-        public string BodySelected
+        public bool HasCircuits
         {
-            get => _bodySelected;
-            set => SetProperty(ref _bodySelected, value);
+            get => _hasCircuits;
+            set => SetProperty(ref _hasCircuits, value);
         }
+
+        private bool _hasCircuitGroups;
+
+        public bool HasCircuitGroups
+        {
+            get => _hasCircuitGroups;
+            set => SetProperty(ref _hasCircuitGroups, value);
+        }
+
 
 
         private DateTime _currentDateTime;
@@ -421,7 +430,6 @@ namespace IntelliCenterControl.ViewModels
                                                                 var chem = (Chem)circuit;
                                                                 if (cv.TryGetValue("SALT", out var salt))
                                                                 {
-                                                                    ChemInstalled = true;
                                                                     chem.Salt = salt.ToString() == "0" ? "-" : salt.ToString();
                                                                     SaltLevel = chem.Salt;
                                                                 }
@@ -661,6 +669,10 @@ namespace IntelliCenterControl.ViewModels
                 Lights.Clear();
                 Heaters.Clear();
 
+                ChemInstalled = Chems.Any();
+                HasCircuits = Circuits.Any();
+                HasCircuitGroups = CircuitGroup.Any();
+
                 foreach (var kvp in HardwareDictionary)
                 {
                     switch (kvp.Value.CircuitDescription)
@@ -707,6 +719,10 @@ namespace IntelliCenterControl.ViewModels
                     }
 
                 }
+
+                ChemInstalled = Chems.Any();
+                HasCircuits = Circuits.Any();
+                HasCircuitGroups = CircuitGroup.Any();
 
                 foreach (var bodyCircuit in Bodies)
                 {
