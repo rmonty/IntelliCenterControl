@@ -1,43 +1,24 @@
-name: CI on Push and Pull Request
-
-on: schedule
-
+on: push
+name: Build and Generate Android Apk
+env:
+  SOLUTION_NAME: ${{secrets.SOLUTION_NAME}}
+  ANDROID_PROJECT_NAME: ${{secrets.ANDROID_PROJECT_NAME}}
 jobs:
-  Practice:
-    runs-on: macos-latest
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Run a one-line script
-      run: echo Hello, world!
-    - name: Run a multi-line script
-      run: |
-        echo Add other actions to build,
-        echo test, and deploy your project.
-    - name: Show what's in the directory
-      run: |
-        ls
-    - name: Show what all is in the parent directory
-      run: |
-        cd ..
-        ls
-        
-  Android:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: Android
-      run: |
-        cd Blank
-        nuget restore
-        cd IntelliCenterControl.Android
-        msbuild IntelliCenterControl.Android.csproj /verbosity:normal /t:Rebuild /p:Configuration=Debug
-        
-  iOS:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: iOS
-      run: |
-        cd IntelliCenterControl.iOS
-        nuget restore
-        msbuild IntelliCenterControl.iOS/IntelliCenterControl.iOS.csproj /verbosity:normal /t:Rebuild /p:Platform=iPhoneSimulator /p:Configuration=Debug
+      - uses: actions/checkout@master
+      - name: Building APK
+        uses: ./action
+        with:
+          args: /r:True /t:SignAndroidPackage /p:AndroidSdkDirectory=/android/sdk ${{env.SOLUTION_NAME}}/${{env.ANDROID_PROJECT_NAME}}/${{env.ANDROID_PROJECT_NAME}}.csproj
+      - name: Artifacts
+        run: |
+          mkdir -p apks
+          cp ${{env.SOLUTION_NAME}}/apk/*.apk apks
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: apks
+          path: apks
