@@ -6,5 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Generate Xamarin Form Android APK
-        uses: fahimshahrierrasel/Xamarin-Droid-Builder@1.0.2       
+        uses: fahimshahrierrasel/Xamarin-Droid-Builder@1.0.2
+
   
