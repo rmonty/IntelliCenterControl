@@ -98,6 +98,26 @@ namespace IntelliCenterControl.Views
         private void DataInterface_ConnectionChanged(object sender, IntelliCenterConnection e)
         {
             CrossToastPopUp.Current.ShowToastMessage(e.State.ToString() + "...");
+
+            switch (e.State)
+            {
+                case IntelliCenterConnection.ConnectionState.Disconnected:
+                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
+                    break;
+                case IntelliCenterConnection.ConnectionState.Connected:
+                    ConnectedIcon.IconImageSource = ImageSource.FromFile("connected.png");
+                    break;
+                case IntelliCenterConnection.ConnectionState.Connecting:
+                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
+                    break;
+                case IntelliCenterConnection.ConnectionState.Reconnecting:
+                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
+                    break;
+                default:
+                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
+                    break;
+            }
+
         }
 
         private async void UpdateIP_Clicked(object sender, EventArgs e)

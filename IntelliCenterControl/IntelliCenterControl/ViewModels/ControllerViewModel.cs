@@ -109,7 +109,6 @@ namespace IntelliCenterControl.ViewModels
             set => SetProperty(ref _currentDateTime, value);
         }
 
-        private bool _isConnected;
         private Timer _dateTimeTimer;
 
 
@@ -142,21 +141,11 @@ namespace IntelliCenterControl.ViewModels
         {
             if (e.State == IntelliCenterConnection.ConnectionState.Connected)
             {
-                _isConnected = true;
-                try
-                {
-                    DataInterface.UnSubscribeAllItemsUpdate();
-                    DataInterface.GetItemsDefinitionAsync(true);
-                }
-                catch (Exception ex)
-                {
-                    this._logService.LogError(ex.ToString());
-                    this._cloudLogService.LogError(ex);
-                }
+               DataInterface.UnSubscribeAllItemsUpdate();
+               DataInterface.GetItemsDefinitionAsync(true);
             }
             else
             {
-                _isConnected = false;
                 Circuits.Clear();
                 CircuitGroup.Clear();
                 Pumps.Clear();
@@ -203,7 +192,7 @@ namespace IntelliCenterControl.ViewModels
 
                 if (jData.TryGetValue("command", out var commandValue))
                 {
-                    semaphoreSlim.Wait(DataInterface.Cts.Token);
+                    //semaphoreSlim.Wait(DataInterface.Cts.Token);
                     try
                     {
                         switch (commandValue.ToString())
@@ -590,7 +579,7 @@ namespace IntelliCenterControl.ViewModels
                     }
                     finally
                     {
-                        semaphoreSlim.Release();
+                        //semaphoreSlim.Release();
                     }
                 }
             }
@@ -598,16 +587,7 @@ namespace IntelliCenterControl.ViewModels
 
         private async Task ExecuteLoadHardwareDefinitionCommand()
         {
-            try
-            {
-                await DataInterface.CreateConnectionAsync();
-            }
-            catch (Exception ex)
-            {
-                this._logService.LogError(ex.ToString());
-                this._cloudLogService.LogError(ex);
-            }
-
+            await DataInterface.CreateConnectionAsync();
         }
 
         private async Task ExecuteSubscribeDataCommand()

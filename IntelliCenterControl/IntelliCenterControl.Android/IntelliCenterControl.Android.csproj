@@ -198,10 +198,22 @@
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\pump_off.png" />
   </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\wifi_icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\no_wifi_icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\connected.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\not_connected.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties XamarinHotReloadUnhandledDeviceExceptionIntelliCenterControlAndroidHideInfoBar="True" XamarinHotReloadDebuggerTimeoutExceptionIntelliCenterControlAndroidHideInfoBar="True" />
+      <UserProperties XamarinHotReloadDebuggerTimeoutExceptionIntelliCenterControlAndroidHideInfoBar="True" XamarinHotReloadUnhandledDeviceExceptionIntelliCenterControlAndroidHideInfoBar="True" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

@@ -11,6 +11,7 @@
              BackgroundColor="LightGray">
 
     <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="ConnectedIcon" IconImageSource="no_wifi_icon.png"/>
         <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked" />
         <ToolbarItem x:Name="UpdateIP"  IconImageSource="gear_icon.png" Clicked="UpdateIP_Clicked" />
     </ContentPage.ToolbarItems>
