@@ -466,7 +466,7 @@ namespace IntelliCenterControl.Services
             return message;
         }
 
-        private async Task<bool> SendMessage(string message)
+        public async Task<bool> SendMessage(string message)
         {
             try
             {

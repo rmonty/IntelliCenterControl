@@ -12,12 +12,14 @@ namespace IntelliCenterControl
 
         public App()
         {
-            InitializeComponent();
+            Device.SetFlags(new string[] {"Expander_Experimental", "RadioButton_Experimental"});
+
+        InitializeComponent();
+            
             SimpleIoc.Default.Register<ICloudLogService, CloudLogService>();
             SimpleIoc.Default.Register<IDataInterface<IntelliCenterConnection>, IntelliCenterDataInterface>();
             SimpleIoc.Default.Register<ILogService, LogService>();
             SimpleIoc.Default.Register<ControllerViewModel>();
-            //DependencyService.Register<IntelliCenterDataInterface>();
             
             MainPage = new MainPage();
             

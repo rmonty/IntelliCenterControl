@@ -57,7 +57,9 @@ namespace IntelliCenterControl.Models
             [Description( "Relay")]
             RLY,
             [Description( "Legacy")]
-            LEGACY
+            LEGACY,
+            [Description("Spa")]
+            SPA
 
         }
 
@@ -148,6 +150,11 @@ namespace IntelliCenterControl.Models
             Name = name;
             Hname = hName;
             CircuitDescription = circuitType;
+        }
+
+        protected Circuit(CircuitType circuitType, IDataInterface<T> dataInterface = null)
+        {
+            DataInterface = dataInterface;
         }
 
 

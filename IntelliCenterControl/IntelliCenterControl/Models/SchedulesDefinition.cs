@@ -38,8 +38,10 @@ namespace IntelliCenterControl.Models
             public string DNTSTP { get; set; }
             public string ACT { get; set; }
             public string MODE { get; set; }
+            public string HITMP {get; set;}
+            public string STATIC {get; set;}
+            public string UPDATE {get; set;}
         }
-
     }
 
 

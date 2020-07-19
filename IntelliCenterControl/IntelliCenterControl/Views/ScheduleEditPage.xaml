@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:IntelliCenterControl.Views;assembly=intellicentercontrol"
+             xmlns:viewModel="clr-namespace:IntelliCenterControl.Models;assembly=intellicentercontrol"
+             xmlns:controls="clr-namespace:Plugin.InputKit.Shared.Controls;assembly=Plugin.InputKit"
+             mc:Ignorable="d"
+             x:Class="IntelliCenterControl.Views.ScheduleEditPage"
+             BackgroundColor="LightGray"
+             x:Name="Root">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <views:DateTimeConverter x:Key="DateTimeSpan"/>
+            <views:IntEnumConverter x:Key="IntEnum"/>
+            <views:VisibleEnumConverter x:Key="VisEnum"/>
+            <views:InvertBoolConverter x:Key="InvertBool"/>
+            <views:EnumToCheckedConverter x:Key="SundayDayConverter" Type="{x:Type viewModel:DaysEnum}" Flags="True"/>
+            <views:EnumToCheckedConverter x:Key="MondayDayConverter" Type="{x:Type viewModel:DaysEnum}" Flags="True"/>
+            <views:EnumToCheckedConverter x:Key="TuesdayDayConverter" Type="{x:Type viewModel:DaysEnum}" Flags="True"/>
+            <views:EnumToCheckedConverter x:Key="WednesdayDayConverter" Type="{x:Type viewModel:DaysEnum}" Flags="True"/>
+            <views:EnumToCheckedConverter x:Key="ThursdayDayConverter" Type="{x:Type viewModel:DaysEnum}" Flags="True"/>
+            <views:EnumToCheckedConverter x:Key="FridayDayConverter" Type="{x:Type viewModel:DaysEnum}" Flags="True"/>
+            <views:EnumToCheckedConverter x:Key="SaturdayDayConverter" Type="{x:Type viewModel:DaysEnum}" Flags="True"/>
+            <views:EnumToCheckedConverter x:Key="SundayRadioDayConverter" Type="{x:Type viewModel:DaysEnum}" />
+            <views:EnumToCheckedConverter x:Key="MondayRadioDayConverter" Type="{x:Type viewModel:DaysEnum}" />
+            <views:EnumToCheckedConverter x:Key="TuesdayRadioDayConverter" Type="{x:Type viewModel:DaysEnum}" />
+            <views:EnumToCheckedConverter x:Key="WednesdayRadioDayConverter" Type="{x:Type viewModel:DaysEnum}" />
+            <views:EnumToCheckedConverter x:Key="ThursdayRadioDayConverter" Type="{x:Type viewModel:DaysEnum}" />
+            <views:EnumToCheckedConverter x:Key="FridayRadioDayConverter" Type="{x:Type viewModel:DaysEnum}" />
+            <views:EnumToCheckedConverter x:Key="SaturdayRadioDayConverter" Type="{x:Type viewModel:DaysEnum}" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
+        <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked"/>
+        <ToolbarItem x:Name="AddNew" Text="Add" Command="{Binding AddScheduleItemCommand}"/>
+    </ContentPage.ToolbarItems>
+    <ContentPage.Content>
+        <CollectionView ItemsSource="{Binding Schedules}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Frame BackgroundColor="White" CornerRadius="5" Margin="5"/>
+                        <Expander x:Name="itemExpander" VerticalOptions="Center" IsExpanded="{Binding Expanded}">
+                           <Expander.Triggers>
+                               <DataTrigger TargetType="Expander"
+                                            Binding="{Binding Source={x:Reference itemExpander}, Path=BindingContext.IsNew}"
+                                            Value="true">
+                                   <Setter Property="BackgroundColor" Value="LightYellow" />
+                                   <!-- multiple Setters elements are allowed -->
+                               </DataTrigger>
+                           </Expander.Triggers>
+                            <Expander.Header>
+                            <StackLayout Orientation="Horizontal" Margin="10" Spacing="0">
+                            <Label Text="{Binding Name}"
+                                   FontAttributes="Bold"
+                                   FontSize="Medium" 
+                                   VerticalTextAlignment="Center"/>
+                            <Label Text=" - "
+                                   FontAttributes="Bold"
+                                   FontSize="Small"
+                                   VerticalTextAlignment="Center"/>
+                            <Label Text="{Binding StartTime, StringFormat='{0:h:mm tt}', Converter={StaticResource DateTimeSpan}}"
+                                   FontAttributes="Bold"
+                                   FontSize="Small"
+                                   VerticalTextAlignment="Center"
+                                   IsVisible="{Binding StartTimeType, Converter={StaticResource VisEnum}, ConverterParameter=0}"/>
+                            <Label Text="Sunrise"
+                                   FontAttributes="Bold"
+                                   FontSize="Small"
+                                   VerticalTextAlignment="Center"
+                                   IsVisible="{Binding StartTimeType, Converter={StaticResource VisEnum}, ConverterParameter=1}"/>
+                            <Label Text="Sunset"
+                                   FontAttributes="Bold"
+                                   FontSize="Small"
+                                   VerticalTextAlignment="Center"
+                                   IsVisible="{Binding StartTimeType, Converter={StaticResource VisEnum}, ConverterParameter=2}"/>
+                            <Label Text=" to "
+                                   FontAttributes="Bold"
+                                   FontSize="Small"
+                                   VerticalTextAlignment="Center"/>
+                            <Label Text="{Binding EndTime, StringFormat='{0:h:mm tt}', Converter={StaticResource DateTimeSpan}}"
+                                   FontAttributes="Bold"
+                                   FontSize="Small"
+                                   VerticalTextAlignment="Center"
+                                   IsVisible="{Binding EndTimeType, Converter={StaticResource VisEnum}, ConverterParameter=0}"/>
+                            <Label Text="Sunrise"
+                                   FontAttributes="Bold"
+                                   FontSize="Small"
+                                   VerticalTextAlignment="Center"
+                                   IsVisible="{Binding EndTimeType, Converter={StaticResource VisEnum}, ConverterParameter=1}"/>
+                            <Label Text="Sunset"
+                                   FontAttributes="Bold"
+                                   FontSize="Small"
+                                   VerticalTextAlignment="Center"
+                                   IsVisible="{Binding EndTimeType, Converter={StaticResource VisEnum}, ConverterParameter=2}"/>
+                            </StackLayout>
+                        </Expander.Header>
+                        <Grid Margin="2">
+                            <Frame BackgroundColor="AntiqueWhite"/>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Label Grid.Row="0" Grid.Column="0" Text="Circuit"
+                                       VerticalOptions="Center" FontSize="Caption" />
+                                <Picker Grid.Row="1" Grid.Column="0"
+                                        ItemsSource="{Binding BindingContext.AvailableCircuits, Source={x:Reference Root}}" 
+                                        ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding ScheduledCircuit}"
+                                        FontSize="Small" VerticalOptions="Center"/>
+                                <Label Grid.Row="0" Grid.Column="1" Text="Heat Source"
+                                       VerticalOptions="Center" FontSize="Caption" IsVisible="{Binding ScheduledCircuit.CircuitDescription, Converter={StaticResource VisEnum}, ConverterParameter=11|23}"/> 
+                                <Picker Grid.Row="1" Grid.Column="1"
+                                        ItemsSource="{Binding BindingContext.ScheduleHeaters, Source={x:Reference Root}}" 
+                                        ItemDisplayBinding="{Binding Name}" 
+                                        SelectedItem="{Binding SelectedHeater}"
+                                        FontSize="Small" VerticalOptions="Center"
+                                        IsVisible="{Binding ScheduledCircuit.CircuitDescription, Converter={StaticResource VisEnum}, ConverterParameter=11|23}"/>
+                                <StackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="0">
+                                    <Picker x:Name="StartTimePicker" FontSize="Caption" Title="Start Time Type" ItemsSource="{Binding TimeTypeNames}" 
+                                            SelectedIndex="{Binding StartTimeType, Converter={StaticResource IntEnum}}"/>
+                                    <TimePicker x:Name="StartTimeInput" Time="{Binding StartTime}" FontSize="Caption" VerticalOptions="Center" FontAttributes="Bold"
+                                                IsVisible="{Binding StartTimeType, Converter={StaticResource VisEnum}, ConverterParameter=0}"/>
+                                    <Label Text=" to " FontSize="Caption" VerticalTextAlignment="Center"/>
+                                    <Picker x:Name="EndTimePicker" FontSize="Caption" Title="End Time Type" ItemsSource="{Binding TimeTypeNames}"
+                                            SelectedIndex="{Binding EndTimeType, Converter={StaticResource IntEnum}}" />
+                                    <TimePicker x:Name="EndTimeInput" Time="{Binding EndTime}" FontSize="Caption" VerticalOptions="Center" FontAttributes="Bold"
+                                                IsVisible="{Binding EndTimeType, Converter={StaticResource VisEnum}, ConverterParameter=0}"/>
+                                </StackLayout>
+                                <StackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                    <Label Text="Occurence: " VerticalTextAlignment="Center"/>
+                                    <controls:RadioButtonGroupView Orientation="Horizontal">
+                                        <controls:RadioButton Text="Repeats" TextFontSize="Small" IsChecked="{Binding Repeats, Mode=TwoWay}" />
+                                        <controls:RadioButton Text="Once" TextFontSize="Small" IsChecked="{Binding Single, Mode=TwoWay}"/>
+                                    </controls:RadioButtonGroupView>
+                                </StackLayout>
+                                <Grid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="3">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <Label Grid.Row="0" Grid.Column="0" Text="Sun" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontSize="Caption"/>
+                                    <Label Grid.Row="0" Grid.Column="1" Text="Mon" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontSize="Caption"/>
+                                    <Label Grid.Row="0" Grid.Column="2" Text="Tue" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontSize="Caption"/>
+                                    <Label Grid.Row="0" Grid.Column="3" Text="Wed" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontSize="Caption"/>
+                                    <Label Grid.Row="0" Grid.Column="4" Text="Thu" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontSize="Caption"/>
+                                    <Label Grid.Row="0" Grid.Column="5" Text="Fri" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontSize="Caption"/>
+                                    <Label Grid.Row="0" Grid.Column="6" Text="Sat" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" FontSize="Caption"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="0" IsChecked="{Binding ScheduledDays, Converter={StaticResource SundayDayConverter}, ConverterParameter=Sunday}" IsVisible="{Binding Repeats}" HorizontalOptions="Center"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding ScheduledDays, Converter={StaticResource MondayDayConverter}, ConverterParameter=Monday}" IsVisible="{Binding Repeats}" HorizontalOptions="Center"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="2" IsChecked="{Binding ScheduledDays, Converter={StaticResource TuesdayDayConverter}, ConverterParameter=Tuesday}" IsVisible="{Binding Repeats}" HorizontalOptions="Center"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="3" IsChecked="{Binding ScheduledDays, Converter={StaticResource WednesdayDayConverter}, ConverterParameter=Wednesday}" IsVisible="{Binding Repeats}" HorizontalOptions="Center"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="4" IsChecked="{Binding ScheduledDays, Converter={StaticResource ThursdayDayConverter}, ConverterParameter=Thursday}" IsVisible="{Binding Repeats}" HorizontalOptions="Center"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="5" IsChecked="{Binding ScheduledDays, Converter={StaticResource FridayDayConverter}, ConverterParameter=Friday}" IsVisible="{Binding Repeats}" HorizontalOptions="Center"/>
+                                    <CheckBox Grid.Row="1" Grid.Column="6" IsChecked="{Binding ScheduledDays, Converter={StaticResource SaturdayDayConverter}, ConverterParameter=Saturday}" IsVisible="{Binding Repeats}" HorizontalOptions="Center"/>
+                                    <RadioButton Grid.Row="1" Grid.Column="0" GroupName="Days" IsChecked="{Binding ScheduledDay, Converter={StaticResource SundayRadioDayConverter}, ConverterParameter=Sunday}" IsVisible="{Binding Repeats, Converter={StaticResource InvertBool}}" HorizontalOptions="Center"/>
+                                    <RadioButton Grid.Row="1" Grid.Column="1" GroupName="Days" IsChecked="{Binding ScheduledDay, Converter={StaticResource MondayRadioDayConverter}, ConverterParameter=Monday}" IsVisible="{Binding Repeats, Converter={StaticResource InvertBool}}" HorizontalOptions="Center"/>
+                                    <RadioButton Grid.Row="1" Grid.Column="2" GroupName="Days" IsChecked="{Binding ScheduledDay, Converter={StaticResource TuesdayRadioDayConverter}, ConverterParameter=Tuesday}" IsVisible="{Binding Repeats, Converter={StaticResource InvertBool}}" HorizontalOptions="Center"/>
+                                    <RadioButton Grid.Row="1" Grid.Column="3" GroupName="Days" IsChecked="{Binding ScheduledDay, Converter={StaticResource WednesdayRadioDayConverter}, ConverterParameter=Wednesday}" IsVisible="{Binding Repeats, Converter={StaticResource InvertBool}}" HorizontalOptions="Center"/>
+                                    <RadioButton Grid.Row="1" Grid.Column="4" GroupName="Days" IsChecked="{Binding ScheduledDay, Converter={StaticResource ThursdayRadioDayConverter}, ConverterParameter=Thursday}" IsVisible="{Binding Repeats, Converter={StaticResource InvertBool}}" HorizontalOptions="Center"/>
+                                    <RadioButton Grid.Row="1" Grid.Column="5" GroupName="Days" IsChecked="{Binding ScheduledDay, Converter={StaticResource FridayRadioDayConverter}, ConverterParameter=Friday}" IsVisible="{Binding Repeats, Converter={StaticResource InvertBool}}" HorizontalOptions="Center"/>
+                                    <RadioButton Grid.Row="1" Grid.Column="6" GroupName="Days" IsChecked="{Binding ScheduledDay, Converter={StaticResource SaturdayRadioDayConverter}, ConverterParameter=Saturday}" IsVisible="{Binding Repeats, Converter={StaticResource InvertBool}}" HorizontalOptions="Center"/>
+
+                                </Grid>
+                                <Button x:Name="Save" Grid.Row="5" Grid.Column="0" Text="Save" BackgroundColor="LightGreen" Margin="5,0,5,5" Clicked="Save_Clicked" BindingContext="{Binding BindingContext, Source={x:Reference itemExpander}}"/>
+                                <Button x:Name="Delete" Grid.Row="5" Grid.Column="1" Text="Delete" BackgroundColor="LightSalmon" Margin="5,0,5,5" Clicked="Delete_Clicked" BindingContext="{Binding BindingContext, Source={x:Reference itemExpander}}"/>
+                            </Grid>
+                        </Grid>
+                    </Expander>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </ContentPage.Content>
+</ContentPage>

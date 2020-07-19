@@ -1,4 +1,6 @@
-﻿using Xamarin.Forms;
+﻿using System;
+using System.Globalization;
+using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 namespace IntelliCenterControl.Views
@@ -26,4 +28,6 @@ namespace IntelliCenterControl.Views
             ButtonImage.Source = ImageSource.FromFile(ActiveToggle.IsToggled ? "radio_button_on_large.png" : "radio_button_off_large.png");
         }
     }
+
+    
 }

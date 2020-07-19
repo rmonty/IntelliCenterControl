@@ -92,6 +92,10 @@ namespace IntelliCenterControl.Views
                         Grid.SetRowSpan(BodyGrid, 2);
                     }
                     break;
+                case "StatusMessage":
+                    Device.BeginInvokeOnMainThread(
+                        () => { CrossToastPopUp.Current.ShowToastMessage(viewModel.StatusMessage); });
+                    break;
             }
         }
 

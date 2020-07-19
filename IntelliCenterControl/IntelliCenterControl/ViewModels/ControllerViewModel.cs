@@ -18,7 +18,7 @@ namespace IntelliCenterControl.ViewModels
     {
         private readonly ILogService _logService;
         private readonly ICloudLogService _cloudLogService;
-        
+
         private HardwareDefinition _hardwareDefinition = new HardwareDefinition();
 
         public HardwareDefinition HardwareDefinition
@@ -41,6 +41,9 @@ namespace IntelliCenterControl.ViewModels
         public Command SubscribeDataCommand { get; set; }
         public Command AllLightsOnCommand { get; set; }
         public Command AllLightsOffCommand { get; set; }
+        public Command AddScheduleItemCommand { get; set; }
+
+       
 
         public ObservableCollection<Circuit<IntelliCenterConnection>> Circuits { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> CircuitGroup { get; private set; }
@@ -49,7 +52,10 @@ namespace IntelliCenterControl.ViewModels
         public ObservableCollection<Circuit<IntelliCenterConnection>> Chems { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Lights { get; private set; }
         public ObservableCollection<Heater> Heaters { get; private set; }
+        public ObservableCollection<Heater> ScheduleHeaters {get; private set;}
+        public ObservableCollection<Circuit<IntelliCenterConnection>> TodaysSchedule { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Schedules { get; private set; }
+        public ObservableCollection<Circuit<IntelliCenterConnection>> AvailableCircuits {get; private set;}
         public ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> HardwareDictionary = new ConcurrentDictionary<string, Circuit<IntelliCenterConnection>>();
 
         private string _airTemp = "-";
@@ -111,6 +117,18 @@ namespace IntelliCenterControl.ViewModels
 
         private Timer _dateTimeTimer;
 
+        private string _statusMessage;
+
+        public string StatusMessage
+        {
+            get { return _statusMessage; }
+            set
+            {
+                if(_statusMessage == value || String.IsNullOrEmpty(value)) return;
+                _statusMessage = value;
+                OnPropertyChanged();
+            }
+        }
 
 
         public ControllerViewModel(ILogService logService, ICloudLogService cloudLogService)
@@ -125,15 +143,54 @@ namespace IntelliCenterControl.ViewModels
             Chems = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Lights = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Heaters = new ObservableCollection<Heater>();
+            ScheduleHeaters = new ObservableCollection<Heater>();
+            TodaysSchedule = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Schedules = new ObservableCollection<Circuit<IntelliCenterConnection>>();
+            AvailableCircuits = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             LoadHardwareDefinitionCommand = new Command(async () => await ExecuteLoadHardwareDefinitionCommand());
             ClosingCommand = new Command(async () => await ExecuteClosingCommand());
             SubscribeDataCommand = new Command(async () => await ExecuteSubscribeDataCommand());
             AllLightsOnCommand = new Command(async () => await ExecuteAllLightsOnCommand());
             AllLightsOffCommand = new Command(async () => await ExecuteAllLightsOffCommand());
+            AddScheduleItemCommand = new Command(ExecuteAddScheduleItemCommand);
             DataInterface.DataReceived += DataStoreDataReceived;
             DataInterface.ConnectionChanged += DataInterface_ConnectionChanged;
             _dateTimeTimer = new Timer(DateTimeTimerElapsed, this, 0, 1000);
+
+        }
+
+        private void ExecuteAddScheduleItemCommand()
+        {
+            if (Schedules.Any())
+            {
+                if (((Schedule)Schedules[Schedules.Count - 1]).IsNew)
+                {
+                    return;
+                }
+            }
+
+            Device.BeginInvokeOnMainThread(
+                () =>
+                {
+                    if (ScheduleHeaters.Any())
+                    {
+                       
+
+                        Schedules.Add(new Schedule(Circuit<IntelliCenterConnection>.CircuitType.SCHED, DataInterface)
+                        {
+                            SelectedHeater = ScheduleHeaters[0],
+                            IsNew = true,
+
+                        });
+                    }
+                    else
+                    {
+                        Schedules.Add(new Schedule(Circuit<IntelliCenterConnection>.CircuitType.SCHED, DataInterface)
+                        {
+                            IsNew = true
+                        });
+                    }
+                });
 
         }
 
@@ -141,18 +198,25 @@ namespace IntelliCenterControl.ViewModels
         {
             if (e.State == IntelliCenterConnection.ConnectionState.Connected)
             {
-               DataInterface.UnSubscribeAllItemsUpdate();
-               DataInterface.GetItemsDefinitionAsync(true);
+                DataInterface.UnSubscribeAllItemsUpdate();
+                DataInterface.GetItemsDefinitionAsync(true);
             }
             else
             {
-                Circuits.Clear();
-                CircuitGroup.Clear();
-                Pumps.Clear();
-                Bodies.Clear();
-                Chems.Clear();
-                Lights.Clear();
-                Heaters.Clear();
+                Device.BeginInvokeOnMainThread(
+                    () =>
+                    {
+                        Circuits.Clear();
+                        CircuitGroup.Clear();
+                        Pumps.Clear();
+                        Bodies.Clear();
+                        Chems.Clear();
+                        Lights.Clear();
+                        Heaters.Clear();
+                        ScheduleHeaters.Clear();
+                        Schedules.Clear();
+                        TodaysSchedule.Clear();
+                    });
             }
         }
 
@@ -210,15 +274,13 @@ namespace IntelliCenterControl.ViewModels
                                                 {
                                                     if (Guid.TryParse(g.ToString(), out _hardwareDefinitionMessageId))
                                                     {
-
+                                                        StatusMessage = "Loading Data";
                                                         //Console.WriteLine(e);
                                                         HardwareDefinition =
                                                             JsonConvert.DeserializeObject<HardwareDefinition>(e);
 
                                                         LoadModels();
                                                         PopulateModels();
-                                                        ExecuteSubscribeDataCommand();
-
                                                     }
                                                 }
                                             }
@@ -488,8 +550,13 @@ namespace IntelliCenterControl.ViewModels
                                                                 switch (cktType)
                                                                 {
                                                                     case Circuit<IntelliCenterConnection>.CircuitType.SCHED:
-
-                                                                        Schedules.Clear();
+                                                                        StatusMessage = "Retrieving Schedule";
+                                                                        Device.BeginInvokeOnMainThread(
+                                                                            () =>
+                                                                            {
+                                                                                TodaysSchedule.Clear();
+                                                                                Schedules.Clear();
+                                                                            });
                                                                         ScheduleDefinition =
                                                                             JsonConvert.DeserializeObject<SchedulesDefinition>(e);
                                                                         foreach (var sch in ScheduleDefinition.objectList)
@@ -524,40 +591,46 @@ namespace IntelliCenterControl.ViewModels
                                                                                     isToday = false;
                                                                                     break;
                                                                             }
-                                                                            
-                                                                            if (isToday)
-                                                                            {
-                                                                                var startTime = sch.Params.TIME.Split(',');
-                                                                                var endTime = sch.Params.TIMOUT.Split(',');
-                                                                                if (startTime.Length > 2 && endTime.Length > 2)
+                                                                            var cirName = sch.Params.CIRCUIT;
+
+                                                                            if (HardwareDictionary.TryGetValue(
+                                                                                cirName, out var schedCir))
+                                                                            { 
+                                                                                var selectedHeater =
+                                                                                    ScheduleHeaters.FirstOrDefault(o =>
+                                                                                        o.Hname == sch.Params.HEATER);
+
+                                                                                var s = new Schedule(
+                                                                                    sch.Params.SNAME,
+                                                                                    Circuit<IntelliCenterConnection>
+                                                                                        .CircuitType.SCHED,
+                                                                                    sch,
+                                                                                    schedCir,
+                                                                                    sch.objnam,
+                                                                                    DataInterface)
                                                                                 {
-
-                                                                                    var start = new DateTime(date.Year, date.Month, date.Day,
-                                                                                        int.Parse(startTime[0]),
-                                                                                        int.Parse(startTime[1]), int.Parse(startTime[2]));
-                                                                                    var end = new DateTime(date.Year, date.Month, date.Day,
-                                                                                        int.Parse(endTime[0]),
-                                                                                        int.Parse(endTime[1]), int.Parse(endTime[2]));
-
-                                                                                    var s = new Schedule(sch.Params.SNAME, Circuit<IntelliCenterConnection>.CircuitType.SCHED,
-                                                                                        sch.objnam,
-                                                                                        DataInterface)
+                                                                                    SelectedHeater = selectedHeater
+                                                                                };
+                                                                                Device.BeginInvokeOnMainThread(
+                                                                                    () =>
                                                                                     {
-                                                                                        Active = sch.Params.ACT == "ON",
-                                                                                        StartTime = start,
-                                                                                        EndTime = end
-                                                                                    };
-
-                                                                                    Device.BeginInvokeOnMainThread(() =>
-                                                                                    {
-                                                                                        Schedules.Add(s);
+                                                                                        Schedules.InsertInPlace(s,
+                                                                                            o => o.ListOrd);
                                                                                     });
-                                                                                    HardwareDictionary[s.Hname] = s;
+
+                                                                                if (isToday)
+                                                                                {
+                                                                                    Device.BeginInvokeOnMainThread(
+                                                                                        () =>
+                                                                                        {
+                                                                                            TodaysSchedule.InsertInPlace(s, o => o.ListOrd);
+                                                                                        });
+
                                                                                 }
+
+                                                                                HardwareDictionary[s.Hname] = s;
                                                                             }
                                                                         }
-
-
                                                                         return;
                                                                 }
                                                             }
@@ -568,6 +641,125 @@ namespace IntelliCenterControl.ViewModels
                                             }
                                         }
                                     }
+                                }
+                                break;
+                            case "ObjectCreated":
+                                StatusMessage = "Item Created";
+                                break;
+                            case "WriteParamList":
+                                Console.WriteLine(e);
+                                if (jData.TryGetValue("objectList", out var writeParamObjList))
+                                {
+                                    var jDataArray = (JArray)writeParamObjList;
+
+                                    if (jDataArray != null)
+                                    {
+                                        foreach (JToken item in jDataArray)
+                                        {
+                                            if (!item.HasValues)
+                                            {
+                                                continue;
+                                            }
+                                            var jItem = (JObject)item;
+
+                                            if (jItem.TryGetValue("created", out var createdObject))
+                                            {
+                                                var createdSchedule = JsonConvert.DeserializeObject<SchedulesDefinition.Schedule>(createdObject.First.ToString());
+
+                                                if (Schedules.Any() & createdSchedule.Params != null)
+                                                {
+                                                    var newItem = (Schedule) Schedules[Schedules.Count - 1];
+                                                    if (newItem.IsNew)
+                                                    {
+                                                        
+                                                        if (HardwareDictionary.TryGetValue(
+                                                            createdSchedule.Params.CIRCUIT, out var schedCir))
+                                                        {
+                                                            Schedules.Remove(newItem);
+                                                            
+                                                            var sitem = new Schedule(createdSchedule.Params.SNAME,
+                                                                Circuit<IntelliCenterConnection>.CircuitType.SCHED,
+                                                                createdSchedule, schedCir, createdSchedule.objnam,
+                                                                DataInterface);
+                                                            
+                                                            var date = DateTime.Now;
+                                                            var days = createdSchedule.Params.DAY;
+                                                            bool isToday;
+                                                            switch (date.DayOfWeek)
+                                                            {
+                                                                case DayOfWeek.Friday:
+                                                                    isToday = days.Contains('F');
+                                                                    break;
+                                                                case DayOfWeek.Monday:
+                                                                    isToday = days.Contains('M');
+                                                                    break;
+                                                                case DayOfWeek.Saturday:
+                                                                    isToday = days.Contains('A');
+                                                                    break;
+                                                                case DayOfWeek.Sunday:
+                                                                    isToday = days.Contains('U');
+                                                                    break;
+                                                                case DayOfWeek.Thursday:
+                                                                    isToday = days.Contains('R');
+                                                                    break;
+                                                                case DayOfWeek.Tuesday:
+                                                                    isToday = days.Contains('T');
+                                                                    break;
+                                                                case DayOfWeek.Wednesday:
+                                                                    isToday = days.Contains('W');
+                                                                    break;
+                                                                default:
+                                                                    isToday = false;
+                                                                    break;
+                                                            }
+                                                            StatusMessage = "Item Added";
+                                                            Device.BeginInvokeOnMainThread(
+                                                                () =>
+                                                                {
+                                                                    Schedules.InsertInPlace(sitem,
+                                                                        o => o.ListOrd);
+                                                                });
+
+                                                            if (isToday)
+                                                            {
+                                                                Device.BeginInvokeOnMainThread(
+                                                                    () =>
+                                                                    {
+                                                                        TodaysSchedule.InsertInPlace(sitem, o => o.ListOrd);
+                                                                    });
+
+                                                            }
+
+                                                            HardwareDictionary[sitem.Hname] = sitem;
+
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            if (jItem.TryGetValue("deleted", out var deletedObject))
+                                            {
+                                                var deletedItem = (JToken)deletedObject;
+
+                                                StatusMessage = "Item Deleted";
+                                                var schItem = Schedules.FirstOrDefault(o => o.Hname == deletedItem.First.ToString());
+                                                if (schItem != null)
+                                                {
+                                                    Schedules.Remove(schItem);
+                                                }
+
+                                                var todayItem = TodaysSchedule.FirstOrDefault(o => o.Hname == deletedItem.First.ToString());
+                                                if (todayItem != null)
+                                                {
+                                                    TodaysSchedule.Remove(todayItem);
+                                                }
+
+                                                DataInterface.GetScheduleDataAsync();
+                                            }
+                                        }
+                                    }
+
+                                    
                                 }
                                 break;
                         }
@@ -593,6 +785,7 @@ namespace IntelliCenterControl.ViewModels
         private async Task ExecuteSubscribeDataCommand()
         {
             IsBusy = true;
+            StatusMessage = "Subscribing To Data";
             foreach (var kvp in HardwareDictionary)
             {
                 switch (kvp.Value.CircuitDescription)
@@ -641,6 +834,7 @@ namespace IntelliCenterControl.ViewModels
         {
             Device.BeginInvokeOnMainThread(() =>
             {
+                AvailableCircuits.Clear();
                 Circuits.Clear();
                 CircuitGroup.Clear();
                 Pumps.Clear();
@@ -648,7 +842,7 @@ namespace IntelliCenterControl.ViewModels
                 Chems.Clear();
                 Lights.Clear();
                 Heaters.Clear();
-
+                ScheduleHeaters.Clear();
                 ChemInstalled = Chems.Any();
                 HasCircuits = Circuits.Any();
                 HasCircuitGroups = CircuitGroup.Any();
@@ -659,18 +853,20 @@ namespace IntelliCenterControl.ViewModels
                     {
                         case Circuit<IntelliCenterConnection>.CircuitType.BODY:
                             //Bodies.Add(kvp.Value);
-                            Bodies.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            if (kvp.Value.Display) Bodies.InsertInPlace(kvp.Value, o => o.ListOrd);
                             break;
                         case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
                             Chems.Add(kvp.Value);
                             break;
                         case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
                             //CircuitGroup.Add(kvp.Value);
-                            CircuitGroup.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            if (kvp.Value.Display) CircuitGroup.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            AvailableCircuits.InsertInPlace(kvp.Value, o => o.Name);
                             break;
                         case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
                             //Circuits.Add(kvp.Value);
-                            Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            if (kvp.Value.Display) Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            AvailableCircuits.InsertInPlace(kvp.Value, o => o.Name);
                             break;
                         case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                             //Pumps.Add(kvp.Value);
@@ -686,15 +882,20 @@ namespace IntelliCenterControl.ViewModels
                         case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
                         case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
                             //Lights.Add(kvp.Value);
+                            if (kvp.Value.Display) Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
                             Lights.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            AvailableCircuits.InsertInPlace(kvp.Value, o => o.Name);
                             break;
                         case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
-                            var htr = (Heater) kvp.Value;
+                            var htr = (Heater)kvp.Value;
                             if (htr != null)
                             {
                                 Heaters.Add(htr);
                             }
-
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.POOL:
+                        case Circuit<IntelliCenterConnection>.CircuitType.SPA:
+                            AvailableCircuits.InsertInPlace(kvp.Value, o => o.Name);
                             break;
                     }
 
@@ -706,7 +907,7 @@ namespace IntelliCenterControl.ViewModels
 
                 foreach (var bodyCircuit in Bodies)
                 {
-                    var body = (Body) bodyCircuit;
+                    var body = (Body)bodyCircuit;
                     if (body != null)
                     {
                         body.Heaters.Clear();
@@ -721,7 +922,21 @@ namespace IntelliCenterControl.ViewModels
                         }
                     }
                 }
+
+                if (Heaters.Any())
+                {
+                    ScheduleHeaters.Add(new Heater("Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
+                    ScheduleHeaters.Add(new Heater("Don't Change", Heater.HeaterType.GENERIC, "00001", DataInterface));
+
+                    foreach (var heater in Heaters)
+                    {
+                        ScheduleHeaters.Add(heater);
+                    }
+                }
+
             });
+
+            ExecuteSubscribeDataCommand();
         }
 
         private async Task ExecuteClosingCommand()
@@ -733,7 +948,7 @@ namespace IntelliCenterControl.ViewModels
         {
             DataInterface.UnSubscribeAllItemsUpdate();
             HardwareDictionary.Clear();
-            
+
             foreach (var obj in HardwareDefinition.answer.SelectMany(answer => answer.Params.Objlist))
             {
                 if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(obj.Params.Objtyp, out var circuitType))
@@ -757,7 +972,8 @@ namespace IntelliCenterControl.ViewModels
                                                 var b = new Body(moduleCircuit.Params.Sname, bodyType, moduleCircuit.Objnam, DataInterface)
                                                 {
                                                     LastTemp = "-",
-                                                    ListOrd = listOrder
+                                                    ListOrd = listOrder,
+                                                    Display = true
                                                 };
 
                                                 HardwareDictionary[b.Hname] = b;
@@ -810,29 +1026,40 @@ namespace IntelliCenterControl.ViewModels
                                                                   out var lightType))
                                                             {
                                                                 int.TryParse(moduleCircuit.Params.Listord,
-                                                                    out var listOrder);
+                                                                    out var llistOrder);
                                                                 var l = new Light(moduleCircuit.Params.Sname, lightType,
                                                                     moduleCircuit.Objnam, DataInterface)
                                                                 {
-                                                                    ListOrd = listOrder
+                                                                    ListOrd = llistOrder,
+                                                                    Display = moduleCircuit.Params.Featr == "ON"
                                                                 };
 
                                                                 HardwareDictionary[l.Hname] = l;
                                                             }
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                                                            if (moduleCircuit.Params.Featr == "ON")
+                                                            int.TryParse(moduleCircuit.Params.Listord,
+                                                                out var glistOrder);
+                                                            var gc = new Circuit<IntelliCenterConnection>(moduleCircuit.Params.Sname, subType,
+                                                                moduleCircuit.Objnam, DataInterface)
                                                             {
-                                                                int.TryParse(moduleCircuit.Params.Listord,
-                                                                    out var listOrder);
-                                                                var gc = new Circuit<IntelliCenterConnection>(moduleCircuit.Params.Sname, Circuit<IntelliCenterConnection>.CircuitType.GENERIC,
-                                                                    moduleCircuit.Objnam, DataInterface)
-                                                                {
-                                                                    ListOrd = listOrder
-                                                                };
+                                                                ListOrd = glistOrder,
+                                                                Display = moduleCircuit.Params.Featr == "ON"
+                                                            };
 
-                                                                HardwareDictionary[gc.Hname] = gc;
-                                                            }
+                                                            HardwareDictionary[gc.Hname] = gc;
+                                                            break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.POOL:
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.SPA:
+                                                            int.TryParse(moduleCircuit.Params.Listord,
+                                                                    out var blistOrder);
+                                                            var b = new Circuit<IntelliCenterConnection>(moduleCircuit.Params.Sname, subType,
+                                                                    moduleCircuit.Objnam, DataInterface)
+                                                            {
+                                                                ListOrd = blistOrder,
+                                                                Display = false
+                                                            };
+                                                            HardwareDictionary[b.Hname] = b;
                                                             break;
                                                     }
                                                 }
@@ -842,11 +1069,14 @@ namespace IntelliCenterControl.ViewModels
                                             if (Enum.TryParse<Heater.HeaterType>(moduleCircuit.Params.Subtyp,
                                                 out var htrType))
                                             {
+                                                int.TryParse(moduleCircuit.Params.Listord,
+                                                    out var hlistOrder);
                                                 var bodies = moduleCircuit.Params.Body.Split(' ');
                                                 var h = new Heater(moduleCircuit.Params.Sname, htrType,
                                                     moduleCircuit.Objnam, DataInterface)
                                                 {
-                                                    Bodies = bodies.ToList()
+                                                    Bodies = bodies.ToList(),
+                                                    ListOrd = hlistOrder
                                                 };
 
                                                 HardwareDictionary[h.Hname] = h;
@@ -881,32 +1111,30 @@ namespace IntelliCenterControl.ViewModels
                                     switch (subType)
                                     {
                                         case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                                            {
-                                                if (obj.Params.Featr == "ON")
-                                                {
-                                                    int.TryParse(obj.Params.Listord,
-                                                        out var listOrder);
-                                                    var c = new Circuit<IntelliCenterConnection>(obj.Params.Sname, Circuit<IntelliCenterConnection>.CircuitType.GENERIC,
-                                                        obj.Params.Hname, DataInterface)
-                                                    {
-                                                        ListOrd = listOrder
-                                                    };
-
-                                                    HardwareDictionary[c.Hname] = c;
-                                                }
-                                            }
-                                            break;
                                         case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
+                                        case Circuit<IntelliCenterConnection>.CircuitType.SPILL:
+                                            if (!obj.Params.Featr.Contains("FEATR"))
                                             {
                                                 int.TryParse(obj.Params.Listord,
                                                     out var listOrder);
-                                                var c = new Circuit<IntelliCenterConnection>(obj.Params.Sname, Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP,
+
+                                                if (obj.Params.Objlist != null)
+                                                {
+
+                                                }
+
+                                                var c = new Circuit<IntelliCenterConnection>(obj.Params.Sname, subType,
                                                     obj.Params.Hname, DataInterface)
                                                 {
-                                                    ListOrd = listOrder
+                                                    ListOrd = listOrder,
+                                                    Display = obj.Params.Featr == "ON" ||
+                                                              subType == Circuit<IntelliCenterConnection>.CircuitType
+                                                                  .CIRCGRP
                                                 };
+
                                                 HardwareDictionary[c.Hname] = c;
                                             }
+
                                             break;
                                     }
                                 }

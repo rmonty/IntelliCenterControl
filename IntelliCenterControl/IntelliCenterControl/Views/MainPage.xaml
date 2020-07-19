@@ -16,7 +16,16 @@
                     <On Platform="iOS" Value="tab_feed.png"/>
                 </OnPlatform>
             </NavigationPage.Icon>
-            
+        </NavigationPage>
+        <NavigationPage Title="Schedule">
+            <x:Arguments>
+                <views:ScheduleEditPage />
+            </x:Arguments>
+            <!--<NavigationPage.Icon>
+                <OnPlatform x:TypeArguments="FileImageSource">
+                    <On Platform="iOS" Value="tab_feed.png"/>
+                </OnPlatform>
+            </NavigationPage.Icon>-->
         </NavigationPage>
         <NavigationPage Title="About">
             <x:Arguments>

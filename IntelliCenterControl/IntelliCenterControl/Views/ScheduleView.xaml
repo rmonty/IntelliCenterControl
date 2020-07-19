@@ -3,9 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:IntelliCenterControl.Views;assembly=intellicentercontrol"
              mc:Ignorable="d"
              x:Class="IntelliCenterControl.Views.ScheduleView">
-  <ContentView.Content>
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <views:DateTimeConverter x:Key="DateTimeSpan"/>
+        </ResourceDictionary>
+    </ContentView.Resources>
+    <ContentView.Content>
       <Grid Margin="2">
               <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="1*"/>
@@ -18,9 +24,9 @@
                    Text="{Binding Name}"
                    FontAttributes="Bold" VerticalOptions="Center" FontSize="Caption" />
                 <StackLayout Orientation="Horizontal" Spacing="0">
-                    <Label Text="{Binding StartTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro"/>
+                    <Label Text="{Binding StartTime, StringFormat='{0:h:mm tt}', Converter={StaticResource DateTimeSpan}}" FontSize="Micro"/>
                     <Label Text=" to " FontSize="Micro"/>
-                    <Label Text="{Binding EndTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro"/>
+                    <Label Text="{Binding EndTime, StringFormat='{0:h:mm tt}', Converter={StaticResource DateTimeSpan}}" FontSize="Micro"/>
                 </StackLayout>
             </StackLayout>
 </Grid>

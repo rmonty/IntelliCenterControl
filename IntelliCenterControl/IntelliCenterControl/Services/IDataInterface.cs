@@ -22,6 +22,7 @@ namespace IntelliCenterControl.Services
         Task<bool> UnSubscribeAllItemsUpdate();
         Task<bool> GetItemsDefinitionAsync(bool forceRefresh = false);
         Task<bool> GetScheduleDataAsync();
+        Task<bool> SendMessage(string message);
         event EventHandler<string> DataReceived;
         event EventHandler<T> ConnectionChanged;
         CancellationTokenSource Cts { get; set; }
