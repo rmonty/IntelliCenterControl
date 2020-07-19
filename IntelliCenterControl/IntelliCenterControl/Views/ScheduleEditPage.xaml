@@ -49,7 +49,11 @@
                                             Binding="{Binding Source={x:Reference itemExpander}, Path=BindingContext.IsNew}"
                                             Value="true">
                                    <Setter Property="BackgroundColor" Value="LightYellow" />
-                                   <!-- multiple Setters elements are allowed -->
+                               </DataTrigger>
+                               <DataTrigger TargetType="Expander"
+                                            Binding="{Binding Source={x:Reference itemExpander}, Path=BindingContext.Active}"
+                                            Value="true">
+                                   <Setter Property="BackgroundColor" Value="LightSeaGreen" />
                                </DataTrigger>
                            </Expander.Triggers>
                             <Expander.Header>
@@ -119,29 +123,36 @@
                                 <Picker Grid.Row="1" Grid.Column="0"
                                         ItemsSource="{Binding BindingContext.AvailableCircuits, Source={x:Reference Root}}" 
                                         ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding ScheduledCircuit}"
-                                        FontSize="Small" VerticalOptions="Center"/>
+                                        FontSize="Subtitle" VerticalOptions="Center"/>
                                 <Label Grid.Row="0" Grid.Column="1" Text="Heat Source"
                                        VerticalOptions="Center" FontSize="Caption" IsVisible="{Binding ScheduledCircuit.CircuitDescription, Converter={StaticResource VisEnum}, ConverterParameter=11|23}"/> 
-                                <Picker Grid.Row="1" Grid.Column="1"
-                                        ItemsSource="{Binding BindingContext.ScheduleHeaters, Source={x:Reference Root}}" 
-                                        ItemDisplayBinding="{Binding Name}" 
-                                        SelectedItem="{Binding SelectedHeater}"
-                                        FontSize="Small" VerticalOptions="Center"
-                                        IsVisible="{Binding ScheduledCircuit.CircuitDescription, Converter={StaticResource VisEnum}, ConverterParameter=11|23}"/>
+                                <Grid Grid.Row="1" Grid.Column="1" IsVisible="{Binding ScheduledCircuit.CircuitDescription, Converter={StaticResource VisEnum}, ConverterParameter=11|23}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Picker Grid.Column="0" ItemsSource="{Binding BindingContext.ScheduleHeaters, Source={x:Reference Root}}" 
+                                            ItemDisplayBinding="{Binding Name}" 
+                                            SelectedItem="{Binding SelectedHeater}"
+                                            FontSize="Small" VerticalOptions="Center"
+                                            IsVisible="{Binding ScheduledCircuit.CircuitDescription, Converter={StaticResource VisEnum}, ConverterParameter=11|23}"/>
+                                <Entry Grid.Column="1" Keyboard="Numeric" FontSize="Small" Text="{Binding Lotmp}" HorizontalTextAlignment="Center"
+                                       IsVisible="{Binding ScheduledCircuit.CircuitDescription, Converter={StaticResource VisEnum}, ConverterParameter=11|23}"/>
+                                </Grid>
                                 <StackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="0">
-                                    <Picker x:Name="StartTimePicker" FontSize="Caption" Title="Start Time Type" ItemsSource="{Binding TimeTypeNames}" 
+                                    <Picker x:Name="StartTimePicker" FontSize="Small" Title="Start Time Type" ItemsSource="{Binding TimeTypeNames}" 
                                             SelectedIndex="{Binding StartTimeType, Converter={StaticResource IntEnum}}"/>
-                                    <TimePicker x:Name="StartTimeInput" Time="{Binding StartTime}" FontSize="Caption" VerticalOptions="Center" FontAttributes="Bold"
+                                    <TimePicker x:Name="StartTimeInput" Time="{Binding StartTime}" FontSize="Small" VerticalOptions="Center" 
                                                 IsVisible="{Binding StartTimeType, Converter={StaticResource VisEnum}, ConverterParameter=0}"/>
                                     <Label Text=" to " FontSize="Caption" VerticalTextAlignment="Center"/>
-                                    <Picker x:Name="EndTimePicker" FontSize="Caption" Title="End Time Type" ItemsSource="{Binding TimeTypeNames}"
+                                    <Picker x:Name="EndTimePicker" FontSize="Small" Title="End Time Type" ItemsSource="{Binding TimeTypeNames}"
                                             SelectedIndex="{Binding EndTimeType, Converter={StaticResource IntEnum}}" />
-                                    <TimePicker x:Name="EndTimeInput" Time="{Binding EndTime}" FontSize="Caption" VerticalOptions="Center" FontAttributes="Bold"
+                                    <TimePicker x:Name="EndTimeInput" Time="{Binding EndTime}" FontSize="Small" VerticalOptions="Center" 
                                                 IsVisible="{Binding EndTimeType, Converter={StaticResource VisEnum}, ConverterParameter=0}"/>
                                 </StackLayout>
-                                <StackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
-                                    <Label Text="Occurence: " VerticalTextAlignment="Center"/>
-                                    <controls:RadioButtonGroupView Orientation="Horizontal">
+                                <StackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10">
+                                    <Label Text="Occurence: " VerticalTextAlignment="Center" FontSize="Small"/>
+                                    <controls:RadioButtonGroupView Orientation="Horizontal" Spacing="20">
                                         <controls:RadioButton Text="Repeats" TextFontSize="Small" IsChecked="{Binding Repeats, Mode=TwoWay}" />
                                         <controls:RadioButton Text="Once" TextFontSize="Small" IsChecked="{Binding Single, Mode=TwoWay}"/>
                                     </controls:RadioButtonGroupView>

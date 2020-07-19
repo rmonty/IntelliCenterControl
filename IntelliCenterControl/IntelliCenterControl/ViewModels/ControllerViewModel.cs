@@ -43,7 +43,7 @@ namespace IntelliCenterControl.ViewModels
         public Command AllLightsOffCommand { get; set; }
         public Command AddScheduleItemCommand { get; set; }
 
-       
+
 
         public ObservableCollection<Circuit<IntelliCenterConnection>> Circuits { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> CircuitGroup { get; private set; }
@@ -52,10 +52,10 @@ namespace IntelliCenterControl.ViewModels
         public ObservableCollection<Circuit<IntelliCenterConnection>> Chems { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Lights { get; private set; }
         public ObservableCollection<Heater> Heaters { get; private set; }
-        public ObservableCollection<Heater> ScheduleHeaters {get; private set;}
+        public ObservableCollection<Heater> ScheduleHeaters { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> TodaysSchedule { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Schedules { get; private set; }
-        public ObservableCollection<Circuit<IntelliCenterConnection>> AvailableCircuits {get; private set;}
+        public ObservableCollection<Circuit<IntelliCenterConnection>> AvailableCircuits { get; private set; }
         public ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> HardwareDictionary = new ConcurrentDictionary<string, Circuit<IntelliCenterConnection>>();
 
         private string _airTemp = "-";
@@ -124,7 +124,7 @@ namespace IntelliCenterControl.ViewModels
             get { return _statusMessage; }
             set
             {
-                if(_statusMessage == value || String.IsNullOrEmpty(value)) return;
+                if (_statusMessage == value || String.IsNullOrEmpty(value)) return;
                 _statusMessage = value;
                 OnPropertyChanged();
             }
@@ -174,20 +174,21 @@ namespace IntelliCenterControl.ViewModels
                 {
                     if (ScheduleHeaters.Any())
                     {
-                       
+
 
                         Schedules.Add(new Schedule(Circuit<IntelliCenterConnection>.CircuitType.SCHED, DataInterface)
                         {
                             SelectedHeater = ScheduleHeaters[0],
                             IsNew = true,
-
+                            Bodies = Bodies.ToList()
                         });
                     }
                     else
                     {
                         Schedules.Add(new Schedule(Circuit<IntelliCenterConnection>.CircuitType.SCHED, DataInterface)
                         {
-                            IsNew = true
+                            IsNew = true,
+                            Bodies = Bodies.ToList()
                         });
                     }
                 });
@@ -595,10 +596,14 @@ namespace IntelliCenterControl.ViewModels
 
                                                                             if (HardwareDictionary.TryGetValue(
                                                                                 cirName, out var schedCir))
-                                                                            { 
+                                                                            {
+                                                                                string htrName;
+
+                                                                                htrName = sch.Params.HEATER == "HOLD" ? "00001" : sch.Params.HEATER;
+
                                                                                 var selectedHeater =
                                                                                     ScheduleHeaters.FirstOrDefault(o =>
-                                                                                        o.Hname == sch.Params.HEATER);
+                                                                                        o.Hname == htrName);
 
                                                                                 var s = new Schedule(
                                                                                     sch.Params.SNAME,
@@ -609,7 +614,8 @@ namespace IntelliCenterControl.ViewModels
                                                                                     sch.objnam,
                                                                                     DataInterface)
                                                                                 {
-                                                                                    SelectedHeater = selectedHeater
+                                                                                    SelectedHeater = selectedHeater,
+                                                                                    Bodies = Bodies.ToList()
                                                                                 };
                                                                                 Device.BeginInvokeOnMainThread(
                                                                                     () =>
@@ -647,7 +653,7 @@ namespace IntelliCenterControl.ViewModels
                                 StatusMessage = "Item Created";
                                 break;
                             case "WriteParamList":
-                                Console.WriteLine(e);
+
                                 if (jData.TryGetValue("objectList", out var writeParamObjList))
                                 {
                                     var jDataArray = (JArray)writeParamObjList;
@@ -662,79 +668,202 @@ namespace IntelliCenterControl.ViewModels
                                             }
                                             var jItem = (JObject)item;
 
-                                            if (jItem.TryGetValue("created", out var createdObject))
+                                           JToken createdObject = null;
+                                           JToken changedObject = null;
+                                            if (jItem.TryGetValue("created", out createdObject) || jItem.TryGetValue("changes", out changedObject))
                                             {
-                                                var createdSchedule = JsonConvert.DeserializeObject<SchedulesDefinition.Schedule>(createdObject.First.ToString());
-
-                                                if (Schedules.Any() & createdSchedule.Params != null)
+                                                try
                                                 {
-                                                    var newItem = (Schedule) Schedules[Schedules.Count - 1];
-                                                    if (newItem.IsNew)
-                                                    {
-                                                        
-                                                        if (HardwareDictionary.TryGetValue(
-                                                            createdSchedule.Params.CIRCUIT, out var schedCir))
-                                                        {
-                                                            Schedules.Remove(newItem);
-                                                            
-                                                            var sitem = new Schedule(createdSchedule.Params.SNAME,
-                                                                Circuit<IntelliCenterConnection>.CircuitType.SCHED,
-                                                                createdSchedule, schedCir, createdSchedule.objnam,
-                                                                DataInterface);
-                                                            
-                                                            var date = DateTime.Now;
-                                                            var days = createdSchedule.Params.DAY;
-                                                            bool isToday;
-                                                            switch (date.DayOfWeek)
-                                                            {
-                                                                case DayOfWeek.Friday:
-                                                                    isToday = days.Contains('F');
-                                                                    break;
-                                                                case DayOfWeek.Monday:
-                                                                    isToday = days.Contains('M');
-                                                                    break;
-                                                                case DayOfWeek.Saturday:
-                                                                    isToday = days.Contains('A');
-                                                                    break;
-                                                                case DayOfWeek.Sunday:
-                                                                    isToday = days.Contains('U');
-                                                                    break;
-                                                                case DayOfWeek.Thursday:
-                                                                    isToday = days.Contains('R');
-                                                                    break;
-                                                                case DayOfWeek.Tuesday:
-                                                                    isToday = days.Contains('T');
-                                                                    break;
-                                                                case DayOfWeek.Wednesday:
-                                                                    isToday = days.Contains('W');
-                                                                    break;
-                                                                default:
-                                                                    isToday = false;
-                                                                    break;
-                                                            }
-                                                            StatusMessage = "Item Added";
-                                                            Device.BeginInvokeOnMainThread(
-                                                                () =>
-                                                                {
-                                                                    Schedules.InsertInPlace(sitem,
-                                                                        o => o.ListOrd);
-                                                                });
+                                                    SchedulesDefinition.Schedule createdSchedule = null;
+                                                    if (createdObject != null && createdObject.ToString() != "[]")
+                                                        createdSchedule =
+                                                            JsonConvert.DeserializeObject<SchedulesDefinition.Schedule>(
+                                                                createdObject.First.ToString());
 
-                                                            if (isToday)
+                                                    SchedulesDefinition.Schedule changedSchedule = null;
+                                                    if (changedObject != null && changedObject.ToString() != "[]")
+                                                        changedSchedule =
+                                                            JsonConvert.DeserializeObject<SchedulesDefinition.Schedule>(
+                                                                changedObject.First.ToString());
+
+
+                                                    if (Schedules.Any() && createdSchedule?.Params != null)
+                                                    {
+                                                        if (createdObject != null)
+                                                        {
+                                                            var newItem = (Schedule) Schedules[Schedules.Count - 1];
+                                                            if (newItem.IsNew)
                                                             {
+
+                                                                if (HardwareDictionary.TryGetValue(
+                                                                    createdSchedule.Params.CIRCUIT, out var schedCir))
+                                                                {
+                                                                    Schedules.Remove(newItem);
+
+                                                                    var selectedHeater =
+                                                                        ScheduleHeaters.FirstOrDefault(o =>
+                                                                            o.Hname == createdSchedule.Params.HEATER);
+
+                                                                    var sitem = new Schedule(
+                                                                        createdSchedule.Params.SNAME,
+                                                                        Circuit<IntelliCenterConnection>.CircuitType
+                                                                            .SCHED,
+                                                                        createdSchedule, schedCir,
+                                                                        createdSchedule.objnam,
+                                                                        DataInterface)
+                                                                    {
+                                                                        SelectedHeater = selectedHeater,
+                                                                        Bodies = Bodies.ToList()
+                                                                    };
+
+                                                                    var date = DateTime.Now;
+                                                                    var days = createdSchedule.Params.DAY;
+                                                                    bool isToday;
+                                                                    switch (date.DayOfWeek)
+                                                                    {
+                                                                        case DayOfWeek.Friday:
+                                                                            isToday = days.Contains('F');
+                                                                            break;
+                                                                        case DayOfWeek.Monday:
+                                                                            isToday = days.Contains('M');
+                                                                            break;
+                                                                        case DayOfWeek.Saturday:
+                                                                            isToday = days.Contains('A');
+                                                                            break;
+                                                                        case DayOfWeek.Sunday:
+                                                                            isToday = days.Contains('U');
+                                                                            break;
+                                                                        case DayOfWeek.Thursday:
+                                                                            isToday = days.Contains('R');
+                                                                            break;
+                                                                        case DayOfWeek.Tuesday:
+                                                                            isToday = days.Contains('T');
+                                                                            break;
+                                                                        case DayOfWeek.Wednesday:
+                                                                            isToday = days.Contains('W');
+                                                                            break;
+                                                                        default:
+                                                                            isToday = false;
+                                                                            break;
+                                                                    }
+
+                                                                    StatusMessage = "Item Added";
+                                                                    Device.BeginInvokeOnMainThread(
+                                                                        () =>
+                                                                        {
+                                                                            Schedules.InsertInPlace(sitem,
+                                                                                o => o.ListOrd);
+                                                                        });
+
+                                                                    if (isToday)
+                                                                    {
+                                                                        Device.BeginInvokeOnMainThread(
+                                                                            () =>
+                                                                            {
+                                                                                TodaysSchedule.InsertInPlace(sitem,
+                                                                                    o => o.ListOrd);
+                                                                            });
+
+                                                                    }
+
+                                                                    HardwareDictionary[sitem.Hname] = sitem;
+
+                                                                }
+                                                            }
+                                                        }
+                                                        else if (changedObject != null)
+                                                        {
+                                                            StatusMessage = "Item Changed";
+                                                        }
+                                                    }
+                                                    else if (Schedules.Any() && changedSchedule?.Params != null)
+                                                    {
+                                                        var changedItem =
+                                                            (Schedule) Schedules.FirstOrDefault(o =>
+                                                                o.Hname == changedSchedule.objnam);
+                                                        if (changedItem != null)
+                                                        {
+                                                            Schedules.Remove(changedItem);
+
+                                                            if (TodaysSchedule.Contains(changedItem))
+                                                            {
+                                                                TodaysSchedule.Remove(changedItem);
+                                                            }
+
+                                                            if (HardwareDictionary.TryGetValue(
+                                                                changedSchedule.Params.CIRCUIT, out var schedCir))
+                                                            {
+                                                                var selectedHeater =
+                                                                    ScheduleHeaters.FirstOrDefault(o =>
+                                                                        o.Hname == changedSchedule.Params.HEATER);
+
+                                                                var cItem = new Schedule(changedSchedule.Params.SNAME,
+                                                                    Circuit<IntelliCenterConnection>.CircuitType.SCHED,
+                                                                    changedSchedule, schedCir, changedSchedule.objnam,
+                                                                    DataInterface)
+                                                                {
+                                                                    SelectedHeater = selectedHeater,
+                                                                    Bodies = Bodies.ToList()
+                                                                };
+
+                                                                var date = DateTime.Now;
+                                                                var days = changedSchedule.Params.DAY;
+                                                                bool isToday;
+                                                                switch (date.DayOfWeek)
+                                                                {
+                                                                    case DayOfWeek.Friday:
+                                                                        isToday = days.Contains('F');
+                                                                        break;
+                                                                    case DayOfWeek.Monday:
+                                                                        isToday = days.Contains('M');
+                                                                        break;
+                                                                    case DayOfWeek.Saturday:
+                                                                        isToday = days.Contains('A');
+                                                                        break;
+                                                                    case DayOfWeek.Sunday:
+                                                                        isToday = days.Contains('U');
+                                                                        break;
+                                                                    case DayOfWeek.Thursday:
+                                                                        isToday = days.Contains('R');
+                                                                        break;
+                                                                    case DayOfWeek.Tuesday:
+                                                                        isToday = days.Contains('T');
+                                                                        break;
+                                                                    case DayOfWeek.Wednesday:
+                                                                        isToday = days.Contains('W');
+                                                                        break;
+                                                                    default:
+                                                                        isToday = false;
+                                                                        break;
+                                                                }
+
+                                                                StatusMessage = "Item Changed";
                                                                 Device.BeginInvokeOnMainThread(
                                                                     () =>
                                                                     {
-                                                                        TodaysSchedule.InsertInPlace(sitem, o => o.ListOrd);
+                                                                        Schedules.InsertInPlace(cItem,
+                                                                            o => o.ListOrd);
                                                                     });
 
+                                                                if (isToday)
+                                                                {
+                                                                    Device.BeginInvokeOnMainThread(
+                                                                        () =>
+                                                                        {
+                                                                            TodaysSchedule.InsertInPlace(cItem,
+                                                                                o => o.ListOrd);
+                                                                        });
+
+                                                                }
+
+                                                                HardwareDictionary[cItem.Hname] = cItem;
                                                             }
-
-                                                            HardwareDictionary[sitem.Hname] = sitem;
-
                                                         }
+
                                                     }
                                                 }
+                                                catch(Exception ex)
+                                                {}
                                             }
 
                                             if (jItem.TryGetValue("deleted", out var deletedObject))
@@ -758,9 +887,10 @@ namespace IntelliCenterControl.ViewModels
                                             }
                                         }
                                     }
-
-                                    
                                 }
+                                break;
+                            default:
+                                Console.WriteLine(e);
                                 break;
                         }
                     }
@@ -830,9 +960,9 @@ namespace IntelliCenterControl.ViewModels
             IsBusy = false;
         }
 
-        private void PopulateModels()
+        private async void PopulateModels()
         {
-            Device.BeginInvokeOnMainThread(() =>
+            await Device.InvokeOnMainThreadAsync(() =>
             {
                 AvailableCircuits.Clear();
                 Circuits.Clear();

@@ -64,7 +64,7 @@ namespace IntelliCenterControl.Views
         {
             if (((Button) sender).BindingContext is Schedule context)
             {
-                ((Button)sender).IsEnabled = false;
+                //((Button)sender).IsEnabled = false;
                 context.Expanded = false;
                 context.SaveScheduleCommand.Execute(null);
             }
@@ -88,7 +88,7 @@ namespace IntelliCenterControl.Views
                         "Yes", "No");
                     if (result)
                     {
-                        ((Button)sender).IsEnabled = false;
+                        //((Button)sender).IsEnabled = false;
                         context.DeleteScheduleCommand.Execute(null);
                     }
                 }

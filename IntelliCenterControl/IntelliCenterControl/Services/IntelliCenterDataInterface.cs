@@ -168,16 +168,14 @@ namespace IntelliCenterControl.Services
             return await Task.FromResult(false);
         }
 
-        public async Task<bool> GetScheduleDataAsync()
+        public Task<bool> GetScheduleDataAsync()
         {
             var g = Guid.NewGuid();
             var cmd =
                 "{ \"command\": \"GETPARAMLIST\", \"condition\": \"OBJTYP=SCHED\", \"objectList\": [{ \"objnam\": \"ALL\", \"keys\": " + Schedule.ScheduleKeys + " }], \"messageID\": \"" +
                 g + "\" }";
 
-            return (await SendMessage(cmd));
-
-            return await Task.FromResult(false);
+            return (SendMessage(cmd));
         }
 
         public async Task<bool> GetItemUpdateAsync(string id, string type)
@@ -479,13 +477,13 @@ namespace IntelliCenterControl.Services
                 {
                     // Wait for any previous send commands to finish and release the semaphore
                     // This throttles our commands
-                    await _sendRateLimit.WaitAsync(Cts.Token);
+                    //await _sendRateLimit.WaitAsync(Cts.Token);
                     ArraySegment<byte> byteMessage = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
                     await socketConnection.SendAsync(byteMessage, WebSocketMessageType.Text, true, Cts.Token);
                     // Block other commands until our timeout to prevent flooding
-                    await Task.Delay(_sendRate, Cts.Token);
+                    //await Task.Delay(_sendRate, Cts.Token);
                     // Exit our semaphore
-                    _sendRateLimit.Release();
+                    //_sendRateLimit.Release();
                     return await Task.FromResult(true);
                 }
             }
@@ -497,7 +495,7 @@ namespace IntelliCenterControl.Services
             finally
             {
                 // Exit our semaphore
-                _sendRateLimit.Release();
+                //_sendRateLimit.Release();
             }
 
             return await Task.FromResult(false);

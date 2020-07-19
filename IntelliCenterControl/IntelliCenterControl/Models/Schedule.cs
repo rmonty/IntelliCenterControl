@@ -218,11 +218,14 @@ namespace IntelliCenterControl.Models
             }
         }
 
+        public List<Circuit<IntelliCenterConnection>> Bodies {get; set;}
+
+        private SchedulesDefinition.Schedule _definition;
 
         public Schedule(Circuit<IntelliCenterConnection>.CircuitType circuitType, 
             IDataInterface<IntelliCenterConnection> dataInterface) : base(circuitType, dataInterface)
         {
-            Active = true;
+            Active = false;
             SaveScheduleCommand = new Command(async () => await ExecuteSaveScheduleCommand());
             DeleteScheduleCommand = new Command(async () => await ExecuteDeleteScheduleCommand());
             Expanded = true;
@@ -233,6 +236,7 @@ namespace IntelliCenterControl.Models
             Circuit<IntelliCenterConnection> scheduledCircuit, string hName,
             IDataInterface<IntelliCenterConnection> dataInterface) : base(name, circuitType, hName, dataInterface)
         {
+            _definition = definition;
             SaveScheduleCommand = new Command(async () => await ExecuteSaveScheduleCommand());
             DeleteScheduleCommand = new Command(async () => await ExecuteDeleteScheduleCommand());
             Expanded = false;
@@ -353,10 +357,22 @@ namespace IntelliCenterControl.Models
             }
 
             var heaterName = "00000";
-
+            var mode = "0";
             if (SelectedHeater != null)
             {
                 heaterName = SelectedHeater.Hname;
+               
+                if (heaterName == "00000") mode = "1"; //off
+                else if (heaterName == "00001") mode = "0"; //don't change
+                else
+                {
+                    if (ScheduledCircuit.CircuitDescription == Circuit<IntelliCenterConnection>.CircuitType.POOL ||
+                        ScheduledCircuit.CircuitDescription == Circuit<IntelliCenterConnection>.CircuitType.SPA)
+                    {
+                        var selectedBody = Bodies.FirstOrDefault(o => o.Name == ScheduledCircuit.Name);
+                        if (selectedBody is Body b) mode = b.HeatMode.ToString();
+                    }
+                }
             }
 
             var g = Guid.NewGuid();
@@ -374,7 +390,7 @@ namespace IntelliCenterControl.Models
                                 START = Enum.GetName(typeof(TimeType), StartTimeType),
                                 TIME = StartTime.ToString(@"hh\,mm\,ss"),
                                 STOP = Enum.GetName(typeof(TimeType), EndTimeType),
-                                TIMEOUT = StartTime.ToString(@"hh\,mm\,ss"),
+                                TIMOUT = EndTime.ToString(@"hh\,mm\,ss"),
                                 GROUP = "",
                                 STATUS = "ON",
                                 HEATER = heaterName,
@@ -382,7 +398,7 @@ namespace IntelliCenterControl.Models
                                 LOTMP = Lotmp,
                                 SMTSRT = "OFF",
                                 VACFLO = "OFF",
-                                MODE = "0",
+                                MODE = mode,
                                 DNTSTP = "OFF"
                             }
                 };
@@ -407,13 +423,14 @@ namespace IntelliCenterControl.Models
                         START = Enum.GetName(typeof(TimeType), StartTimeType),
                         TIME = StartTime.ToString(@"hh\,mm\,ss"),
                         STOP = Enum.GetName(typeof(TimeType), EndTimeType),
-                        TIMEOUT = StartTime.ToString(@"hh\,mm\,ss"),
-                        GROUP = "65535",
+                        TIMOUT = EndTime.ToString(@"hh\,mm\,ss"),
+                        GROUP = _definition.Params.GROUP,
+                        STATUS = "ON",
                         HEATER = heaterName,
                         COOLING = cooling,
                         LOTMP = Lotmp,
-                        SMTSRT = "65535",
-                        MODE = "0",
+                        SMTSRT = _definition.Params.SMTSRT,
+                        MODE = mode,
                         DNTSTP = "OFF"
                     }
                 };
