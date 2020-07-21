@@ -38,9 +38,9 @@
                     <Label.FormattedText>
                         <FormattedString>
                             <FormattedString.Spans>
-                                <Span Text="IntelliCenter Control" FontAttributes="Bold" FontSize="22" />
-                                <Span Text=" " />
-                                <Span Text="{Binding Version}" ForegroundColor="{StaticResource LightTextColor}" />
+                                <!--<Span Text="IntelliCenter Control" FontAttributes="Bold" FontSize="22" />-->
+                                <!--<Span Text=" " />
+                                <Span Text="{Binding Version}" ForegroundColor="{StaticResource LightTextColor}" />-->
                             </FormattedString.Spans>
                         </FormattedString>
                     </Label.FormattedText>
@@ -49,13 +49,13 @@
                     <Label.FormattedText>
                         <FormattedString>
                             <FormattedString.Spans>
-                                <Span Text="This app is written in C# and native APIs using the" />
+                                <Span Text="This app is open source and code is hosted on" />
                                 <Span Text=" " />
-                                <Span Text="Xamarin Platform" FontAttributes="Bold" />
+                                <Span Text="GitHub"/>
                                 <Span Text="." />
-                                <Span Text="Please visit the github site by clicking on the" />
+                                <Span Text="Please visit the GitHub site by clicking on the" />
                                 <Span Text=" " />
-                                <Span Text="learn more button below for questions" />
+                                <Span Text="GitHub repository button below for questions" />
                                 <Span Text="." />
                             </FormattedString.Spans>
                         </FormattedString>
@@ -65,17 +65,25 @@
                     <Label.FormattedText>
                         <FormattedString>
                             <FormattedString.Spans>
-                                <Span Text="It shares code with its" />
+                                <Span Text="Additional information can be found on the" />
                                 <Span Text=" " />
-                                <Span Text="iOS, Android, and Windows" FontAttributes="Bold" />
+                                <Span Text="Trouble Free Pool Website/Forum."/>
                                 <Span Text=" " />
-                                <Span Text="versions." />
+                                <Span Text="The forum thread for this application can" />
+                                <Span Text=" " />
+                                <Span Text="be found by clicking on the Trouble Free" />
+                                <Span Text=" " />
+                                <Span Text="Pool Forum button below." />
                             </FormattedString.Spans>
                         </FormattedString>
                     </Label.FormattedText>
                 </Label>
-                <Button Margin="0,10,0,0" Text="Learn more"
+                <Button Margin="0,10,0,0" Text="GitHub Repository"
                         Command="{Binding OpenWebCommand}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White" />
+                <Button Margin="0,10,0,0" Text="Trouble Free Pool Forum"
+                        Command="{Binding OpenForumCommand}"
                         BackgroundColor="{StaticResource Primary}"
                         TextColor="White" />
             </StackLayout>

@@ -1,4 +1,7 @@
-﻿using System.ComponentModel;
+﻿using System;
+using Newtonsoft.Json.Linq;
+using System.ComponentModel;
+using System.Threading.Tasks;
 
 namespace IntelliCenterControl.Models
 {
@@ -8,15 +11,15 @@ namespace IntelliCenterControl.Models
 
         public enum PumpType
         {
-            [Description( "Single Speed")]
+            [Description("Single Speed")]
             SINGLE,
-            [Description( "Dual Speed")]
+            [Description("Dual Speed")]
             DUAL,
-            [Description( "Variable Speed")]
+            [Description("Variable Speed")]
             SPEED,
-            [Description( "Variable GPM")]
+            [Description("Variable GPM")]
             FLOW,
-            [Description( "Variable Speed and GPM")]
+            [Description("Variable Speed and GPM")]
             VSF
         }
 
@@ -33,6 +36,7 @@ namespace IntelliCenterControl.Models
             get => _type;
             set
             {
+                if (_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }
@@ -46,17 +50,7 @@ namespace IntelliCenterControl.Models
             set
             {
                 pumpStatus = value;
-                switch (value)
-                {
-                    case PumpStatus.ON:
-                        Active = true;
-                        break;
-                    case PumpStatus.OFF:
-                        Active = false;
-                        break;
-                    default: break;
-                }
-
+                this.UpdateActiveState(PumpStatus.ON == value);
                 OnPropertyChanged();
             }
         }
@@ -69,6 +63,7 @@ namespace IntelliCenterControl.Models
             get => _primeSpeed;
             set
             {
+                if (_primeSpeed == value) return;
                 _primeSpeed = value;
                 OnPropertyChanged();
             }
@@ -81,6 +76,7 @@ namespace IntelliCenterControl.Models
             get => _minSpeed;
             set
             {
+                if (_minSpeed == value) return;
                 _minSpeed = value;
                 OnPropertyChanged();
             }
@@ -93,6 +89,7 @@ namespace IntelliCenterControl.Models
             get => _maxSpeed;
             set
             {
+                if (_maxSpeed == value) return;
                 _maxSpeed = value;
                 OnPropertyChanged();
             }
@@ -105,6 +102,7 @@ namespace IntelliCenterControl.Models
             get => _minFlow;
             set
             {
+                if (_minFlow == value) return;
                 _minFlow = value;
                 OnPropertyChanged();
             }
@@ -117,51 +115,89 @@ namespace IntelliCenterControl.Models
             get => _maxFlow;
             set
             {
+                if (_maxFlow == value) return;
                 _maxFlow = value;
                 OnPropertyChanged();
             }
         }
 
-        private string _rpm;
+        private string _rpm = "-";
 
         public string RPM
         {
             get => _rpm;
             set
             {
+                if (_rpm == value) return;
                 _rpm = value;
                 OnPropertyChanged();
             }
         }
 
-        private string _gpm;
+        private string _gpm = "-";
 
         public string GPM
         {
             get => _gpm;
             set
             {
+                if (_gpm == value) return;
                 _gpm = value;
                 OnPropertyChanged();
             }
         }
 
-        private string _power;
+        private string _power = "-";
 
         public string Power
         {
             get => _power;
             set
             {
+                if (_power == value) return;
                 _power = value;
                 OnPropertyChanged();
             }
         }
-        
+
 
         public Pump(string name, string Hname) : base(name, CircuitType.PUMP, Hname)
         {
 
+        }
+
+        public override async Task UpdateItemAsync(JObject data)
+        {
+            if (data.TryGetValue("params", out var pumpValues))
+            {
+                var pv = (JObject)pumpValues;
+                if (pv.TryGetValue("RPM", out var rpm))
+                {
+                    RPM = rpm.ToString() == "0" ? "-" : rpm.ToString();
+                }
+
+                if (pv.TryGetValue("GPM", out var flow))
+                {
+                    GPM = flow.ToString() == "0" ? "-" : flow.ToString();
+                }
+
+                if (pv.TryGetValue("PWR", out var power))
+                {
+                    Power = power.ToString() == "0"
+                        ? "-"
+                        : power.ToString();
+                }
+
+                if (pv.TryGetValue("STATUS", out var status))
+                {
+                    var ps = (int)status;
+                    if (Enum.IsDefined(typeof(Pump.PumpStatus), ps))
+                        Status = (Pump.PumpStatus)ps;
+                    else
+                        Status = Pump.PumpStatus.OFF;
+                }
+
+            }
         }
     }
 }

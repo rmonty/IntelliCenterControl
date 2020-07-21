@@ -33,6 +33,7 @@ namespace IntelliCenterControl.Models
             get => _type;
             set
             {
+                if(_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }
@@ -45,6 +46,7 @@ namespace IntelliCenterControl.Models
             get => _bodies;
             set
             {
+                if(_bodies == value) return;
                 _bodies = value;
                 OnPropertyChanged();
             }

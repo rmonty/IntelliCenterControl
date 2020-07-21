@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using IntelliCenterControl.Services;
+using Newtonsoft.Json.Linq;
 
 namespace IntelliCenterControl.Models
 {
@@ -78,12 +79,13 @@ namespace IntelliCenterControl.Models
             get => _type;
             set
             {
+                if(_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }
         }
 
-        public List<string> ColorNames => GetDescriptions(typeof(LightColors)).ToList();
+        public List<string> ColorNames => EnumHelpers.GetDescriptions(typeof(LightColors)).ToList();
 
         private LightColors _color = LightColors.WHITER;
 
@@ -96,7 +98,7 @@ namespace IntelliCenterControl.Models
                 if (_color == value) return;
                 _color = value;
                 OnPropertyChanged();
-                ExecuteLightColorCommand();
+                if(SendColorStateUpdate) ExecuteLightColorCommand();
             }
         }
 
@@ -123,6 +125,7 @@ namespace IntelliCenterControl.Models
             get => _minDimmingValue;
             set
             {
+                if (_minDimmingValue == value) return;
                 _minDimmingValue = value;
                 OnPropertyChanged();
             }
@@ -135,6 +138,7 @@ namespace IntelliCenterControl.Models
             get => _dimmingIncrement;
             set
             {
+                if(_dimmingIncrement == value) return;
                 _dimmingIncrement = value;
                 OnPropertyChanged();
             }
@@ -142,9 +146,11 @@ namespace IntelliCenterControl.Models
 
 
 
-        public bool SupportsColor => GetAttribute<ColorAttribute>(Type).SupportsColor;
+        public bool SupportsColor => EnumHelpers.GetAttribute<ColorAttribute>(Type).SupportsColor;
 
-        public bool SupportsDimming => GetAttribute<DimmingAttribute>(Type).SupportsDimming;
+        public bool SupportsDimming => EnumHelpers.GetAttribute<DimmingAttribute>(Type).SupportsDimming;
+
+        private bool SendColorStateUpdate = true;
 
         public Light(string name, LightType lightType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) : base(name, (CircuitType)Enum.Parse(typeof(CircuitType),lightType.ToString()), hName, dataInterface)
         {
@@ -200,6 +206,13 @@ namespace IntelliCenterControl.Models
             }
         }
 
+        public void UpdateColorState(LightColors color)
+        {
+            SendColorStateUpdate = false;
+            Color = color;
+            SendColorStateUpdate = true;
+        }
+
         internal class ColorAttribute : Attribute
         {
             public bool SupportsColor { get; private set; }
@@ -220,30 +233,27 @@ namespace IntelliCenterControl.Models
             }
         }
 
-
-        public static TAttribute GetAttribute<TAttribute>(Enum value)
-            where TAttribute : Attribute
+        public override async Task UpdateItemAsync(JObject data)
         {
-            var enumType = value.GetType();
-            var name = Enum.GetName(enumType, value);
-            return enumType.GetField(name).GetCustomAttributes(false).OfType<TAttribute>().SingleOrDefault();
-        }
 
-        private static IEnumerable<string> GetDescriptions(Type type)
-        {
-            var descs = new List<string>();
-            var names = Enum.GetNames(type);
-            foreach (var name in names)
+            if (data.TryGetValue("params", out var lightValues))
             {
-                var field = type.GetField(name);
-                var fds = field.GetCustomAttributes(typeof(DescriptionAttribute), true);
-                foreach (DescriptionAttribute fd in fds)
+                var lv = (JObject)lightValues;
+
+                base.UpdateItemAsync(data);
+
+                if (lv.TryGetValue("USE", out var lightColor))
                 {
-                    descs.Add(fd.Description);
+                    if (Enum.TryParse<Light.LightColors>(lightColor.ToString(),
+                        out var color))
+                    {
+                        UpdateColorState(color);
+                    }
                 }
             }
-            return descs;
+
         }
+
 
     }
 

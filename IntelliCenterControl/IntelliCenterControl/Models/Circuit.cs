@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using IntelliCenterControl.Annotations;
 using IntelliCenterControl.Services;
+using Newtonsoft.Json.Linq;
 
 namespace IntelliCenterControl.Models
 {
@@ -70,6 +71,7 @@ namespace IntelliCenterControl.Models
             get => _circuitDescription;
             set
             {
+                if(_circuitDescription == value) return;
                 _circuitDescription = value;
                 OnPropertyChanged();
             }
@@ -83,6 +85,7 @@ namespace IntelliCenterControl.Models
             get => _name;
             set
             {
+                if (_name == value) return;
                 _name = value;
                 OnPropertyChanged();
             }
@@ -95,6 +98,7 @@ namespace IntelliCenterControl.Models
             get => _hName;
             set
             {
+                if(_hName == value) return;
                 _hName = value;
                 OnPropertyChanged();
             }
@@ -112,7 +116,7 @@ namespace IntelliCenterControl.Models
                 _active = value;
                 
                 OnPropertyChanged();
-                ExecuteToggleCircuitCommand();
+                if(SendActiveStateUpdate) ExecuteToggleCircuitCommand();
 
             }
         }
@@ -124,6 +128,7 @@ namespace IntelliCenterControl.Models
             get => _display;
             set
             {
+                if(_display == value) return;
                 _display = value;
                 OnPropertyChanged();
             }
@@ -136,12 +141,15 @@ namespace IntelliCenterControl.Models
             get => _listOrd;
             set
             {
+                if(_listOrd == value) return;
                 _listOrd = value;
                 OnPropertyChanged();
             }
         }
 
         public IDataInterface<T> DataInterface { get; private set; }
+
+        private bool SendActiveStateUpdate = true;
 
         public Circuit(string name, CircuitType circuitType, string hName = "",
             IDataInterface<T> dataInterface = null)
@@ -170,6 +178,25 @@ namespace IntelliCenterControl.Models
             }
         }
 
+        public virtual void UpdateActiveState(bool state)
+        {
+            SendActiveStateUpdate = false;
+            Active = state;
+            SendActiveStateUpdate = true;
+        }
+
+        public virtual async Task UpdateItemAsync(JObject data)
+        {
+            if (data.TryGetValue("params", out var circuitValues))
+            {
+                var cv = (JObject)circuitValues;
+                if (cv.TryGetValue("STATUS", out var stat))
+                {
+                    UpdateActiveState(stat.ToString() == "ON");
+                }
+            }
+        }
+        
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]

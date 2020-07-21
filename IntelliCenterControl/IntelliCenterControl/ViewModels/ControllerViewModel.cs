@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 using Xamarin.Forms;
@@ -58,27 +60,31 @@ namespace IntelliCenterControl.ViewModels
         public ObservableCollection<Circuit<IntelliCenterConnection>> AvailableCircuits { get; private set; }
         public ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> HardwareDictionary = new ConcurrentDictionary<string, Circuit<IntelliCenterConnection>>();
 
-        private string _airTemp = "-";
-        public string AirTemp
+        private Circuit<IntelliCenterConnection> _airSensor;
+
+        public Circuit<IntelliCenterConnection> AirSensor
         {
-            get => _airTemp;
-            set => SetProperty(ref _airTemp, value);
+            get => _airSensor;
+            set => SetProperty(ref _airSensor, value);
         }
 
-        private string _waterTemp = "-";
-        public string WaterTemp
+
+        private Circuit<IntelliCenterConnection> _waterSensor;
+
+        public Circuit<IntelliCenterConnection> WaterSensor
         {
-            get => _waterTemp;
-            set => SetProperty(ref _waterTemp, value);
+            get => _waterSensor;
+            set => SetProperty(ref _waterSensor, value);
         }
 
-        private string _saltLevel = "-";
+        private Circuit<IntelliCenterConnection> _solarSensor;
 
-        public string SaltLevel
+        public Circuit<IntelliCenterConnection> SolarSensor
         {
-            get => _saltLevel;
-            set => SetProperty(ref _saltLevel, value);
+            get => _solarSensor;
+            set => SetProperty(ref _solarSensor, value);
         }
+
 
         private bool _chemInstalled;
 
@@ -257,7 +263,6 @@ namespace IntelliCenterControl.ViewModels
 
                 if (jData.TryGetValue("command", out var commandValue))
                 {
-                    //semaphoreSlim.Wait(DataInterface.Cts.Token);
                     try
                     {
                         switch (commandValue.ToString())
@@ -276,7 +281,7 @@ namespace IntelliCenterControl.ViewModels
                                                     if (Guid.TryParse(g.ToString(), out _hardwareDefinitionMessageId))
                                                     {
                                                         StatusMessage = "Loading Data";
-                                                        //Console.WriteLine(e);
+                                                        //Debug.WriteLine(e);
                                                         HardwareDefinition =
                                                             JsonConvert.DeserializeObject<HardwareDefinition>(e);
 
@@ -308,185 +313,25 @@ namespace IntelliCenterControl.ViewModels
                                                     {
                                                         case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                                                             var pump = (Pump)circuit;
-                                                            if (notifyList.TryGetValue("params", out var pumpValues))
-                                                            {
-                                                                var pv = (JObject)pumpValues;
-                                                                if (pv.TryGetValue("RPM", out var rpm))
-                                                                {
-                                                                    pump.RPM = rpm.ToString() == "0" ? "-" : rpm.ToString();
-                                                                }
-
-                                                                if (pv.TryGetValue("GPM", out var flow))
-                                                                {
-                                                                    pump.GPM = flow.ToString() == "0" ? "-" : flow.ToString();
-                                                                }
-
-                                                                if (pv.TryGetValue("PWR", out var power))
-                                                                {
-                                                                    pump.Power = power.ToString() == "0"
-                                                                        ? "-"
-                                                                        : power.ToString();
-                                                                }
-
-                                                                if (pv.TryGetValue("STATUS", out var status))
-                                                                {
-                                                                    var ps = (int)status;
-                                                                    if (Enum.IsDefined(typeof(Pump.PumpStatus), ps))
-                                                                        pump.Status = (Pump.PumpStatus)ps;
-                                                                    else
-                                                                        pump.Status = Pump.PumpStatus.OFF;
-                                                                }
-
-                                                            }
-
+                                                            pump.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.BODY:
-                                                            if (notifyList.TryGetValue("params", out var bodyValues))
-                                                            {
-                                                                //Console.WriteLine(bodyValues);
-                                                                var bv = (JObject)bodyValues;
-                                                                var body = (Body)circuit;
-                                                                if (bv.TryGetValue("TEMP", out var temp))
-                                                                {
-                                                                    if (int.TryParse(temp.ToString(), out var bTemp))
-                                                                    {
-                                                                        body.Temp = bTemp;
-                                                                    }
-
-                                                                }
-
-                                                                if (bv.TryGetValue("LSTTMP", out var lsttemp))
-                                                                {
-                                                                    body.LastTemp = lsttemp.ToString() == "0"
-                                                                        ? "-"
-                                                                        : lsttemp.ToString();
-                                                                }
-
-                                                                if (bv.TryGetValue("STATUS", out var status))
-                                                                {
-                                                                    body.Active = status.ToString() == "ON";
-                                                                    if (body.Active)
-                                                                    {
-                                                                        WaterTemp = body.Temp == 0 ? "-" : body.Temp.ToString();
-                                                                    }
-                                                                }
-
-                                                                if (bv.TryGetValue("HTMODE", out var htmode))
-                                                                {
-                                                                    var hm = (int)htmode;
-                                                                    if (Enum.IsDefined(typeof(Body.HeatModes), hm))
-                                                                    {
-                                                                        body.HeatMode = (Body.HeatModes)hm;
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        body.HeatMode = Body.HeatModes.Off;
-                                                                    }
-
-                                                                }
-
-                                                                if (bv.TryGetValue("HTSRC", out var htSource))
-                                                                {
-                                                                    var selectedHeater =
-                                                                        body.Heaters.FirstOrDefault(h =>
-                                                                            h.Hname == htSource.ToString());
-
-                                                                    if (selectedHeater != null)
-                                                                    {
-                                                                        body.SelectedHeater =
-                                                                            body.Heaters.Contains(selectedHeater)
-                                                                                ? body.Heaters.IndexOf(selectedHeater)
-                                                                                : 0;
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        body.SelectedHeater = 0;
-                                                                    }
-                                                                }
-
-                                                                if (bv.TryGetValue("LOTMP", out var lTemp))
-                                                                {
-                                                                    body.LOTemp = lTemp.ToString();
-                                                                }
-                                                            }
-
+                                                            var body = (Body)circuit;
+                                                            body.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
-                                                            if (notifyList.TryGetValue("params", out var senseValues))
-                                                            {
-                                                                var sv = (JObject)senseValues;
-                                                                var sensor = (Sense)circuit;
-                                                                if (sv.TryGetValue("PROBE", out var temp))
-                                                                {
-                                                                    switch (sensor.Type)
-                                                                    {
-                                                                        case Sense.SenseType.AIR:
-                                                                            AirTemp = temp.ToString() == "0"
-                                                                                ? "-"
-                                                                                : temp.ToString();
-                                                                            break;
-                                                                        case Sense.SenseType.POOL:
-                                                                            WaterTemp = temp.ToString() == "0"
-                                                                                ? "-"
-                                                                                : temp.ToString();
-                                                                            break;
-                                                                        case Sense.SenseType.SOLAR:
-                                                                            break;
-                                                                    }
-                                                                }
-                                                            }
-
+                                                            var sensor = (Sense)circuit;
+                                                            sensor.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                                                            if (notifyList.TryGetValue("params", out var circuitValues))
-                                                            {
-                                                                var cv = (JObject)circuitValues;
-                                                                if (cv.TryGetValue("STATUS", out var stat))
-                                                                {
-                                                                    switch (stat.ToString())
-                                                                    {
-                                                                        case "ON":
-                                                                            circuit.Active = true;
-                                                                            break;
-                                                                        case "OFF":
-                                                                            circuit.Active = false;
-                                                                            break;
-                                                                    }
-                                                                }
-                                                            }
-
+                                                            circuit.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
-                                                            if (notifyList.TryGetValue("params", out var groupValues))
-                                                            {
-                                                                var gv = (JObject)groupValues;
-                                                                if (gv.TryGetValue("STATUS", out var stat))
-                                                                {
-                                                                    switch (stat.ToString())
-                                                                    {
-                                                                        case "ON":
-                                                                            circuit.Active = true;
-                                                                            break;
-                                                                        case "OFF":
-                                                                            circuit.Active = false;
-                                                                            break;
-                                                                    }
-                                                                }
-                                                            }
-
+                                                            circuit.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
-                                                            if (notifyList.TryGetValue("params", out var chemValues))
-                                                            {
-                                                                var cv = (JObject)chemValues;
-                                                                var chem = (Chem)circuit;
-                                                                if (cv.TryGetValue("SALT", out var salt))
-                                                                {
-                                                                    chem.Salt = salt.ToString() == "0" ? "-" : salt.ToString();
-                                                                    SaltLevel = chem.Salt;
-                                                                }
-                                                            }
-
+                                                            var chem = (Chem)circuit;
+                                                            chem.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
                                                         case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
@@ -495,38 +340,13 @@ namespace IntelliCenterControl.ViewModels
                                                         case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
                                                         case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
                                                         case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
-                                                            if (notifyList.TryGetValue("params", out var lightValues))
-                                                            {
-                                                                var lv = (JObject)lightValues;
-                                                                var light = (Light)circuit;
-                                                                if (lv.TryGetValue("STATUS", out var stat))
-                                                                {
-                                                                    switch (stat.ToString())
-                                                                    {
-                                                                        case "ON":
-                                                                            circuit.Active = true;
-                                                                            break;
-                                                                        case "OFF":
-                                                                            circuit.Active = false;
-                                                                            break;
-                                                                    }
-                                                                }
-
-                                                                if (lv.TryGetValue("USE", out var lightColor))
-                                                                {
-                                                                    if (Enum.TryParse<Light.LightColors>(lightColor.ToString(),
-                                                                        out var color))
-                                                                    {
-                                                                        light.Color = color;
-                                                                    }
-                                                                }
-                                                            }
-
+                                                            var light = (Light)circuit;
+                                                            light.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
                                                             //if (notifyList.TryGetValue("params", out var heaterValues))
                                                             //{
-                                                            //    //Console.WriteLine(heaterValues);
+                                                            //    //Debug.WriteLine(heaterValues);
                                                             //    //var hv = (JObject)heaterValues;
                                                             //    //var heaterCircuit = (Heater)circuit;
                                                             //    //if (hv.TryGetValue("BODY", out var bodies))
@@ -552,90 +372,81 @@ namespace IntelliCenterControl.ViewModels
                                                                 {
                                                                     case Circuit<IntelliCenterConnection>.CircuitType.SCHED:
                                                                         StatusMessage = "Retrieving Schedule";
-                                                                        Device.BeginInvokeOnMainThread(
-                                                                            () =>
-                                                                            {
-                                                                                TodaysSchedule.Clear();
-                                                                                Schedules.Clear();
-                                                                            });
-                                                                        ScheduleDefinition =
-                                                                            JsonConvert.DeserializeObject<SchedulesDefinition>(e);
-                                                                        foreach (var sch in ScheduleDefinition.objectList)
+                                                                        try
                                                                         {
-                                                                            var date = DateTime.Now;
-                                                                            var days = sch.Params.DAY;
-                                                                            bool isToday;
-                                                                            switch (date.DayOfWeek)
-                                                                            {
-                                                                                case DayOfWeek.Friday:
-                                                                                    isToday = days.Contains('F');
-                                                                                    break;
-                                                                                case DayOfWeek.Monday:
-                                                                                    isToday = days.Contains('M');
-                                                                                    break;
-                                                                                case DayOfWeek.Saturday:
-                                                                                    isToday = days.Contains('A');
-                                                                                    break;
-                                                                                case DayOfWeek.Sunday:
-                                                                                    isToday = days.Contains('U');
-                                                                                    break;
-                                                                                case DayOfWeek.Thursday:
-                                                                                    isToday = days.Contains('R');
-                                                                                    break;
-                                                                                case DayOfWeek.Tuesday:
-                                                                                    isToday = days.Contains('T');
-                                                                                    break;
-                                                                                case DayOfWeek.Wednesday:
-                                                                                    isToday = days.Contains('W');
-                                                                                    break;
-                                                                                default:
-                                                                                    isToday = false;
-                                                                                    break;
-                                                                            }
-                                                                            var cirName = sch.Params.CIRCUIT;
-
-                                                                            if (HardwareDictionary.TryGetValue(
-                                                                                cirName, out var schedCir))
-                                                                            {
-                                                                                string htrName;
-
-                                                                                htrName = sch.Params.HEATER == "HOLD" ? "00001" : sch.Params.HEATER;
-
-                                                                                var selectedHeater =
-                                                                                    ScheduleHeaters.FirstOrDefault(o =>
-                                                                                        o.Hname == htrName);
-
-                                                                                var s = new Schedule(
-                                                                                    sch.Params.SNAME,
-                                                                                    Circuit<IntelliCenterConnection>
-                                                                                        .CircuitType.SCHED,
-                                                                                    sch,
-                                                                                    schedCir,
-                                                                                    sch.objnam,
-                                                                                    DataInterface)
+                                                                            await semaphoreSlim.WaitAsync(
+                                                                                TimeSpan.FromSeconds(5));
+                                                                            Device.BeginInvokeOnMainThread(
+                                                                                () =>
                                                                                 {
-                                                                                    SelectedHeater = selectedHeater,
-                                                                                    Bodies = Bodies.ToList()
-                                                                                };
-                                                                                Device.BeginInvokeOnMainThread(
-                                                                                    () =>
+                                                                                    TodaysSchedule.Clear();
+                                                                                    Schedules.Clear();
+                                                                                });
+                                                                            ScheduleDefinition =
+                                                                                JsonConvert
+                                                                                    .DeserializeObject<
+                                                                                        SchedulesDefinition>(e);
+                                                                            foreach (var sch in ScheduleDefinition
+                                                                                .objectList)
+                                                                            {
+                                                                                var cirName = sch.Params.CIRCUIT;
+
+                                                                                if (HardwareDictionary.TryGetValue(
+                                                                                    cirName, out var schedCir))
+                                                                                {
+                                                                                    string htrName;
+
+                                                                                    htrName =
+                                                                                        sch.Params.HEATER == "HOLD"
+                                                                                            ? "00001"
+                                                                                            : sch.Params.HEATER;
+
+                                                                                    var selectedHeater =
+                                                                                        ScheduleHeaters.FirstOrDefault(
+                                                                                            o =>
+                                                                                                o.Hname == htrName);
+
+                                                                                    var s = new Schedule(
+                                                                                        sch.Params.SNAME,
+                                                                                        Circuit<IntelliCenterConnection>
+                                                                                            .CircuitType.SCHED,
+                                                                                        sch,
+                                                                                        schedCir,
+                                                                                        sch.objnam,
+                                                                                        DataInterface)
                                                                                     {
-                                                                                        Schedules.InsertInPlace(s,
-                                                                                            o => o.ListOrd);
-                                                                                    });
-
-                                                                                if (isToday)
-                                                                                {
+                                                                                        SelectedHeater = selectedHeater,
+                                                                                        Bodies = Bodies.ToList()
+                                                                                    };
                                                                                     Device.BeginInvokeOnMainThread(
                                                                                         () =>
                                                                                         {
-                                                                                            TodaysSchedule.InsertInPlace(s, o => o.ListOrd);
+                                                                                            Schedules.InsertInPlace(s,
+                                                                                                o => o.ListOrd);
                                                                                         });
 
-                                                                                }
+                                                                                    if (Today(sch.Params.DAY))
+                                                                                    {
+                                                                                        Device.BeginInvokeOnMainThread(
+                                                                                            () =>
+                                                                                            {
+                                                                                                TodaysSchedule
+                                                                                                    .InsertInPlace(s,
+                                                                                                        o => o.ListOrd);
+                                                                                            });
 
-                                                                                HardwareDictionary[s.Hname] = s;
+                                                                                    }
+
+                                                                                }
                                                                             }
+                                                                        }
+                                                                        catch
+                                                                        {
+                                                                            // ignored
+                                                                        }
+                                                                        finally
+                                                                        {
+                                                                            semaphoreSlim.Release();
                                                                         }
                                                                         return;
                                                                 }
@@ -653,244 +464,318 @@ namespace IntelliCenterControl.ViewModels
                                 StatusMessage = "Item Created";
                                 break;
                             case "WriteParamList":
-
-                                if (jData.TryGetValue("objectList", out var writeParamObjList))
+                                var WriteParamListJson = JToken.Parse(e);
+                                var WriteParamListFieldsCollector = new JsonFieldsCollector(WriteParamListJson);
+                                var WriteParamListFields = (Dictionary<string,JValue>)WriteParamListFieldsCollector.GetAllFields();
+                                if (WriteParamListFields != null)
                                 {
-                                    var jDataArray = (JArray)writeParamObjList;
+                                    bool itemAdded = false;
 
-                                    if (jDataArray != null)
-                                    {
-                                        foreach (JToken item in jDataArray)
+                                    if (WriteParamListFields.TryGetValue("objectList[0].deleted[0]", out var deletedValue))
+                                    { 
+                                        var deletedItem = (JValue)deletedValue;
+
+                                        StatusMessage = "Item Deleted";
+                                        try
                                         {
-                                            if (!item.HasValues)
+                                            await semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(5));
+                                            var schItem = Schedules.FirstOrDefault(o =>
+                                                o.Hname == deletedItem.Value.ToString());
+                                            if (schItem != null)
                                             {
-                                                continue;
+                                                Schedules.Remove(schItem);
                                             }
-                                            var jItem = (JObject)item;
 
-                                           JToken createdObject = null;
-                                           JToken changedObject = null;
-                                            if (jItem.TryGetValue("created", out createdObject) || jItem.TryGetValue("changes", out changedObject))
+                                            var todayItem = TodaysSchedule.FirstOrDefault(o =>
+                                                o.Hname == deletedItem.Value.ToString());
+                                            if (todayItem != null)
                                             {
-                                                try
+                                                TodaysSchedule.Remove(todayItem);
+                                            }
+                                        }
+                                        catch
+                                        {
+                                            // ignored
+                                        }
+                                        finally
+                                        {
+                                            semaphoreSlim.Release();
+                                        }
+
+                                        //DataInterface.GetScheduleDataAsync();
+                                    }
+
+                                    if (WriteParamListFields.TryGetValue("objectList[0].created[0].params.OBJTYP",
+                                        out var createdObjectType))
+                                    {
+                                        if (createdObjectType.Value.ToString().Contains("SCHED"))
+                                        {
+                                            if (jData.TryGetValue("objectList", out var writeParamObjList))
+                                            {
+                                                var jDataArray = (JArray)writeParamObjList;
+                                                if (jDataArray != null && jDataArray.HasValues)
                                                 {
-                                                    SchedulesDefinition.Schedule createdSchedule = null;
-                                                    if (createdObject != null && createdObject.ToString() != "[]")
-                                                        createdSchedule =
-                                                            JsonConvert.DeserializeObject<SchedulesDefinition.Schedule>(
-                                                                createdObject.First.ToString());
-
-                                                    SchedulesDefinition.Schedule changedSchedule = null;
-                                                    if (changedObject != null && changedObject.ToString() != "[]")
-                                                        changedSchedule =
-                                                            JsonConvert.DeserializeObject<SchedulesDefinition.Schedule>(
-                                                                changedObject.First.ToString());
-
-
-                                                    if (Schedules.Any() && createdSchedule?.Params != null)
+                                                    var createdJItem = jDataArray.FirstOrDefault(o=>o.ToString().Contains("created"));
+                                                    if (createdJItem != null)
                                                     {
-                                                        if (createdObject != null)
+                                                        var createdJObject = (JObject) createdJItem;
+                                                        if (createdJObject.TryGetValue("created", out var createdObject))
                                                         {
-                                                            var newItem = (Schedule) Schedules[Schedules.Count - 1];
-                                                            if (newItem.IsNew)
+
+                                                            SchedulesDefinition.Schedule createdSchedule = null;
+                                                            createdSchedule =
+                                                                JsonConvert
+                                                                    .DeserializeObject<SchedulesDefinition.Schedule>(
+                                                                        createdObject.First.ToString());
+
+                                                            if (Schedules.Any() && createdSchedule?.Params != null)
                                                             {
-
-                                                                if (HardwareDictionary.TryGetValue(
-                                                                    createdSchedule.Params.CIRCUIT, out var schedCir))
+                                                                var newItem = (Schedule) Schedules[^1];
+                                                                if (newItem.IsNew)
                                                                 {
-                                                                    Schedules.Remove(newItem);
 
-                                                                    var selectedHeater =
-                                                                        ScheduleHeaters.FirstOrDefault(o =>
-                                                                            o.Hname == createdSchedule.Params.HEATER);
-
-                                                                    var sitem = new Schedule(
-                                                                        createdSchedule.Params.SNAME,
-                                                                        Circuit<IntelliCenterConnection>.CircuitType
-                                                                            .SCHED,
-                                                                        createdSchedule, schedCir,
-                                                                        createdSchedule.objnam,
-                                                                        DataInterface)
+                                                                    if (HardwareDictionary.TryGetValue(
+                                                                        createdSchedule.Params.CIRCUIT,
+                                                                        out var schedCir))
                                                                     {
-                                                                        SelectedHeater = selectedHeater,
-                                                                        Bodies = Bodies.ToList()
-                                                                    };
+                                                                        Schedules.Remove(newItem);
 
-                                                                    var date = DateTime.Now;
-                                                                    var days = createdSchedule.Params.DAY;
-                                                                    bool isToday;
-                                                                    switch (date.DayOfWeek)
-                                                                    {
-                                                                        case DayOfWeek.Friday:
-                                                                            isToday = days.Contains('F');
-                                                                            break;
-                                                                        case DayOfWeek.Monday:
-                                                                            isToday = days.Contains('M');
-                                                                            break;
-                                                                        case DayOfWeek.Saturday:
-                                                                            isToday = days.Contains('A');
-                                                                            break;
-                                                                        case DayOfWeek.Sunday:
-                                                                            isToday = days.Contains('U');
-                                                                            break;
-                                                                        case DayOfWeek.Thursday:
-                                                                            isToday = days.Contains('R');
-                                                                            break;
-                                                                        case DayOfWeek.Tuesday:
-                                                                            isToday = days.Contains('T');
-                                                                            break;
-                                                                        case DayOfWeek.Wednesday:
-                                                                            isToday = days.Contains('W');
-                                                                            break;
-                                                                        default:
-                                                                            isToday = false;
-                                                                            break;
-                                                                    }
+                                                                        var selectedHeater =
+                                                                            ScheduleHeaters.FirstOrDefault(o =>
+                                                                                o.Hname == createdSchedule.Params
+                                                                                    .HEATER);
 
-                                                                    StatusMessage = "Item Added";
-                                                                    Device.BeginInvokeOnMainThread(
-                                                                        () =>
+                                                                        var sitem = new Schedule(
+                                                                            createdSchedule.Params.SNAME,
+                                                                            Circuit<IntelliCenterConnection>.CircuitType
+                                                                                .SCHED,
+                                                                            createdSchedule, schedCir,
+                                                                            createdSchedule.objnam,
+                                                                            DataInterface)
                                                                         {
-                                                                            Schedules.InsertInPlace(sitem,
-                                                                                o => o.ListOrd);
-                                                                        });
+                                                                            SelectedHeater = selectedHeater,
+                                                                            Bodies = Bodies.ToList()
+                                                                        };
 
-                                                                    if (isToday)
-                                                                    {
+                                                                        StatusMessage = "Item Added";
                                                                         Device.BeginInvokeOnMainThread(
                                                                             () =>
                                                                             {
-                                                                                TodaysSchedule.InsertInPlace(sitem,
+                                                                                Schedules.InsertInPlace(sitem,
                                                                                     o => o.ListOrd);
                                                                             });
 
+                                                                        if (Today(createdSchedule.Params.DAY))
+                                                                        {
+                                                                            Device.BeginInvokeOnMainThread(
+                                                                                () =>
+                                                                                {
+                                                                                    TodaysSchedule.InsertInPlace(sitem,
+                                                                                        o => o.ListOrd);
+                                                                                });
+
+                                                                        }
+
+                                                                        itemAdded = true;
+
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                }
+                                            }
+                                            
+                                        }
+                                    }
+
+                                    if (WriteParamListFields.TryGetValue("objectList[0].changes[0].params.OBJTYP",
+                                        out var changedObjectType))
+                                    {
+                                        if (jData.TryGetValue("objectList", out var writeParamObjList))
+                                        {
+                                            var jDataArray = (JArray)writeParamObjList;
+                                            if (jDataArray != null && jDataArray.HasValues)
+                                            {
+                                                var changesItem = jDataArray.FirstOrDefault(o =>
+                                                    o.ToString().Contains("changes"));
+                                                if (changesItem != null)
+                                                {
+                                                    var changesJObject = (JObject)changesItem;
+                                                    if (changesJObject.TryGetValue("changes",
+                                                        out var changesObject))
+                                                    {
+                                                        if (changedObjectType.Value.ToString().Contains("SCHED"))
+                                                        {
+                                                            SchedulesDefinition.Schedule changedSchedule = null;
+                                                            changedSchedule =
+                                                                JsonConvert
+                                                                    .DeserializeObject<SchedulesDefinition.Schedule>(
+                                                                        changesObject.First.ToString());
+
+                                                            if (Schedules.Any() && changedSchedule?.Params != null)
+                                                            {
+                                                                var changedItem =
+                                                                    (Schedule)Schedules.FirstOrDefault(o =>
+                                                                       o.Hname == changedSchedule.objnam);
+                                                                if (changedItem != null)
+                                                                {
+                                                                    Schedules.Remove(changedItem);
+
+                                                                    if (TodaysSchedule.Contains(changedItem))
+                                                                    {
+                                                                        TodaysSchedule.Remove(changedItem);
                                                                     }
 
-                                                                    HardwareDictionary[sitem.Hname] = sitem;
+                                                                    if (HardwareDictionary.TryGetValue(
+                                                                        changedSchedule.Params.CIRCUIT,
+                                                                        out var schedCir))
+                                                                    {
+                                                                        var selectedHeater =
+                                                                            ScheduleHeaters.FirstOrDefault(o =>
+                                                                                o.Hname == changedSchedule.Params
+                                                                                    .HEATER);
 
+                                                                        var cItem = new Schedule(
+                                                                            changedSchedule.Params.SNAME,
+                                                                            Circuit<IntelliCenterConnection>.CircuitType
+                                                                                .SCHED,
+                                                                            changedSchedule, schedCir,
+                                                                            changedSchedule.objnam,
+                                                                            DataInterface)
+                                                                        {
+                                                                            SelectedHeater = selectedHeater,
+                                                                            Bodies = Bodies.ToList()
+                                                                        };
+
+
+                                                                        StatusMessage = "Item Changed";
+                                                                        Device.BeginInvokeOnMainThread(
+                                                                            () =>
+                                                                            {
+                                                                                Schedules.InsertInPlace(cItem,
+                                                                                    o => o.ListOrd);
+                                                                            });
+
+                                                                        if (Today(changedSchedule.Params.DAY))
+                                                                        {
+                                                                            Device.BeginInvokeOnMainThread(
+                                                                                () =>
+                                                                                {
+                                                                                    TodaysSchedule.InsertInPlace(cItem,
+                                                                                        o => o.ListOrd);
+                                                                                });
+
+                                                                        }
+                                                                    }
                                                                 }
+
                                                             }
                                                         }
-                                                        else if (changedObject != null)
+                                                        else if (WriteParamListFields.TryGetValue("objectList[0].changes[0].objnam",
+                                                            out var changedObjectName))
                                                         {
-                                                            StatusMessage = "Item Changed";
-                                                        }
-                                                    }
-                                                    else if (Schedules.Any() && changedSchedule?.Params != null)
-                                                    {
-                                                        var changedItem =
-                                                            (Schedule) Schedules.FirstOrDefault(o =>
-                                                                o.Hname == changedSchedule.objnam);
-                                                        if (changedItem != null)
-                                                        {
-                                                            Schedules.Remove(changedItem);
-
-                                                            if (TodaysSchedule.Contains(changedItem))
+                                                            if (HardwareDictionary.TryGetValue(changedObjectName.ToString(),
+                                                                out var circuit))
                                                             {
-                                                                TodaysSchedule.Remove(changedItem);
-                                                            }
-
-                                                            if (HardwareDictionary.TryGetValue(
-                                                                changedSchedule.Params.CIRCUIT, out var schedCir))
-                                                            {
-                                                                var selectedHeater =
-                                                                    ScheduleHeaters.FirstOrDefault(o =>
-                                                                        o.Hname == changedSchedule.Params.HEATER);
-
-                                                                var cItem = new Schedule(changedSchedule.Params.SNAME,
-                                                                    Circuit<IntelliCenterConnection>.CircuitType.SCHED,
-                                                                    changedSchedule, schedCir, changedSchedule.objnam,
-                                                                    DataInterface)
+                                                                switch (circuit.CircuitDescription)
                                                                 {
-                                                                    SelectedHeater = selectedHeater,
-                                                                    Bodies = Bodies.ToList()
-                                                                };
-
-                                                                var date = DateTime.Now;
-                                                                var days = changedSchedule.Params.DAY;
-                                                                bool isToday;
-                                                                switch (date.DayOfWeek)
-                                                                {
-                                                                    case DayOfWeek.Friday:
-                                                                        isToday = days.Contains('F');
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .BODY:
+                                                                        Debug.WriteLine("Body Changed");
                                                                         break;
-                                                                    case DayOfWeek.Monday:
-                                                                        isToday = days.Contains('M');
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .CIRCUIT:
+                                                                        Debug.WriteLine("Circuit Changed");
+                                                                        //circuit.UpdateItemAsync((JObject) changesObject);
                                                                         break;
-                                                                    case DayOfWeek.Saturday:
-                                                                        isToday = days.Contains('A');
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .HEATER:
+                                                                        Debug.WriteLine("Heater Changed");
                                                                         break;
-                                                                    case DayOfWeek.Sunday:
-                                                                        isToday = days.Contains('U');
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .REMOTE:
+                                                                        Debug.WriteLine("Remote Changed");
                                                                         break;
-                                                                    case DayOfWeek.Thursday:
-                                                                        isToday = days.Contains('R');
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .CHEM:
+                                                                        Debug.WriteLine("Chem Changed");
+                                                                        //var c = (Chem)circuit;
+                                                                        //c.UpdateItemAsync((JObject) changesObject);
                                                                         break;
-                                                                    case DayOfWeek.Tuesday:
-                                                                        isToday = days.Contains('T');
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .CIRCGRP:
+                                                                        Debug.WriteLine("Circuit Group Changed");
+                                                                        //circuit.UpdateItemAsync((JObject) changesObject);
                                                                         break;
-                                                                    case DayOfWeek.Wednesday:
-                                                                        isToday = days.Contains('W');
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .GENERIC:
+                                                                        Debug.WriteLine("Generic Changed");
+                                                                        //circuit.UpdateItemAsync((JObject) changesObject);
+                                                                        break;
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .PUMP:
+                                                                        Debug.WriteLine("Pump Changed");
+                                                                        break;
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .SENSE:
+                                                                        Debug.WriteLine("Sense Changed");
+                                                                        break;
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .DIMMER:
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .GLOW:
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .GLOWT:
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .INTELLI:
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .LIGHT:
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .MAGIC2:
+                                                                    case Circuit<IntelliCenterConnection>.CircuitType
+                                                                        .CLRCASC:
+                                                                        Debug.WriteLine("Light Changed");
                                                                         break;
                                                                     default:
-                                                                        isToday = false;
+                                                                        Debug.WriteLine("Not Defined Changed");
                                                                         break;
                                                                 }
-
-                                                                StatusMessage = "Item Changed";
-                                                                Device.BeginInvokeOnMainThread(
-                                                                    () =>
-                                                                    {
-                                                                        Schedules.InsertInPlace(cItem,
-                                                                            o => o.ListOrd);
-                                                                    });
-
-                                                                if (isToday)
-                                                                {
-                                                                    Device.BeginInvokeOnMainThread(
-                                                                        () =>
-                                                                        {
-                                                                            TodaysSchedule.InsertInPlace(cItem,
-                                                                                o => o.ListOrd);
-                                                                        });
-
-                                                                }
-
-                                                                HardwareDictionary[cItem.Hname] = cItem;
+                                                            }
+                                                            else
+                                                            {
+                                                                Debug.WriteLine("Not Defined Changed");
                                                             }
                                                         }
-
+                                                        else
+                                                        {
+                                                            Debug.WriteLine("Not Defined Changed");
+                                                        }
                                                     }
                                                 }
-                                                catch(Exception ex)
-                                                {}
-                                            }
-
-                                            if (jItem.TryGetValue("deleted", out var deletedObject))
-                                            {
-                                                var deletedItem = (JToken)deletedObject;
-
-                                                StatusMessage = "Item Deleted";
-                                                var schItem = Schedules.FirstOrDefault(o => o.Hname == deletedItem.First.ToString());
-                                                if (schItem != null)
-                                                {
-                                                    Schedules.Remove(schItem);
-                                                }
-
-                                                var todayItem = TodaysSchedule.FirstOrDefault(o => o.Hname == deletedItem.First.ToString());
-                                                if (todayItem != null)
-                                                {
-                                                    TodaysSchedule.Remove(todayItem);
-                                                }
-
-                                                DataInterface.GetScheduleDataAsync();
                                             }
                                         }
                                     }
+
                                 }
+                                
                                 break;
                             default:
-                                Console.WriteLine(e);
+                                var json = JToken.Parse(e);
+                                var fieldsCollector = new JsonFieldsCollector(json);
+                                var fields = (Dictionary<string,JValue>)fieldsCollector.GetAllFields();
+                                if (fields != null)
+                                {
+                                    if (fields.TryGetValue("response", out var responseValue))
+                                    {
+                                        if (responseValue.Value.ToString().Contains("404"))
+                                        {
+                                            StatusMessage = "Request Not Accepted";
+                                        }
+                                    }
+                                }
+                                
                                 break;
                         }
                     }
@@ -898,10 +783,6 @@ namespace IntelliCenterControl.ViewModels
                     {
                         this._logService.LogError(messageEx.ToString());
                         this._cloudLogService.LogError(messageEx);
-                    }
-                    finally
-                    {
-                        //semaphoreSlim.Release();
                     }
                 }
             }
@@ -1003,6 +884,19 @@ namespace IntelliCenterControl.ViewModels
                             Pumps.InsertInPlace(kvp.Value, o => o.Hname);
                             break;
                         case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
+                            var sen = (Sense) kvp.Value;
+                            switch (sen.Type)
+                            {
+                                case Sense.SenseType.AIR:
+                                    AirSensor = kvp.Value;
+                                    break;
+                                case Sense.SenseType.SOLAR:
+                                    SolarSensor = kvp.Value;
+                                    break;
+                                case Sense.SenseType.POOL:
+                                    WaterSensor = kvp.Value;
+                                    break;
+                            }
                             break;
                         case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
                         case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
@@ -1101,41 +995,55 @@ namespace IntelliCenterControl.ViewModels
                                                     out var listOrder);
                                                 var b = new Body(moduleCircuit.Params.Sname, bodyType, moduleCircuit.Objnam, DataInterface)
                                                 {
-                                                    LastTemp = "-",
                                                     ListOrd = listOrder,
                                                     Display = true
                                                 };
 
                                                 HardwareDictionary[b.Hname] = b;
-                                            }
 
-                                            if (moduleCircuit.Params.Objlist != null)
-                                            {
-                                                foreach (var bodyParam in moduleCircuit.Params.Objlist)
+                                                if (moduleCircuit.Params.Objlist != null)
                                                 {
-                                                    if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(
-                                                        bodyParam.Params.Objtyp,
-                                                        out var cktType))
+                                                    foreach (var bodyParam in moduleCircuit.Params.Objlist)
                                                     {
-                                                        switch (cktType)
+                                                        if (Enum.TryParse<Circuit<IntelliCenterConnection>.CircuitType>(
+                                                            bodyParam.Params.Objtyp,
+                                                            out var cktType))
                                                         {
-                                                            case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
-                                                                if (Enum.TryParse<Chem.ChemType>(
-                                                                    bodyParam.Params.Subtyp, out var chemType))
-                                                                {
-                                                                    var c = new Chem(bodyParam.Params.Sname, chemType)
+                                                            switch (cktType)
+                                                            {
+                                                                case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
+                                                                    if (Enum.TryParse<Chem.ChemType>(
+                                                                        bodyParam.Params.Subtyp, out var chemType))
                                                                     {
-                                                                        Hname = bodyParam.Objnam
-                                                                    };
+                                                                        if (chemType == Chem.ChemType.ICHLOR)
+                                                                        {
+                                                                            var c = new Chem(bodyParam.Params.Sname,
+                                                                                chemType, bodyParam.Objnam,
+                                                                                DataInterface);
 
-                                                                    HardwareDictionary[c.Hname] = c;
-                                                                }
+                                                                            switch (bodyType)
+                                                                            {
+                                                                                case Body.BodyType.POOL:
+                                                                                    c.PrimaryName = b.Name;
+                                                                                    break;
+                                                                                case Body.BodyType.SPA:
+                                                                                    c.SecondaryName = b.Name;
+                                                                                    break;
+                                                                            }
 
-                                                                break;
+
+                                                                            HardwareDictionary[c.Hname] = c;
+                                                                        }
+                                                                    }
+
+                                                                    break;
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
+
+                                            
 
                                             break;
                                         case Circuit<IntelliCenterConnection>.CircuitType.CIRCUIT:
@@ -1292,6 +1200,41 @@ namespace IntelliCenterControl.ViewModels
                 }
             }
 
+        }
+
+        private bool Today(string days)
+        {
+            var date = DateTime.Now;
+            bool isToday;
+            switch (date.DayOfWeek)
+            {
+                case DayOfWeek.Friday:
+                    isToday = days.Contains('F');
+                    break;
+                case DayOfWeek.Monday:
+                    isToday = days.Contains('M');
+                    break;
+                case DayOfWeek.Saturday:
+                    isToday = days.Contains('A');
+                    break;
+                case DayOfWeek.Sunday:
+                    isToday = days.Contains('U');
+                    break;
+                case DayOfWeek.Thursday:
+                    isToday = days.Contains('R');
+                    break;
+                case DayOfWeek.Tuesday:
+                    isToday = days.Contains('T');
+                    break;
+                case DayOfWeek.Wednesday:
+                    isToday = days.Contains('W');
+                    break;
+                default:
+                    isToday = false;
+                    break;
+            }
+
+            return isToday;
         }
 
 

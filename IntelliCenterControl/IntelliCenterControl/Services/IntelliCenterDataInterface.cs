@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -30,38 +31,71 @@ namespace IntelliCenterControl.Services
         public Dictionary<string, string> Subscriptions = new Dictionary<string, string>();
         public Dictionary<Guid, string> UnsubscribeMessages = new Dictionary<Guid, string>();
 
-        public CancellationTokenSource Cts { get; set; } = new CancellationTokenSource();
+        public CancellationTokenSource Cts { get; set; }
 
         public IntelliCenterDataInterface(ILogService logService, ICloudLogService cloudLogService)
         {
             _logService = logService;
             _cloudLogService = cloudLogService;
+            Cts = new CancellationTokenSource();
+        }
+
+        private async Task<JObject> CheckCredentials()
+        {
+            using var client = new HttpClient {BaseAddress = new Uri(Settings.ServerURL)};
+            var content = new FormUrlEncodedContent(new[] {
+                new KeyValuePair<string, string>("username", "user"),
+                new KeyValuePair<string, string>("password", "user"),
+                new KeyValuePair<string, string>("grant_type", "password")
+            });
+            var response = await client.PostAsync("/Account/Token", content);
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                return JObject.Parse(json);
+            }
+            else
+                return null;
         }
 
         public async Task<bool> CreateConnectionAsync()
         {
             try
             {
+                
+
                 if (connection != null && connection.State == HubConnectionState.Connected)
                 {
-                    await connection.StopAsync(Cts.Token);
+                    await connection.StopAsync();
                 }
 
                 if (socketConnection != null && socketConnection.State == WebSocketState.Open)
                 {
                     await socketConnection.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token);
                 }
+                
+                Cts?.Cancel();
+                Cts?.Dispose();
+                Cts = new CancellationTokenSource();
 
                 _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
                 OnConnectionChanged();
 
                 if (Settings.ServerURL.StartsWith("http"))
                 {
+                    //connection = new HubConnectionBuilder()
+                    //    .WithUrl(Settings.ServerURL, options =>
+                    //        {
+                    //            options.AccessTokenProvider = async () => await Task.FromResult(CheckCredentials().ToString());
+                    //        })
+                    //        .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
+                    //    .Build();
+
+
                     connection = new HubConnectionBuilder()
                         .WithUrl(Settings.ServerURL)
                         .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
                         .Build();
-
 
                     connection.KeepAliveInterval = TimeSpan.FromSeconds(5);
 
@@ -586,66 +620,61 @@ namespace IntelliCenterControl.Services
 
         private async Task ReadMessage()
         {
-            WebSocketReceiveResult result;
             var message = new ArraySegment<byte>(new byte[4096]);
             try
             {
-                using (var ms = new MemoryStream())
+                await using var ms = new MemoryStream();
+                WebSocketReceiveResult result;
+                do
                 {
-                    do
-                    {
-                        result = await socketConnection.ReceiveAsync(message, Cts.Token);
-                        if (result.MessageType != WebSocketMessageType.Text)
-                            return;
-                        ms.Write(message.Array ?? throw new InvalidOperationException(), message.Offset, result.Count);
-                    } while (!result.EndOfMessage);
+                    result = await socketConnection.ReceiveAsync(message, Cts.Token);
+                    if (result.MessageType != WebSocketMessageType.Text)
+                        return;
+                    ms.Write(message.Array ?? throw new InvalidOperationException(), message.Offset, result.Count);
+                } while (!result.EndOfMessage);
 
-                    ms.Seek(0, SeekOrigin.Begin);
-                    using (var reader = new StreamReader(ms, Encoding.UTF8))
+                ms.Seek(0, SeekOrigin.Begin);
+                using var reader = new StreamReader(ms, Encoding.UTF8);
+                var receivedMessage = reader.ReadToEnd();
+                if (receivedMessage.StartsWith("{"))
+                {
+                    var data = JsonConvert.DeserializeObject(receivedMessage);
+                    if (data != null)
                     {
-                        var receivedMessage = reader.ReadToEnd();
-                        if (receivedMessage.StartsWith("{"))
+                        var jData = (JObject)data;
+                        if (jData.TryGetValue("command", out var commandValue))
                         {
-                            var data = JsonConvert.DeserializeObject(receivedMessage);
-                            if (data != null)
+                            switch (commandValue.ToString())
                             {
-                                var jData = (JObject)data;
-                                if (jData.TryGetValue("command", out var commandValue))
-                                {
-                                    switch (commandValue.ToString())
+                                case "ClearParam":
+                                    Subscriptions.Clear();
+                                    UnsubscribeMessages.Clear();
+                                    break;
+                                case "ReleaseParamList":
+                                    if (jData.TryGetValue("messageID", out var g))
                                     {
-                                        case "ClearParam":
-                                            Subscriptions.Clear();
-                                            UnsubscribeMessages.Clear();
-                                            break;
-                                        case "ReleaseParamList":
-                                            if (jData.TryGetValue("messageID", out var g))
-                                            {
-                                                var gid = (Guid)g;
-                                                if (UnsubscribeMessages.TryGetValue(gid, out var id))
-                                                {
-                                                    Subscriptions.Remove(id);
-                                                    UnsubscribeMessages.Remove(gid);
-                                                }
-                                            }
-
-                                            break;
-                                        default:
-                                            OnDataReceived(receivedMessage);
-                                            break;
+                                        var gid = (Guid)g;
+                                        if (UnsubscribeMessages.TryGetValue(gid, out var id))
+                                        {
+                                            Subscriptions.Remove(id);
+                                            UnsubscribeMessages.Remove(gid);
+                                        }
                                     }
-                                }
-                            }
 
+                                    break;
+                                default:
+                                    OnDataReceived(receivedMessage);
+                                    break;
+                            }
                         }
                     }
-                }
 
+                }
             }
             catch (Exception e)
             {
-                this._logService.LogError(e.ToString());
-                this._cloudLogService.LogError(e);
+                //this._logService.LogError(e.ToString());
+                //this._cloudLogService.LogError(e);
             }
 
         }

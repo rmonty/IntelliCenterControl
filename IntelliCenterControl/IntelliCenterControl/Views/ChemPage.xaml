@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="IntelliCenterControl.Views.ChemPage"
+             Title="Chem">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
+    </ContentPage.ToolbarItems>
+    <ContentPage.Content>
+        <CollectionView ItemsSource="{Binding Chems}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Label Grid.Row="0" Text="{Binding Description}" HorizontalOptions="Center" FontSize="Title" FontAttributes="Bold"/>
+                        <Frame Grid.Row="1" Grid.RowSpan="3" CornerRadius="5" Margin="5" Padding="0">
+                            <Image Source="water.png" Aspect="AspectFill"/>
+                        </Frame>
+                        <StackLayout Orientation="Horizontal" Grid.Row="1" HorizontalOptions="Center" Margin="0,5,0,0">
+                            <Label Text="Output: " FontSize="Large" FontAttributes="Bold,Italic"/>
+                            <Label Text="{Binding PrimaryName}" FontSize="Large" FontAttributes="Bold,Italic"/>
+                        </StackLayout>
+                        <Frame Grid.Row="2" IsVisible="{Binding SecondaryAvailable}" BorderColor="Black" HorizontalOptions="Center" VerticalOptions="Center"
+                               BackgroundColor="#96d1ff" Opacity="0.5"/>
+                        <Label Grid.Row="2" Text="{Binding Primary}" FontSize="Large" FontAttributes="Bold" HorizontalTextAlignment="Center" TextColor="DarkBlue"
+                               VerticalTextAlignment="Center"/>
+                        <Stepper Grid.Row="3" Grid.Column="0" Value="{Binding Primary}" HorizontalOptions="Center" Margin="0,0,0,5"
+                                 Minimum="0" Maximum="100"/>
+                        <Frame  Grid.Row="4" Grid.RowSpan="3" CornerRadius="5" Margin="5" IsVisible="{Binding SecondaryAvailable}" Padding="0">
+                            <Image Source="water.png" IsVisible="{Binding SecondaryAvailable}" Aspect="AspectFill"/>
+                        </Frame>
+
+                        <StackLayout Orientation="Horizontal" Grid.Row="4" HorizontalOptions="Center" Margin="0,5,0,0" IsVisible="{Binding SecondaryAvailable}">
+                            <Label Text="Output: " FontSize="Large" FontAttributes="Bold,Italic"/>
+                            <Label Text="{Binding SecondaryName}" FontSize="Large" FontAttributes="Bold,Italic"/>
+                        </StackLayout>
+                        <Frame Grid.Row="5" IsVisible="{Binding SecondaryAvailable}" BorderColor="Black" HorizontalOptions="Center" VerticalOptions="Center"
+                               BackgroundColor="#96d1ff" Opacity="0.5"/>
+                        <Label  Grid.Row="5" Text="{Binding Secondary}" FontSize="Large" FontAttributes="Bold" TextColor="DarkBlue" HorizontalTextAlignment="Center" IsVisible="{Binding SecondaryAvailable}"
+                                VerticalTextAlignment="Center"/>
+                        <Stepper Grid.Row="6" Grid.Column="0" Value="{Binding Secondary}" HorizontalOptions="Center" Margin="0,0,0,5" IsVisible="{Binding SecondaryAvailable}"
+                                 Minimum="0" Maximum="100"/>
+                        <Frame BackgroundColor="#96d1ff" Grid.Row="7" CornerRadius="5" Margin="5"/>
+                        <StackLayout Orientation="Horizontal" Grid.Row="7" HorizontalOptions="Center">
+                            <Label Text="Super Chlorinate: " VerticalOptions="Center" FontSize="Subtitle" FontAttributes="Bold"/>
+                            <Switch IsToggled="{Binding Super}" VerticalOptions="Center"/>
+                        </StackLayout>
+                        <Frame BackgroundColor="#96d1ff" Grid.Row="8" CornerRadius="5" Margin="5"/>
+                        <StackLayout Orientation="Horizontal" Grid.Row="8" HorizontalOptions="Center" Margin="5">
+                            <Label Text="Salt Level: " FontSize="Subtitle" FontAttributes="Bold" VerticalOptions="Center"/>
+                            <Label Text="{Binding Salt}" FontSize="Subtitle" FontAttributes="Bold" VerticalOptions="Center"/>
+                        </StackLayout>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </ContentPage.Content>
+</ContentPage>

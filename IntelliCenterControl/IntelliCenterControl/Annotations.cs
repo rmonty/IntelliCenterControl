@@ -75,7 +75,7 @@ namespace IntelliCenterControl.Annotations
   /// {
   ///   foreach (var book in books) {
   ///     if (book != null) // Warning: Expression is always true
-  ///      Console.WriteLine(book.ToUpper());
+  ///      Debug.WriteLine(book.ToUpper());
   ///   }
   /// }
   /// </code></example>
@@ -95,7 +95,7 @@ namespace IntelliCenterControl.Annotations
   ///   foreach (var book in books)
   ///   {
   ///     // Warning: Possible 'System.NullReferenceException'
-  ///     Console.WriteLine(book.ToUpper());
+  ///     Debug.WriteLine(book.ToUpper());
   ///   }
   /// }
   /// </code></example>

@@ -23,7 +23,7 @@ namespace IntelliCenterControl.Models
         Saturday = 64
     }
 
-    public class Schedule : Circuit<IntelliCenterConnection>
+    public sealed class Schedule : Circuit<IntelliCenterConnection>
     {
         public const string ScheduleKeys =
             "[\"OBJNAM : OBJTYP : LISTORD : CIRCUIT : SNAME : DAY : SINGLE : START : TIME : STOP : TIMOUT : GROUP : HEATER : COOLING : LOTMP : SMTSRT : VACFLO : STATUS : DNTSTP : ACT : MODE\"]";
@@ -40,7 +40,7 @@ namespace IntelliCenterControl.Models
 
         public bool IsNew {get;set;}
 
-        public List<string> TimeTypeNames => GetDescriptions(typeof(TimeType)).ToList();
+        public List<string> TimeTypeNames => EnumHelpers.GetDescriptions(typeof(TimeType)).ToList();
 
         private TimeSpan _startTime = new TimeSpan(8,0,0);
 
@@ -225,7 +225,6 @@ namespace IntelliCenterControl.Models
         public Schedule(Circuit<IntelliCenterConnection>.CircuitType circuitType, 
             IDataInterface<IntelliCenterConnection> dataInterface) : base(circuitType, dataInterface)
         {
-            Active = false;
             SaveScheduleCommand = new Command(async () => await ExecuteSaveScheduleCommand());
             DeleteScheduleCommand = new Command(async () => await ExecuteDeleteScheduleCommand());
             Expanded = true;
@@ -263,7 +262,7 @@ namespace IntelliCenterControl.Models
                 out var sTimeType)) StartTimeType = sTimeType;
 
             ScheduledCircuit = scheduledCircuit;
-            Active = definition.Params.ACT == "ON";
+            UpdateActiveState(definition.Params.ACT == "ON");
             Repeats = definition.Params.SINGLE == "OFF";
             Single = definition.Params.SINGLE == "ON";
             if(int.TryParse(definition.Params.LISTORD, out var liOrd)) ListOrd = liOrd;
@@ -442,21 +441,7 @@ namespace IntelliCenterControl.Models
                 DataInterface.SendMessage(message);
             }
         }
+        
 
-        private static IEnumerable<string> GetDescriptions(Type type)
-        {
-            var descs = new List<string>();
-            var names = Enum.GetNames(type);
-            foreach (var name in names)
-            {
-                var field = type.GetField(name);
-                var fds = field.GetCustomAttributes(typeof(DescriptionAttribute), true);
-                foreach (DescriptionAttribute fd in fds)
-                {
-                    descs.Add(fd.Description);
-                }
-            }
-            return descs;
-        }
     }
 }

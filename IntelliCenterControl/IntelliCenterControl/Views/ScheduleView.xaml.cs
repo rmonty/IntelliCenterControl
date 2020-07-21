@@ -25,7 +25,14 @@ namespace IntelliCenterControl.Views
         
         private void UpdateVisibility()
         {
-            ButtonImage.Source = ImageSource.FromFile(ActiveToggle.IsToggled ? "radio_button_on_large.png" : "radio_button_off_large.png");
+            Device.BeginInvokeOnMainThread(
+            ()=>
+            {
+                ButtonImage.Source = ImageSource.FromFile(ActiveToggle.IsToggled
+                    ? "radio_button_on_large.png"
+                    : "radio_button_off_large.png");
+            });
+
         }
     }
 

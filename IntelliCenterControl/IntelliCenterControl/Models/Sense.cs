@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using Newtonsoft.Json.Linq;
+using System.ComponentModel;
+using System.Threading.Tasks;
 
 namespace IntelliCenterControl.Models
 {
@@ -23,6 +25,7 @@ namespace IntelliCenterControl.Models
             get => _type;
             set
             {
+                if(_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }
@@ -35,6 +38,7 @@ namespace IntelliCenterControl.Models
             get => _temp;
             set
             {
+                if(_temp == value) return;
                 _temp = value;
                 OnPropertyChanged();
             }
@@ -43,6 +47,23 @@ namespace IntelliCenterControl.Models
         public Sense(string name, SenseType senseType):base(name, CircuitType.SENSE)
         {
             Type = senseType;
+        }
+
+        public override async Task UpdateItemAsync(JObject data)
+        {
+            if (data.TryGetValue("params", out var senseValues))
+            {
+                var sv = (JObject)senseValues;
+                                                                
+                if (sv.TryGetValue("PROBE", out var temp))
+                {
+                    if (int.TryParse(temp.ToString(), out var itemp))
+                    {
+                        Temp = itemp;
+                    }
+                }
+            }
+            
         }
 
     }

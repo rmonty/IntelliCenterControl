@@ -19,6 +19,7 @@ namespace IntelliCenterControl.Models
             get => _type;
             set
             {
+                if(_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }

@@ -5,7 +5,8 @@
             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
             mc:Ignorable="d"
             xmlns:views="clr-namespace:IntelliCenterControl.Views"
-            x:Class="IntelliCenterControl.Views.MainPage">
+            x:Class="IntelliCenterControl.Views.MainPage"
+            x:Name="MainAppPage">
 
     <TabbedPage.Children>
         <NavigationPage Title="Controller">
@@ -27,6 +28,16 @@
                 </OnPlatform>
             </NavigationPage.Icon>-->
         </NavigationPage>
+        <!--<NavigationPage Title="Chem">
+            <x:Arguments>
+                <views:ChemPage />
+            </x:Arguments>
+            <NavigationPage.Icon>
+                <OnPlatform x:TypeArguments="FileImageSource">
+                    <On Platform="iOS" Value="tab_feed.png"/>
+                </OnPlatform>
+            </NavigationPage.Icon>
+        </NavigationPage>-->
         <NavigationPage Title="About">
             <x:Arguments>
                 <views:AboutPage />

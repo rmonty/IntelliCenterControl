@@ -34,27 +34,27 @@ namespace IntelliCenterControl.Services
 
         public void LogDebug(string message)
         {
-            this.logger.Info(message);
+            this.logger?.Info(message);
         }
 
         public void LogError(string message)
         {
-            this.logger.Error(message);
+            this.logger?.Error(message);
         }
 
         public void LogFatal(string message)
         {
-            this.logger.Fatal(message);
+            this.logger?.Fatal(message);
         }
 
         public void LogInfo(string message)
         {
-            this.logger.Info(message);
+            this.logger?.Info(message);
         }
 
         public void LogWarning(string message)
         {
-            this.logger.Warn(message);
+            this.logger?.Warn(message);
         }
     }
 }
