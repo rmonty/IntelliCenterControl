@@ -1,41 +1,197 @@
-﻿using Plugin.Settings;
+﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using IntelliCenterControl.Annotations;
+using Plugin.Settings;
 using Plugin.Settings.Abstractions;
+using Xamarin.Essentials;
 
 namespace IntelliCenterControl
 {
-    
+
     /// <summary>
     /// This is the Settings static class that can be used in your Core solution or in any
     /// of your client applications. All settings are laid out the same exact way with getters
     /// and setters. 
     /// </summary>
-    public static class Settings
+    public class Settings : INotifyPropertyChanged
     {
         private static ISettings AppSettings => CrossSettings.Current;
+
+        private static Settings instance;
+        private static readonly object mutex = new object();
+
+        private Settings()
+        {
+        }
+
+        public static Settings Instance
+        {
+            get
+            {
+                lock (mutex)
+                {
+
+                    instance ??= new Settings();
+                }
+
+                return instance;
+            }
+        }
 
         #region Setting Constants
 
         private const string ServerURLKey = "server_url_key";
-        //private static readonly string ServerURLDefault = "ws://192.168.0.114:6680/";
-        private static readonly string ServerURLDefault = "http://192.168.0.130:5000/stream";
+        private readonly string ServerURLDefault = "http://192.168.0.130:5000/stream";
 
         private const string StorageAccessAskedKey = "storage_access_key";
-        private static readonly bool StorageAccessAskedDefault = false;
+        private readonly bool StorageAccessAskedDefault = false;
+
+        private const string HomeURLKey = "home_url_key";
+        private readonly string HomeURLDefault = "http://192.168.0.130:5000/stream";
+
+        private const string AwayURLKey = "away_url_key";
+        private readonly string AwayURLDefault = "http://192.168.0.130:5000/stream";
+
+        private const string SuperChlorinateStartKey = "super_chlorinate_start_key";
+        private readonly DateTime SuperChlorinateStartDefault = DateTime.Now;
         #endregion
 
 
-        public static string ServerURL
+        //public string ServerURL
+        //{
+        //    get => AppSettings.GetValueOrDefault(ServerURLKey, ServerURLDefault);
+        //    set => AppSettings.AddOrUpdateValue(ServerURLKey, value);
+        //}
+
+        public string ServerURL
         {
-            get => AppSettings.GetValueOrDefault(ServerURLKey, ServerURLDefault);
-            set => AppSettings.AddOrUpdateValue(ServerURLKey, value);
+            get => Preferences.Get(ServerURLKey, ServerURLDefault);
+            set => Preferences.Set(ServerURLKey, value);
         }
 
 
-        public static bool StorageAccessAsked
+        public bool StorageAccessAsked
         {
-            get => AppSettings.GetValueOrDefault(StorageAccessAskedKey, StorageAccessAskedDefault);
-            set => AppSettings.AddOrUpdateValue(StorageAccessAskedKey, value);
+            get => Preferences.Get(StorageAccessAskedKey, StorageAccessAskedDefault);
+            set => Preferences.Set(StorageAccessAskedKey, value);
         }
 
+        public string HomeURL
+        {
+            get => Preferences.Get(HomeURLKey, HomeURLDefault);
+            set
+            {
+                Preferences.Set(HomeURLKey, value);
+                OnPropertyChanged();
+            }
+        }
+
+        public string AwayURL
+        {
+            get => Preferences.Get(AwayURLKey, AwayURLDefault);
+            set
+            {
+                Preferences.Set(AwayURLKey, value);
+                OnPropertyChanged();
+            }
+        }
+
+        public string Username
+        {
+            get
+            {
+                var retVal = GetUserName().Result;
+                return string.IsNullOrEmpty(retVal) ? string.Empty : retVal;
+            }
+            set
+            {
+                StoreUserName(value);
+                OnPropertyChanged();
+            }
+        }
+
+        public string Password
+        {
+            get
+            {
+                var retVal = GetPassword().Result;
+                return string.IsNullOrEmpty(retVal) ? string.Empty : retVal;
+            }
+            set
+            {
+                StorePassword(value);
+                OnPropertyChanged();
+            }
+        }
+
+        public async Task<string> GetUserName()
+        {
+            try
+            {
+                return await SecureStorage.GetAsync("userName");
+            }
+            catch
+            {
+                //ignore
+            }
+
+            return null;
+        }
+
+        public async void StoreUserName(string userName)
+        {
+            try
+
+            {
+                await SecureStorage.SetAsync("userName", userName);
+            }
+            catch
+            {
+                //ignore
+            }
+        }
+
+        public async Task<string> GetPassword()
+        {
+            try
+            {
+                return await SecureStorage.GetAsync("passWord");
+            }
+            catch
+            {
+                //ignore
+            }
+
+            return null;
+        }
+
+        public async void StorePassword(string passWord)
+        {
+            try
+
+            {
+                await SecureStorage.SetAsync("passWord", passWord);
+            }
+            catch
+            {
+                //ignore
+            }
+        }
+
+        public void RemoveUserNameAndPassword()
+        {
+            SecureStorage.RemoveAll();
+        }
+
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(sender: this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

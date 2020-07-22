@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:intelliCenterControl="clr-namespace:IntelliCenterControl;assembly=intellicentercontrol"
+             xmlns:viewModels="clr-namespace:IntelliCenterControl.ViewModels;assembly=intellicentercontrol"
+             mc:Ignorable="d"
+             x:Class="IntelliCenterControl.Views.SettingsPage"
+             Title="{Binding Title}">
+    <ContentPage.BindingContext>
+        <viewModels:SettingsViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
+        <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked" />
+        <ToolbarItem x:Name="UpdateIP"  IconImageSource="ip_icon.png" Clicked="UpdateIP_Clicked" />
+    </ContentPage.ToolbarItems>
+    <ContentPage.Content>
+        <TableView>
+            <TableRoot>
+            <TableSection Title="IP Addresses" TextColor="#2196F3">
+                <EntryCell Label="Home URL:" Text="{Binding Settings.HomeURL}" Placeholder="Home URL" LabelColor="#2196F3"/>
+                <EntryCell Label="Away URL:" Text="{Binding Settings.AwayURL}" Placeholder="Away URL" LabelColor="#2196F3"/>
+            </TableSection>
+            <TableSection Title="Authentication" TextColor="#2196F3">
+            <EntryCell Label="Username:" Text="{Binding Settings.Username}" Placeholder="Username" LabelColor="#2196F3"/>
+            <ViewCell>
+                <StackLayout Orientation="Horizontal" Margin="17,0,8,0" Spacing="0">
+                    <Label Text="Password:" VerticalTextAlignment="Center" HorizontalTextAlignment="End"
+                           TextColor="#2196F3" />
+                    <Entry Text="{Binding Settings.Password}"
+                           HorizontalOptions="FillAndExpand"
+                           IsPassword="True" Placeholder="Password" />
+                </StackLayout>
+            </ViewCell>
+            
+            </TableSection>
+            </TableRoot>
+        </TableView>
+    </ContentPage.Content>
+</ContentPage>

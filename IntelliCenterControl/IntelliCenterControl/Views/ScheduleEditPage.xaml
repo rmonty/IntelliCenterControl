@@ -36,13 +36,32 @@
     <ContentPage.ToolbarItems>
         <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
         <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked"/>
-        <ToolbarItem x:Name="AddNew" Text="Add" Command="{Binding AddScheduleItemCommand}"/>
+        <ToolbarItem x:Name="AddNew" IconImageSource="plus_sign.png" Command="{Binding AddScheduleItemCommand}"/>
     </ContentPage.ToolbarItems>
     <ContentPage.Content>
         <CollectionView ItemsSource="{Binding Schedules}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Grid>
+                    <SwipeView>
+                        <SwipeView.LeftItems>
+                            <SwipeItems SwipeBehaviorOnInvoked="Close">
+                        <SwipeItem Text="Delete"
+                                   IconImageSource="delete.png"
+                                   BackgroundColor="LightPink"
+                                   Invoked="Delete_Clicked"
+                                   BindingContext="{Binding BindingContext, Source={x:Reference itemExpander}}"/>
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+                        <SwipeView.RightItems>
+                        <SwipeItems SwipeBehaviorOnInvoked="Close">
+                            <SwipeItem Text="Save"
+                                       IconImageSource="save.png"
+                                       BackgroundColor="LightGreen"
+                                       Invoked="Save_Clicked"
+                                       BindingContext="{Binding BindingContext, Source={x:Reference itemExpander}}"/>
+                        </SwipeItems>
+                        </SwipeView.RightItems>
+                        <Grid>
                         <Frame BackgroundColor="White" CornerRadius="5" Margin="5"/>
                         <Expander x:Name="itemExpander" VerticalOptions="Center" IsExpanded="{Binding Expanded}">
                            <Expander.Triggers>
@@ -195,12 +214,13 @@
                                     <RadioButton Grid.Row="1" Grid.Column="6" GroupName="Days" IsChecked="{Binding ScheduledDay, Converter={StaticResource SaturdayRadioDayConverter}, ConverterParameter=Saturday}" IsVisible="{Binding Repeats, Converter={StaticResource InvertBool}}" HorizontalOptions="Center"/>
 
                                 </Grid>
-                                <Button x:Name="Save" Grid.Row="5" Grid.Column="0" Text="Save" BackgroundColor="LightGreen" Margin="5,0,5,5" Clicked="Save_Clicked" BindingContext="{Binding BindingContext, Source={x:Reference itemExpander}}"/>
-                                <Button x:Name="Delete" Grid.Row="5" Grid.Column="1" Text="Delete" BackgroundColor="LightSalmon" Margin="5,0,5,5" Clicked="Delete_Clicked" BindingContext="{Binding BindingContext, Source={x:Reference itemExpander}}"/>
+                                <!--<Button x:Name="Save" Grid.Row="5" Grid.Column="0" Text="Save" BackgroundColor="LightGreen" Margin="5,0,5,5" Clicked="Save_Clicked" BindingContext="{Binding BindingContext, Source={x:Reference itemExpander}}"/>
+                                <Button x:Name="Delete" Grid.Row="5" Grid.Column="1" Text="Delete" BackgroundColor="LightSalmon" Margin="5,0,5,5" Clicked="Delete_Clicked" BindingContext="{Binding BindingContext, Source={x:Reference itemExpander}}"/>-->
                             </Grid>
                         </Grid>
                     </Expander>
                     </Grid>
+                    </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

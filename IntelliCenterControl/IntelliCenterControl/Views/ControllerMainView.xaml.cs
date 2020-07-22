@@ -17,6 +17,7 @@ namespace IntelliCenterControl.Views
     public partial class ControllerMainView : ContentPage
     {
         ControllerViewModel viewModel;
+        Settings _settings = Settings.Instance;
 
         public ControllerMainView()
         {
@@ -103,37 +104,34 @@ namespace IntelliCenterControl.Views
         {
             CrossToastPopUp.Current.ShowToastMessage(e.State.ToString() + "...");
 
-            switch (e.State)
+            ConnectedIcon.IconImageSource = e.State switch
             {
-                case IntelliCenterConnection.ConnectionState.Disconnected:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
-                    break;
-                case IntelliCenterConnection.ConnectionState.Connected:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("connected.png");
-                    break;
-                case IntelliCenterConnection.ConnectionState.Connecting:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
-                    break;
-                case IntelliCenterConnection.ConnectionState.Reconnecting:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
-                    break;
-                default:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
-                    break;
-            }
-
+                IntelliCenterConnection.ConnectionState.Disconnected => ImageSource.FromFile("not_connected.png"),
+                IntelliCenterConnection.ConnectionState.Connected => ImageSource.FromFile("connected.png"),
+                IntelliCenterConnection.ConnectionState.Connecting => ImageSource.FromFile("not_connected.png"),
+                IntelliCenterConnection.ConnectionState.Reconnecting => ImageSource.FromFile("not_connected.png"),
+                _ => ImageSource.FromFile("not_connected.png")
+            };
         }
 
         private async void UpdateIP_Clicked(object sender, EventArgs e)
         {
-            var result = await DisplayPromptAsync("Server URL", "Please Enter Server URL", initialValue : Settings.ServerURL);
+            var result = await DisplayActionSheet("Server URL", "Cancel", null, "Home URL", "Away URL");
 
-            //var validUrl = Uri.TryCreate(result, UriKind.Absolute, out var uriResult);
-                           // && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-            if (!String.IsNullOrEmpty(result))
+            if (!string.IsNullOrEmpty(result))
             {
-                Settings.ServerURL = result;
-                viewModel.UpdateIpAddress();
+                switch (result)
+                {
+                    case "Home URL":
+                        _settings.ServerURL = _settings.HomeURL;
+                        viewModel.UpdateIpAddress();
+                        break;
+                    case "Away URL":
+                        _settings.ServerURL = _settings.AwayURL;
+                        viewModel.UpdateIpAddress();
+                        break;
+                }
+
             }
             
         }
@@ -154,21 +152,21 @@ namespace IntelliCenterControl.Views
 
         public async Task<PermissionStatus> CheckAndRequestStoragePermission()
         {
-            var status = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
-
+            var status = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
             
-
-            if (status != PermissionStatus.Granted && !Settings.StorageAccessAsked)
+            if (status != PermissionStatus.Granted)
             {
-                var result = await DisplayAlert("Storage Access",
-                    @"This application uses storage for debug logging. These logs are not sent from your device and are only used for debugging purposes if you encounter a problem. Restricting access will not affect app usage.",
-                    "Yes", "No");
-                Settings.StorageAccessAsked = true;
-                
-                if (result)
+                status = await Permissions.RequestAsync<Permissions.StorageWrite>();
+
+                if (status != PermissionStatus.Granted && !_settings.StorageAccessAsked)
                 {
-                    status = await Permissions.RequestAsync<Permissions.StorageRead>();
+
+                    await DisplayAlert("Storage Access",
+                        @"This application can us storage for debug logging. These logs are not sent from your device and are only used for debugging purposes if you encounter a problem. Restricting access will not affect app usage.  To enable storage you can turn on manually in phone settings",
+                        "Ok");
+                    _settings.StorageAccessAsked = true;
                 }
+
             }
             
             return status;

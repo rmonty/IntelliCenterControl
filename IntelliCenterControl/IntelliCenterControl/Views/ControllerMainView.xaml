@@ -13,7 +13,7 @@
     <ContentPage.ToolbarItems>
         <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
         <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked" />
-        <ToolbarItem x:Name="UpdateIP"  IconImageSource="gear_icon.png" Clicked="UpdateIP_Clicked" />
+        <ToolbarItem x:Name="UpdateIP"  IconImageSource="ip_icon.png" Clicked="UpdateIP_Clicked" />
     </ContentPage.ToolbarItems>
 
     <ContentPage.Resources>

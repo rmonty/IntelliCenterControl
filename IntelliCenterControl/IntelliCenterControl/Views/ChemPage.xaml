@@ -5,9 +5,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              x:Class="IntelliCenterControl.Views.ChemPage"
-             Title="Chem">
+             Title="Chemical">
     <ContentPage.ToolbarItems>
         <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
+        <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked"/>
     </ContentPage.ToolbarItems>
     <ContentPage.Content>
         <CollectionView ItemsSource="{Binding Chems}">

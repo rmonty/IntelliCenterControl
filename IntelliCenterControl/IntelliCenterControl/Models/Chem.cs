@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using IntelliCenterControl.Services;
 using Xamarin.Forms;
@@ -205,6 +206,8 @@ namespace IntelliCenterControl.Models
             }
         }
 
+        private Settings _settings = Settings.Instance;
+
         private bool SendChangePrimaryCommand = true;
         private bool SendChangeSecondaryCommand = true;
         private bool SendToggleSuperCommand = true;
@@ -215,6 +218,7 @@ namespace IntelliCenterControl.Models
             ChangeSecondaryCommand = new Command(async () => await ExecuteChangeSecondaryCommand());
             ToggleSuperCommand = new Command(async () => await ExecuteToggleSuperCommand());
             Type = chemType;
+            
         }
 
         private async Task ExecuteChangeSecondaryCommand()

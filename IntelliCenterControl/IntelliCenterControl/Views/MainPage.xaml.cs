@@ -12,7 +12,7 @@ namespace IntelliCenterControl.Views
     {
         ControllerViewModel viewModel;
         private Page cPage;
-        private Page aboutPage;
+        private Page schedulePage;
 
         public MainPage()
         {
@@ -22,7 +22,7 @@ namespace IntelliCenterControl.Views
                 Title="Chem"
             };
 
-            aboutPage = MainAppPage.Children[^1];
+            schedulePage = MainAppPage.Children[1];
 
             BindingContext = viewModel = SimpleIoc.Default.GetInstance<ControllerViewModel>();
 
@@ -36,7 +36,7 @@ namespace IntelliCenterControl.Views
                 case "ChemInstalled":
                     if (viewModel.ChemInstalled)
                     {
-                        MainAppPage.Children.Insert(2, cPage);
+                        MainAppPage.Children.Insert(1, cPage);
                         
 
                     }

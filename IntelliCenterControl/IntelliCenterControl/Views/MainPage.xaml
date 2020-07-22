@@ -9,7 +9,7 @@
             x:Name="MainAppPage">
 
     <TabbedPage.Children>
-        <NavigationPage Title="Controller">
+        <NavigationPage Title="CNTRL">
             <x:Arguments>
                 <views:ControllerMainView />
             </x:Arguments><NavigationPage.Icon>
@@ -18,7 +18,7 @@
                 </OnPlatform>
             </NavigationPage.Icon>
         </NavigationPage>
-        <NavigationPage Title="Schedule">
+        <NavigationPage Title="SCHED">
             <x:Arguments>
                 <views:ScheduleEditPage />
             </x:Arguments>
@@ -38,7 +38,18 @@
                 </OnPlatform>
             </NavigationPage.Icon>
         </NavigationPage>-->
-        <NavigationPage Title="About">
+        <NavigationPage Title="SET">
+            <x:Arguments>
+                <views:SettingsPage />
+            </x:Arguments>
+            <!--<NavigationPage.Icon>
+                <OnPlatform x:TypeArguments="FileImageSource">
+                    <On Platform="iOS" Value="tab_about.png"/>
+                </OnPlatform>
+            </NavigationPage.Icon>-->
+            
+        </NavigationPage>
+        <NavigationPage Title="ABOUT">
             <x:Arguments>
                 <views:AboutPage />
             </x:Arguments><NavigationPage.Icon>

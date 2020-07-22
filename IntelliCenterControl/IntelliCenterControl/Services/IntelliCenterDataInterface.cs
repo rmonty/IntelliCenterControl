@@ -18,6 +18,7 @@ namespace IntelliCenterControl.Services
     {
         private ILogService _logService;
         private readonly ICloudLogService _cloudLogService;
+        private Settings _settings = Settings.Instance;
 
         private HubConnection connection;
         private ClientWebSocket socketConnection;
@@ -42,7 +43,7 @@ namespace IntelliCenterControl.Services
 
         private async Task<JObject> CheckCredentials()
         {
-            using var client = new HttpClient {BaseAddress = new Uri(Settings.ServerURL)};
+            using var client = new HttpClient {BaseAddress = new Uri(_settings.ServerURL)};
             var content = new FormUrlEncodedContent(new[] {
                 new KeyValuePair<string, string>("username", "user"),
                 new KeyValuePair<string, string>("password", "user"),
@@ -81,7 +82,7 @@ namespace IntelliCenterControl.Services
                 _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
                 OnConnectionChanged();
 
-                if (Settings.ServerURL.StartsWith("http"))
+                if (_settings.ServerURL.StartsWith("http"))
                 {
                     //connection = new HubConnectionBuilder()
                     //    .WithUrl(Settings.ServerURL, options =>
@@ -93,7 +94,7 @@ namespace IntelliCenterControl.Services
 
 
                     connection = new HubConnectionBuilder()
-                        .WithUrl(Settings.ServerURL)
+                        .WithUrl(_settings.ServerURL)
                         .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
                         .Build();
 
@@ -137,12 +138,12 @@ namespace IntelliCenterControl.Services
 
                     _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState)connection.State;
                 }
-                else if (Settings.ServerURL.StartsWith("ws"))
+                else if (_settings.ServerURL.StartsWith("ws"))
                 {
 
                     socketConnection = new ClientWebSocket();
 
-                    await socketConnection.ConnectAsync(new Uri(Settings.ServerURL), Cts.Token);
+                    await socketConnection.ConnectAsync(new Uri(_settings.ServerURL), Cts.Token);
 
                     if (socketConnection.State == WebSocketState.Open) DataSubscribe();
 

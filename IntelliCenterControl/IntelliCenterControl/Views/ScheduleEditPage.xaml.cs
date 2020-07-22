@@ -24,24 +24,16 @@ namespace IntelliCenterControl.Views
 
         private void DataInterface_ConnectionChanged(object sender, Models.IntelliCenterConnection e)
         {
-            switch (e.State)
+            CrossToastPopUp.Current.ShowToastMessage(e.State.ToString() + "...");
+
+            ConnectedIcon.IconImageSource = e.State switch
             {
-                case IntelliCenterConnection.ConnectionState.Disconnected:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
-                    break;
-                case IntelliCenterConnection.ConnectionState.Connected:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("connected.png");
-                    break;
-                case IntelliCenterConnection.ConnectionState.Connecting:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
-                    break;
-                case IntelliCenterConnection.ConnectionState.Reconnecting:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
-                    break;
-                default:
-                    ConnectedIcon.IconImageSource = ImageSource.FromFile("not_connected.png");
-                    break;
-            }
+                IntelliCenterConnection.ConnectionState.Disconnected => ImageSource.FromFile("not_connected.png"),
+                IntelliCenterConnection.ConnectionState.Connected => ImageSource.FromFile("connected.png"),
+                IntelliCenterConnection.ConnectionState.Connecting => ImageSource.FromFile("not_connected.png"),
+                IntelliCenterConnection.ConnectionState.Reconnecting => ImageSource.FromFile("not_connected.png"),
+                _ => ImageSource.FromFile("not_connected.png")
+            };
         }
 
         private void ViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -62,7 +54,7 @@ namespace IntelliCenterControl.Views
 
         private void Save_Clicked(object sender, System.EventArgs e)
         {
-            if (((Button) sender).BindingContext is Schedule context)
+            if (((SwipeItem) sender).BindingContext is Schedule context)
             {
                 //((Button)sender).IsEnabled = false;
                 context.Expanded = false;
@@ -72,7 +64,7 @@ namespace IntelliCenterControl.Views
 
         private async void Delete_Clicked(object sender, System.EventArgs e)
         {
-            if (((Button)sender).BindingContext is Schedule context)
+            if (((SwipeItem)sender).BindingContext is Schedule context)
             {
                 context.Expanded = false;
                 if (context.Hname == null)
@@ -94,5 +86,7 @@ namespace IntelliCenterControl.Views
                 }
             }
         }
+
+        
     }
 }
