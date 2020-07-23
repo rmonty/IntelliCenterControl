@@ -8,6 +8,7 @@ using Android.Widget;
 using Android.OS;
 using GalaSoft.MvvmLight.Ioc;
 using IntelliCenterControl.Services;
+using Xamarin.Forms;
 
 namespace IntelliCenterControl.Droid
 {
@@ -23,7 +24,8 @@ namespace IntelliCenterControl.Droid
 
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
-            
+            //DependencyService.Register<ToastNotification>();
+            //ToastNotification.Init(this);
             LoadApplication(new App());
             
             this.Bootstraping();

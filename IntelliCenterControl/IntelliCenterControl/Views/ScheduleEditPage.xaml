@@ -34,8 +34,6 @@
         </ResourceDictionary>
     </ContentPage.Resources>
     <ContentPage.ToolbarItems>
-        <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
-        <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked"/>
         <ToolbarItem x:Name="AddNew" IconImageSource="plus_sign.png" Command="{Binding AddScheduleItemCommand}"/>
     </ContentPage.ToolbarItems>
     <ContentPage.Content>
@@ -142,7 +140,7 @@
                                        VerticalOptions="Center" FontSize="Caption" />
                                 <Picker Grid.Row="1" Grid.Column="0"
                                         ItemsSource="{Binding BindingContext.AvailableCircuits, Source={x:Reference Root}}" 
-                                        ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding ScheduledCircuit}"
+                                        SelectedItem="{Binding ScheduledCircuitName}"
                                         FontSize="Subtitle" VerticalOptions="Center"/>
                                 <Label Grid.Row="0" Grid.Column="1" Text="Heat Source"
                                        VerticalOptions="Center" FontSize="Caption" IsVisible="{Binding ScheduledCircuit.CircuitDescription, Converter={StaticResource VisEnum}, ConverterParameter=11|23}"/> 

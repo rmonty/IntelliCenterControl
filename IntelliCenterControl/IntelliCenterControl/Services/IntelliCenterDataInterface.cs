@@ -129,7 +129,7 @@ namespace IntelliCenterControl.Services
                                     return message;
                                 };
                             })
-                            .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
+                            .WithAutomaticReconnect(new[] { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
                         .Build();
                     
                     //var result = await CheckCredentials();
@@ -139,7 +139,7 @@ namespace IntelliCenterControl.Services
                     //    .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
                     //    .Build();
 
-                    connection.KeepAliveInterval = TimeSpan.FromSeconds(5);
+                    connection.KeepAliveInterval = TimeSpan.FromSeconds(10);
 
                     connection.Reconnecting += error =>
                     {
@@ -185,6 +185,8 @@ namespace IntelliCenterControl.Services
                     socketConnection = new ClientWebSocket();
 
                     await socketConnection.ConnectAsync(new Uri(_settings.ServerURL), Cts.Token);
+
+                    Thread.Sleep(50);
 
                     if (socketConnection.State == WebSocketState.Open) DataSubscribe();
 
@@ -553,13 +555,13 @@ namespace IntelliCenterControl.Services
                 {
                     // Wait for any previous send commands to finish and release the semaphore
                     // This throttles our commands
-                    //await _sendRateLimit.WaitAsync(Cts.Token);
+                    await _sendRateLimit.WaitAsync(Cts.Token);
                     ArraySegment<byte> byteMessage = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
                     await socketConnection.SendAsync(byteMessage, WebSocketMessageType.Text, true, Cts.Token);
                     // Block other commands until our timeout to prevent flooding
-                    //await Task.Delay(_sendRate, Cts.Token);
+                    await Task.Delay(_sendRate, Cts.Token);
                     // Exit our semaphore
-                    //_sendRateLimit.Release();
+                    _sendRateLimit.Release();
                     return await Task.FromResult(true);
                 }
             }

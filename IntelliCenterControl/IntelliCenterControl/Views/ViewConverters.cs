@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
-using IntelliCenterControl.Models;
 using Xamarin.Forms;
 
 namespace IntelliCenterControl.Views

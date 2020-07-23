@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using IntelliCenterControl.Services;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Xamarin.Forms;
 
 namespace IntelliCenterControl.Models
@@ -172,8 +172,22 @@ namespace IntelliCenterControl.Models
             {
                 if(_scheduledCircuit == value) return;
                 _scheduledCircuit = value;
-                Name = _scheduledCircuit.Name;
                 OnPropertyChanged();
+            }
+        }
+
+        private string _scheduledCircuitNAme;
+
+        public string ScheduledCircuitName
+        {
+            get => _scheduledCircuitNAme;
+            set
+            {
+                if(_scheduledCircuitNAme == value) return;
+                _scheduledCircuitNAme = value;
+                Name = value;
+                OnPropertyChanged();
+                Task.Run(UpdateScheduledCircuit);
             }
         }
 
@@ -222,19 +236,26 @@ namespace IntelliCenterControl.Models
 
         private SchedulesDefinition.Schedule _definition;
 
+        public ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> _hardwareDictionary = new ConcurrentDictionary<string, Circuit<IntelliCenterConnection>>();
+
+
         public Schedule(Circuit<IntelliCenterConnection>.CircuitType circuitType, 
-            IDataInterface<IntelliCenterConnection> dataInterface) : base(circuitType, dataInterface)
+            IDataInterface<IntelliCenterConnection> dataInterface,
+            ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> hardwareDictionary) : base(circuitType, dataInterface)
         {
             SaveScheduleCommand = new Command(async () => await ExecuteSaveScheduleCommand());
             DeleteScheduleCommand = new Command(async () => await ExecuteDeleteScheduleCommand());
             Expanded = true;
             Single = true;
+            _hardwareDictionary = hardwareDictionary;
         }
 
         public Schedule(string name, CircuitType circuitType, SchedulesDefinition.Schedule definition,
             Circuit<IntelliCenterConnection> scheduledCircuit, string hName,
-            IDataInterface<IntelliCenterConnection> dataInterface) : base(name, circuitType, hName, dataInterface)
+            IDataInterface<IntelliCenterConnection> dataInterface,
+            ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> hardwareDictionary) : base(name, circuitType, hName, dataInterface)
         {
+            _hardwareDictionary = hardwareDictionary;
             _definition = definition;
             SaveScheduleCommand = new Command(async () => await ExecuteSaveScheduleCommand());
             DeleteScheduleCommand = new Command(async () => await ExecuteDeleteScheduleCommand());
@@ -261,7 +282,8 @@ namespace IntelliCenterControl.Models
             >(definition.Params.START,
                 out var sTimeType)) StartTimeType = sTimeType;
 
-            ScheduledCircuit = scheduledCircuit;
+            _scheduledCircuit = scheduledCircuit;
+            ScheduledCircuitName = definition.Params.SNAME;
             UpdateActiveState(definition.Params.ACT == "ON");
             Repeats = definition.Params.SINGLE == "OFF";
             Single = definition.Params.SINGLE == "ON";
@@ -322,6 +344,11 @@ namespace IntelliCenterControl.Models
             }
         }
 
+        private void UpdateScheduledCircuit()
+        {
+            ScheduledCircuit = _hardwareDictionary.Values.FirstOrDefault(o => o.Name == ScheduledCircuitName);
+        }
+
         private async Task ExecuteDeleteScheduleCommand()
         {
             if (!IsNew)
@@ -349,7 +376,7 @@ namespace IntelliCenterControl.Models
         private async Task ExecuteSaveScheduleCommand()
         {
             SetDays();
-           
+
             if (ScheduledCircuit == null)
             {
                 return;

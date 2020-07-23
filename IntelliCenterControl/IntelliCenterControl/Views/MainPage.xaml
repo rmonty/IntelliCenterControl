@@ -6,57 +6,43 @@
             mc:Ignorable="d"
             xmlns:views="clr-namespace:IntelliCenterControl.Views"
             x:Class="IntelliCenterControl.Views.MainPage"
-            x:Name="MainAppPage">
-
+            x:Name="MainAppPage" >
+    
+<TabbedPage.ToolbarItems>
+        <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
+        <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked" />
+        <ToolbarItem x:Name="UpdateIP"  IconImageSource="ip_icon.png" Clicked="UpdateIP_Clicked" />
+    </TabbedPage.ToolbarItems>
     <TabbedPage.Children>
-        <NavigationPage Title="CNTRL">
+        <NavigationPage Title="CNTRL" IconImageSource="control_icon.png">
             <x:Arguments>
                 <views:ControllerMainView />
-            </x:Arguments><NavigationPage.Icon>
-                <OnPlatform x:TypeArguments="FileImageSource">
-                    <On Platform="iOS" Value="tab_feed.png"/>
-                </OnPlatform>
-            </NavigationPage.Icon>
-        </NavigationPage>
-        <NavigationPage Title="SCHED">
-            <x:Arguments>
-                <views:ScheduleEditPage />
             </x:Arguments>
-            <!--<NavigationPage.Icon>
-                <OnPlatform x:TypeArguments="FileImageSource">
-                    <On Platform="iOS" Value="tab_feed.png"/>
-                </OnPlatform>
-            </NavigationPage.Icon>-->
         </NavigationPage>
-        <!--<NavigationPage Title="Chem">
+        <!--<NavigationPage Title="CHEM" IconImageSource="chem_icon.png">
             <x:Arguments>
                 <views:ChemPage />
             </x:Arguments>
-            <NavigationPage.Icon>
+            --><!--<NavigationPage.Icon>
                 <OnPlatform x:TypeArguments="FileImageSource">
                     <On Platform="iOS" Value="tab_feed.png"/>
                 </OnPlatform>
-            </NavigationPage.Icon>
+            </NavigationPage.Icon>--><!--
         </NavigationPage>-->
-        <NavigationPage Title="SET">
+        <NavigationPage Title="SCHED" IconImageSource="schedule_icon.png">
+            <x:Arguments>
+                <views:ScheduleEditPage />
+            </x:Arguments>
+        </NavigationPage>
+        <NavigationPage Title="SET" IconImageSource="gear_icon.png">
             <x:Arguments>
                 <views:SettingsPage />
             </x:Arguments>
-            <!--<NavigationPage.Icon>
-                <OnPlatform x:TypeArguments="FileImageSource">
-                    <On Platform="iOS" Value="tab_about.png"/>
-                </OnPlatform>
-            </NavigationPage.Icon>-->
         </NavigationPage>
-        <NavigationPage Title="ABOUT">
+        <NavigationPage Title="ABOUT" IconImageSource="about_icon.png">
             <x:Arguments>
                 <views:AboutPage />
-            </x:Arguments><NavigationPage.Icon>
-                <OnPlatform x:TypeArguments="FileImageSource">
-                    <On Platform="iOS" Value="tab_about.png"/>
-                </OnPlatform>
-            </NavigationPage.Icon>
-            
+            </x:Arguments>
         </NavigationPage>
     </TabbedPage.Children>
     

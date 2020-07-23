@@ -11,11 +11,6 @@
     <ContentPage.BindingContext>
         <viewModels:SettingsViewModel />
     </ContentPage.BindingContext>
-    <ContentPage.ToolbarItems>
-        <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
-        <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked" />
-        <ToolbarItem x:Name="UpdateIP"  IconImageSource="ip_icon.png" Clicked="UpdateIP_Clicked" />
-    </ContentPage.ToolbarItems>
     <ContentPage.Content>
         <TableView>
             <TableRoot>
@@ -28,7 +23,7 @@
             <ViewCell>
                 <StackLayout Orientation="Horizontal" Margin="17,0,8,0" Spacing="0">
                     <Label Text="Password:" VerticalTextAlignment="Center" HorizontalTextAlignment="End"
-                           TextColor="#2196F3" />
+                           TextColor="#2196F3"/>
                     <Entry Text="{Binding Settings.Password}"
                            HorizontalOptions="FillAndExpand"
                            IsPassword="True" Placeholder="Password" />

@@ -1,10 +1,4 @@
-﻿using System.Reflection;
-using System.Windows.Input;
-using IntelliCenterControl.Views;
-using Xamarin.Essentials;
-using Xamarin.Forms;
-
-namespace IntelliCenterControl.ViewModels
+﻿namespace IntelliCenterControl.ViewModels
 {
     public class SettingsViewModel : BaseViewModel<object>
     {

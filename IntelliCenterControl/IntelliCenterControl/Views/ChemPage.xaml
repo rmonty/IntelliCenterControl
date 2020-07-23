@@ -3,15 +3,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:IntelliCenterControl.Views;assembly=intellicentercontrol"
              mc:Ignorable="d"
              x:Class="IntelliCenterControl.Views.ChemPage"
              Title="Chemical">
-    <ContentPage.ToolbarItems>
-        <ToolbarItem x:Name="ConnectedIcon" IconImageSource="not_connected.png"/>
-        <ToolbarItem x:Name="RefreshConnection" IconImageSource="refresh_icon.png" Clicked="RefreshConnection_Clicked"/>
-    </ContentPage.ToolbarItems>
+    <ContentPage.Resources>
+        <views:InvertBoolConverter x:Key="InvertBool"/>
+    </ContentPage.Resources>    
     <ContentPage.Content>
-        <CollectionView ItemsSource="{Binding Chems}">
+        <Grid>
+        <Label Text="None Installed" IsVisible="{Binding ChemInstalled, Converter={StaticResource InvertBool}}" FontAttributes="Bold"
+               HorizontalOptions="Center" VerticalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center"/>
+        <CollectionView ItemsSource="{Binding Chems}" IsVisible="{Binding ChemInstalled}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
@@ -69,5 +72,6 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+        </Grid>
     </ContentPage.Content>
 </ContentPage>
