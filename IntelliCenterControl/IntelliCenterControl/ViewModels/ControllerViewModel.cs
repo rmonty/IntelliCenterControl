@@ -265,12 +265,12 @@ namespace IntelliCenterControl.ViewModels
 
         private async Task ExecuteAllLightsOnCommand()
         {
-            await DataInterface.SendItemParamsUpdateAsync("_A111", "STATUS", "ON");
+            DataInterface.SendItemParamsUpdateAsync("_A111", "STATUS", "ON");
         }
 
         private async Task ExecuteAllLightsOffCommand()
         {
-            await DataInterface.SendItemParamsUpdateAsync("_A110", "STATUS", "OFF");
+            DataInterface.SendItemParamsUpdateAsync("_A110", "STATUS", "OFF");
         }
 
         private Guid _hardwareDefinitionMessageId;
@@ -813,7 +813,7 @@ namespace IntelliCenterControl.ViewModels
 
         private async Task ExecuteLoadHardwareDefinitionCommand()
         {
-            await DataInterface.CreateConnectionAsync();
+            DataInterface.CreateConnectionAsync();
         }
 
         private async Task ExecuteSubscribeDataCommand()

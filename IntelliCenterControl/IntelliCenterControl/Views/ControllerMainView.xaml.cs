@@ -156,11 +156,10 @@ namespace IntelliCenterControl.Views
             
             if (status != PermissionStatus.Granted)
             {
-                status = await Permissions.RequestAsync<Permissions.StorageWrite>();
+                if(status != PermissionStatus.Denied) status = await Permissions.RequestAsync<Permissions.StorageWrite>();
 
                 if (status != PermissionStatus.Granted && !_settings.StorageAccessAsked)
                 {
-
                     await DisplayAlert("Storage Access",
                         @"This application can us storage for debug logging. These logs are not sent from your device and are only used for debugging purposes if you encounter a problem. Restricting access will not affect app usage.  To enable storage you can turn on manually in phone settings",
                         "Ok");

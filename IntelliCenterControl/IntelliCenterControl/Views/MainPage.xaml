@@ -47,7 +47,6 @@
                     <On Platform="iOS" Value="tab_about.png"/>
                 </OnPlatform>
             </NavigationPage.Icon>-->
-            
         </NavigationPage>
         <NavigationPage Title="ABOUT">
             <x:Arguments>

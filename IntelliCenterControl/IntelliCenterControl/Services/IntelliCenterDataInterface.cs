@@ -34,29 +34,57 @@ namespace IntelliCenterControl.Services
 
         public CancellationTokenSource Cts { get; set; }
 
+        private int tokenExpiration;
+
+        private Timer _tokenExpireTimer;
+
         public IntelliCenterDataInterface(ILogService logService, ICloudLogService cloudLogService)
         {
             _logService = logService;
             _cloudLogService = cloudLogService;
             Cts = new CancellationTokenSource();
+            _tokenExpireTimer = new Timer(TokenTimeOut);
         }
 
-        private async Task<JObject> CheckCredentials()
+        private async Task<string> CheckCredentials()
         {
-            using var client = new HttpClient {BaseAddress = new Uri(_settings.ServerURL)};
+            var httpClientHandler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
+
+            using var client = new HttpClient(httpClientHandler);
             var content = new FormUrlEncodedContent(new[] {
-                new KeyValuePair<string, string>("username", "user"),
-                new KeyValuePair<string, string>("password", "user"),
+                new KeyValuePair<string, string>("username", _settings.Username),
+                new KeyValuePair<string, string>("password", _settings.Password),
                 new KeyValuePair<string, string>("grant_type", "password")
             });
-            var response = await client.PostAsync("/Account/Token", content);
+            var response = await client.PostAsync(_settings.ServerURL + @"/Account/Token", content, Cts.Token);
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                return JObject.Parse(json);
+                var fieldsCollector = new JsonFieldsCollector(JToken.Parse(json));
+                var fields = (Dictionary<string,JValue>)fieldsCollector.GetAllFields();
+                if (fields != null)
+                {
+                    if (fields.TryGetValue("access_token", out var token) && fields.TryGetValue("expires_in", out var expire))
+                    {
+                        _tokenExpireTimer.Dispose();
+                        tokenExpiration = int.Parse(expire.Value.ToString());
+                        _tokenExpireTimer = new Timer(TokenTimeOut, this, TimeSpan.FromSeconds(0),
+                            TimeSpan.FromSeconds(tokenExpiration));
+                        return token.ToString();
+                    }
+                }
+                return null;
             }
             else
                 return null;
+        }
+
+        private void TokenTimeOut(object state)
+        {
+            //CheckCredentials();
         }
 
         public async Task<bool> CreateConnectionAsync()
@@ -84,19 +112,32 @@ namespace IntelliCenterControl.Services
 
                 if (_settings.ServerURL.StartsWith("http"))
                 {
-                    //connection = new HubConnectionBuilder()
-                    //    .WithUrl(Settings.ServerURL, options =>
-                    //        {
-                    //            options.AccessTokenProvider = async () => await Task.FromResult(CheckCredentials().ToString());
-                    //        })
-                    //        .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
-                    //    .Build();
-
+                    var serverUrl = _settings.ServerURL;
+                    if (serverUrl.EndsWith("/")) serverUrl += @"stream/";
+                    else serverUrl += @"/stream/";
 
                     connection = new HubConnectionBuilder()
-                        .WithUrl(_settings.ServerURL)
-                        .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
+                        .WithUrl(serverUrl, options =>
+                            {
+                                options.AccessTokenProvider = async () => await CheckCredentials();
+                                options.HttpMessageHandlerFactory = (message) =>
+                                {
+                                    if (message is HttpClientHandler clientHandler)
+                                        // bypass SSL certificate
+                                        clientHandler.ServerCertificateCustomValidationCallback +=
+                                            (sender, certificate, chain, sslPolicyErrors) => true;
+                                    return message;
+                                };
+                            })
+                            .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
                         .Build();
+                    
+                    //var result = await CheckCredentials();
+
+                    //connection = new HubConnectionBuilder()
+                    //    .WithUrl(serverUrl)
+                    //    .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
+                    //    .Build();
 
                     connection.KeepAliveInterval = TimeSpan.FromSeconds(5);
 

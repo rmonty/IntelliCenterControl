@@ -29,7 +29,7 @@
                         </Grid.RowDefinitions>
                         <Label Grid.Row="0" Text="{Binding Description}" HorizontalOptions="Center" FontSize="Title" FontAttributes="Bold"/>
                         <Frame Grid.Row="1" Grid.RowSpan="3" CornerRadius="5" Margin="5" Padding="0">
-                            <Image Source="water.png" Aspect="AspectFill"/>
+                            <Image Source="water.png" Aspect="AspectFill" Opacity="0.4"/>
                         </Frame>
                         <StackLayout Orientation="Horizontal" Grid.Row="1" HorizontalOptions="Center" Margin="0,5,0,0">
                             <Label Text="Output: " FontSize="Large" FontAttributes="Bold,Italic"/>
@@ -42,7 +42,7 @@
                         <Stepper Grid.Row="3" Grid.Column="0" Value="{Binding Primary}" HorizontalOptions="Center" Margin="0,0,0,5"
                                  Minimum="0" Maximum="100"/>
                         <Frame  Grid.Row="4" Grid.RowSpan="3" CornerRadius="5" Margin="5" IsVisible="{Binding SecondaryAvailable}" Padding="0">
-                            <Image Source="water.png" IsVisible="{Binding SecondaryAvailable}" Aspect="AspectFill"/>
+                            <Image Source="water.png" IsVisible="{Binding SecondaryAvailable}" Aspect="AspectFill" Opacity="0.4"/>
                         </Frame>
 
                         <StackLayout Orientation="Horizontal" Grid.Row="4" HorizontalOptions="Center" Margin="0,5,0,0" IsVisible="{Binding SecondaryAvailable}">
