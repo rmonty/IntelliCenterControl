@@ -15,7 +15,7 @@ namespace IntelliCenterControl.Models
             DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
                 typeof(DescriptionAttribute), false);
 
-            if (attributes != null && attributes.Length > 0) return attributes[0].Description;
+            if (attributes.Length > 0) return attributes[0].Description;
             else return source.ToString();
         }
 

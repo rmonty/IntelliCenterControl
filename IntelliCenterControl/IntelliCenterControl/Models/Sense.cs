@@ -10,11 +10,11 @@ namespace IntelliCenterControl.Models
 
         public enum SenseType
         {
-            [Description( "Air")]
+            [Description("Air")]
             AIR,
-            [Description( "Solar")]
+            [Description("Solar")]
             SOLAR,
-            [Description( "Water")]
+            [Description("Water")]
             POOL
         }
 
@@ -25,7 +25,7 @@ namespace IntelliCenterControl.Models
             get => _type;
             set
             {
-                if(_type == value) return;
+                if (_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }
@@ -38,13 +38,13 @@ namespace IntelliCenterControl.Models
             get => _temp;
             set
             {
-                if(_temp == value) return;
+                if (_temp == value) return;
                 _temp = value;
                 OnPropertyChanged();
             }
         }
 
-        public Sense(string name, SenseType senseType):base(name, CircuitType.SENSE)
+        public Sense(string name, SenseType senseType) : base(name, CircuitType.SENSE)
         {
             Type = senseType;
         }
@@ -54,7 +54,7 @@ namespace IntelliCenterControl.Models
             if (data.TryGetValue("params", out var senseValues))
             {
                 var sv = (JObject)senseValues;
-                                                                
+
                 if (sv.TryGetValue("PROBE", out var temp))
                 {
                     if (int.TryParse(temp.ToString(), out var itemp))
@@ -63,7 +63,7 @@ namespace IntelliCenterControl.Models
                     }
                 }
             }
-            
+
         }
 
     }

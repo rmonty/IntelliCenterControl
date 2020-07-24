@@ -17,7 +17,7 @@
             get => _type;
             set
             {
-                if(_type == value) return;
+                if (_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }

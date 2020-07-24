@@ -1,6 +1,6 @@
-﻿using System.ComponentModel;
+﻿using IntelliCenterControl.Annotations;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using IntelliCenterControl.Annotations;
 
 namespace IntelliCenterControl.Models
 {
@@ -41,7 +41,7 @@ namespace IntelliCenterControl.Models
                 OnPropertyChanged();
             }
         }
-        
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]

@@ -4,13 +4,13 @@
     {
         public Settings Settings => Settings.Instance;
 
-        
+
 
 
         public SettingsViewModel()
         {
             Title = "Settings";
-            
+
         }
     }
 }

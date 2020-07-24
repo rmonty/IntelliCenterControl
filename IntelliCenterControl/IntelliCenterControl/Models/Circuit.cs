@@ -1,9 +1,9 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using IntelliCenterControl.Annotations;
+﻿using IntelliCenterControl.Annotations;
 using IntelliCenterControl.Services;
 using Newtonsoft.Json.Linq;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace IntelliCenterControl.Models
 {
@@ -13,51 +13,51 @@ namespace IntelliCenterControl.Models
 
         public enum CircuitType
         {
-            [Description( "Body")]
+            [Description("Body")]
             BODY,
-            [Description( "Circuit")]
+            [Description("Circuit")]
             CIRCUIT,
-            [Description( "Heater")]
+            [Description("Heater")]
             HEATER,
-            [Description( "Remote")]
+            [Description("Remote")]
             REMOTE,
-            [Description( "Chem Relay")]
+            [Description("Chem Relay")]
             CHEM,
-            [Description( "Circuit Group")]
+            [Description("Circuit Group")]
             CIRCGRP,
-            [Description( "Generic")]
+            [Description("Generic")]
             GENERIC,
-            [Description( "Spillway")]
+            [Description("Spillway")]
             SPILL,
-            [Description( "Pump")]
+            [Description("Pump")]
             PUMP,
-            [Description( "Sense")]
+            [Description("Sense")]
             SENSE,
-            [Description( "Module")]
+            [Description("Module")]
             MODULE,
-            [Description( "Pool")]
+            [Description("Pool")]
             POOL,
-            [Description( "Dimmer")]
+            [Description("Dimmer")]
             DIMMER,
-            [Description( "GloBrite")]
+            [Description("GloBrite")]
             GLOW,
-            [Description( "GloBrite White")]
+            [Description("GloBrite White")]
             GLOWT,
-            [Description( "IntelliBrite")]
+            [Description("IntelliBrite")]
             INTELLI,
-            [Description( "Light")]
+            [Description("Light")]
             LIGHT,
-            [Description( "Magic Stream")]
+            [Description("Magic Stream")]
             MAGIC2,
-            [Description( "Color Cascade")]
+            [Description("Color Cascade")]
             CLRCASC,
-            [Description( "Schedule")]
+            [Description("Schedule")]
             SCHED,
-            [Description( "Panel")]
+            [Description("Panel")]
             PANEL,
-            [Description( "Relay")]
+            [Description("Relay")]
             RLY,
-            [Description( "Legacy")]
+            [Description("Legacy")]
             LEGACY,
             [Description("Spa")]
             SPA
@@ -71,13 +71,13 @@ namespace IntelliCenterControl.Models
             get => _circuitDescription;
             set
             {
-                if(_circuitDescription == value) return;
+                if (_circuitDescription == value) return;
                 _circuitDescription = value;
                 OnPropertyChanged();
             }
         }
 
-        
+
         private string _name;
 
         public string Name
@@ -98,7 +98,7 @@ namespace IntelliCenterControl.Models
             get => _hName;
             set
             {
-                if(_hName == value) return;
+                if (_hName == value) return;
                 _hName = value;
                 OnPropertyChanged();
             }
@@ -114,9 +114,9 @@ namespace IntelliCenterControl.Models
             {
                 if (_active == value) return;
                 _active = value;
-                
+
                 OnPropertyChanged();
-                if(SendActiveStateUpdate) ExecuteToggleCircuitCommand();
+                if (SendActiveStateUpdate) Task.Run(ExecuteToggleCircuitCommand);
 
             }
         }
@@ -128,7 +128,7 @@ namespace IntelliCenterControl.Models
             get => _display;
             set
             {
-                if(_display == value) return;
+                if (_display == value) return;
                 _display = value;
                 OnPropertyChanged();
             }
@@ -141,7 +141,7 @@ namespace IntelliCenterControl.Models
             get => _listOrd;
             set
             {
-                if(_listOrd == value) return;
+                if (_listOrd == value) return;
                 _listOrd = value;
                 OnPropertyChanged();
             }
@@ -196,7 +196,7 @@ namespace IntelliCenterControl.Models
                 }
             }
         }
-        
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
@@ -206,5 +206,5 @@ namespace IntelliCenterControl.Models
         }
     }
 
-    
+
 }

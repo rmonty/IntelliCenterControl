@@ -9,6 +9,11 @@
              Title="Chemical">
     <ContentPage.Resources>
         <views:InvertBoolConverter x:Key="InvertBool"/>
+         <ResourceDictionary>
+            <Color x:Key="Primary">#2196F3</Color>
+            <Color x:Key="Accent">#96d1ff</Color>
+            <Color x:Key="LightTextColor">#999999</Color>
+        </ResourceDictionary>
     </ContentPage.Resources>    
     <ContentPage.Content>
         <Grid>
@@ -30,40 +35,53 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <Label Grid.Row="0" Text="{Binding Description}" HorizontalOptions="Center" FontSize="Title" FontAttributes="Bold"/>
+                        <Label Grid.Row="0" Text="{Binding Description}" HorizontalOptions="Center" FontSize="Title" FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"/>
                         <Frame Grid.Row="1" Grid.RowSpan="3" CornerRadius="5" Margin="5" Padding="0">
                             <Image Source="water.png" Aspect="AspectFill" Opacity="0.4"/>
                         </Frame>
                         <StackLayout Orientation="Horizontal" Grid.Row="1" HorizontalOptions="Center" Margin="0,5,0,0">
-                            <Label Text="Output: " FontSize="Large" FontAttributes="Bold,Italic"/>
-                            <Label Text="{Binding PrimaryName}" FontSize="Large" FontAttributes="Bold,Italic"/>
+                            <Label Text="Output: " FontSize="Medium" FontAttributes="Bold,Italic"/>
+                            <Label Text="{Binding PrimaryName}" FontSize="Medium" FontAttributes="Bold,Italic"/>
                         </StackLayout>
                         <Frame Grid.Row="2" IsVisible="{Binding SecondaryAvailable}" BorderColor="Black" HorizontalOptions="Center" VerticalOptions="Center"
-                               BackgroundColor="#96d1ff" Opacity="0.5"/>
-                        <Label Grid.Row="2" Text="{Binding Primary}" FontSize="Large" FontAttributes="Bold" HorizontalTextAlignment="Center" TextColor="DarkBlue"
-                               VerticalTextAlignment="Center"/>
-                        <Stepper Grid.Row="3" Grid.Column="0" Value="{Binding Primary}" HorizontalOptions="Center" Margin="0,0,0,5"
-                                 Minimum="0" Maximum="100"/>
+                               BackgroundColor="{StaticResource Accent}" Opacity="0.6"/>
+                        <Label Grid.Row="2" Text="{Binding Primary}" FontSize="Large" FontAttributes="Bold" HorizontalTextAlignment="Center" 
+                                    VerticalTextAlignment="Center"/>
+                        <StackLayout Grid.Row="3" Grid.Column="0" HorizontalOptions="Center" Margin="0,0,0,5" Orientation="Horizontal">
+                            <Button Text="-" Command="{Binding PrimaryChangeCommand}" CommandParameter="decrease"
+                                    BackgroundColor="{StaticResource Primary}" TextColor="White"
+                                    FontAttributes="Bold" FontSize="Large" Margin="5"/>
+                            <Button Text="+" Command="{Binding PrimaryChangeCommand}" CommandParameter="increase"
+                                    BackgroundColor="{StaticResource Primary}" TextColor="White"
+                                    FontAttributes="Bold" FontSize="Large" Margin="5"/>
+                        </StackLayout>
                         <Frame  Grid.Row="4" Grid.RowSpan="3" CornerRadius="5" Margin="5" IsVisible="{Binding SecondaryAvailable}" Padding="0">
                             <Image Source="water.png" IsVisible="{Binding SecondaryAvailable}" Aspect="AspectFill" Opacity="0.4"/>
                         </Frame>
 
                         <StackLayout Orientation="Horizontal" Grid.Row="4" HorizontalOptions="Center" Margin="0,5,0,0" IsVisible="{Binding SecondaryAvailable}">
-                            <Label Text="Output: " FontSize="Large" FontAttributes="Bold,Italic"/>
-                            <Label Text="{Binding SecondaryName}" FontSize="Large" FontAttributes="Bold,Italic"/>
+                            <Label Text="Output: " FontSize="Medium" FontAttributes="Bold,Italic"/>
+                            <Label Text="{Binding SecondaryName}" FontSize="Medium" FontAttributes="Bold,Italic"/>
                         </StackLayout>
                         <Frame Grid.Row="5" IsVisible="{Binding SecondaryAvailable}" BorderColor="Black" HorizontalOptions="Center" VerticalOptions="Center"
-                               BackgroundColor="#96d1ff" Opacity="0.5"/>
-                        <Label  Grid.Row="5" Text="{Binding Secondary}" FontSize="Large" FontAttributes="Bold" TextColor="DarkBlue" HorizontalTextAlignment="Center" IsVisible="{Binding SecondaryAvailable}"
+                               BackgroundColor="{StaticResource Accent}" Opacity="0.6"/>
+                        <Label  Grid.Row="5" Text="{Binding Secondary}" FontSize="Large" FontAttributes="Bold" HorizontalTextAlignment="Center" IsVisible="{Binding SecondaryAvailable}"
                                 VerticalTextAlignment="Center"/>
-                        <Stepper Grid.Row="6" Grid.Column="0" Value="{Binding Secondary}" HorizontalOptions="Center" Margin="0,0,0,5" IsVisible="{Binding SecondaryAvailable}"
-                                 Minimum="0" Maximum="100"/>
-                        <Frame BackgroundColor="#96d1ff" Grid.Row="7" CornerRadius="5" Margin="5"/>
+                        <StackLayout Grid.Row="6" Grid.Column="0" HorizontalOptions="Center" Margin="0,0,0,5" Orientation="Horizontal">
+                            <Button Text="-" Command="{Binding SecondaryChangeCommand}" CommandParameter="decrease"
+                                    BackgroundColor="{StaticResource Primary}" TextColor="White"
+                                    FontAttributes="Bold" FontSize="Large" Margin="5"/>
+                            <Button Text="+" Command="{Binding SecondaryChangeCommand}" CommandParameter="increase"
+                                    BackgroundColor="{StaticResource Primary}" TextColor="White"
+                                    FontAttributes="Bold" FontSize="Large" Margin="5"/>
+                        </StackLayout>
+                        <Frame BackgroundColor="{StaticResource Accent}" Grid.Row="7" CornerRadius="5" Margin="5"/>
                         <StackLayout Orientation="Horizontal" Grid.Row="7" HorizontalOptions="Center">
                             <Label Text="Super Chlorinate: " VerticalOptions="Center" FontSize="Subtitle" FontAttributes="Bold"/>
                             <Switch IsToggled="{Binding Super}" VerticalOptions="Center"/>
                         </StackLayout>
-                        <Frame BackgroundColor="#96d1ff" Grid.Row="8" CornerRadius="5" Margin="5"/>
+                        <Frame BackgroundColor="{StaticResource Accent}" Grid.Row="8" CornerRadius="5" Margin="5"/>
                         <StackLayout Orientation="Horizontal" Grid.Row="8" HorizontalOptions="Center" Margin="5">
                             <Label Text="Salt Level: " FontSize="Subtitle" FontAttributes="Bold" VerticalOptions="Center"/>
                             <Label Text="{Binding Salt}" FontSize="Subtitle" FontAttributes="Bold" VerticalOptions="Center"/>

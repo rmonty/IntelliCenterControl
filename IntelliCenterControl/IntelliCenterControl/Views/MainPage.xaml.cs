@@ -1,9 +1,9 @@
-﻿using System.ComponentModel;
-using System.Threading.Tasks;
-using GalaSoft.MvvmLight.Ioc;
+﻿using GalaSoft.MvvmLight.Ioc;
 using IntelliCenterControl.Models;
 using IntelliCenterControl.ViewModels;
 using Plugin.Toast;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 
@@ -32,10 +32,10 @@ namespace IntelliCenterControl.Views
             viewModel.PropertyChanged += ViewModel_PropertyChanged;
             viewModel.DataInterface.ConnectionChanged += DataInterface_ConnectionChanged;
 
-             MessagingCenter.Subscribe<App>(this, "Starting", (sender) =>
-            {
-                viewModel.LoadHardwareDefinitionCommand.Execute(true);
-            });
+            MessagingCenter.Subscribe<App>(this, "Starting", (sender) =>
+           {
+               viewModel.LoadHardwareDefinitionCommand.Execute(true);
+           });
             MessagingCenter.Subscribe<App>(this, "Sleeping", (sender) =>
             {
                 viewModel.ClosingCommand.Execute(null);
@@ -44,9 +44,9 @@ namespace IntelliCenterControl.Views
             {
                 viewModel.LoadHardwareDefinitionCommand.Execute(true);
             });
-            
-            
-            Task.Run(async() => await CheckAndRequestStoragePermission());
+
+
+            Task.Run(async () => await CheckAndRequestStoragePermission());
 
         }
 
@@ -94,7 +94,14 @@ namespace IntelliCenterControl.Views
                         }
                         break;
                     case "StatusMessage":
-                        CrossToastPopUp.Current.ShowCustomToast(viewModel.StatusMessage, "#2196F3", "#FFFFFF");
+                        if (viewModel.StatusMessage == "Unauthorized")
+                        {
+                            CrossToastPopUp.Current.ShowToastError(viewModel.StatusMessage);
+                        }
+                        else
+                        {
+                            CrossToastPopUp.Current.ShowCustomToast(viewModel.StatusMessage, "#2196F3", "#FFFFFF");
+                        }
                         break;
 
                 }
@@ -108,12 +115,12 @@ namespace IntelliCenterControl.Views
 
         private async void UpdateIP_Clicked(object sender, System.EventArgs e)
         {
-            string result = string.Empty;
+            string result;
             if (_settings.ServerURL == _settings.HomeURL)
             {
                 result = await DisplayActionSheet("Server URL", "Cancel", null, "Home URL (Active)", "Away URL");
             }
-            else if(_settings.ServerURL == _settings.AwayURL)
+            else if (_settings.ServerURL == _settings.AwayURL)
             {
                 result = await DisplayActionSheet("Server URL", "Cancel", null, "Home URL", "Away URL (Active)");
             }
@@ -129,11 +136,11 @@ namespace IntelliCenterControl.Views
                 {
                     case "Home URL":
                         _settings.ServerURL = _settings.HomeURL;
-                        viewModel.UpdateIpAddress();
+                        viewModel.UpdateIpAddressAsync();
                         break;
                     case "Away URL":
                         _settings.ServerURL = _settings.AwayURL;
-                        viewModel.UpdateIpAddress();
+                        viewModel.UpdateIpAddressAsync();
                         break;
                 }
 
@@ -143,10 +150,10 @@ namespace IntelliCenterControl.Views
         public async Task<PermissionStatus> CheckAndRequestStoragePermission()
         {
             var status = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
-            
+
             if (status != PermissionStatus.Granted)
             {
-                if(status != PermissionStatus.Denied) status = await Permissions.RequestAsync<Permissions.StorageWrite>();
+                if (status != PermissionStatus.Denied) status = await Permissions.RequestAsync<Permissions.StorageWrite>();
 
                 if (status != PermissionStatus.Granted && !_settings.StorageAccessAsked)
                 {
@@ -157,7 +164,7 @@ namespace IntelliCenterControl.Views
                 }
 
             }
-            
+
             return status;
         }
     }

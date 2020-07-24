@@ -9,18 +9,18 @@ namespace IntelliCenterControl.Views
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is TimeSpan)
+            if (value is TimeSpan span)
             {
-                return DateTime.Today.Add((TimeSpan)value);
+                return DateTime.Today.Add(span);
             }
             return 0;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is DateTime)
+            if (value is DateTime time)
             {
-                return ((DateTime)value).TimeOfDay;
+                return time.TimeOfDay;
             }
             return 0;
         }
@@ -48,108 +48,108 @@ namespace IntelliCenterControl.Views
     }
 
     public class EnumToCheckedConverter : IValueConverter
-{
-    public Type Type { get; set; }
-    public int? LastValue { get; private set; }
-    public bool Flags { get; set; }
-
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value != null && value.GetType() == Type)
+        public Type Type { get; set; }
+        public int? LastValue { get; private set; }
+        public bool Flags { get; set; }
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            try
-            {
-                var parameterValue = Enum.Parse(Type, parameter as string);
-
-                if (Flags == true)
-                {
-                    var intParameter = (int)parameterValue;
-                    var intValue = (int)value;
-                    LastValue = intValue;
-
-                    return (intValue & intParameter) == intParameter;
-                }
-                else
-                {
-                    return Equals(parameterValue, value);
-                }
-            }
-            catch (ArgumentNullException)
-            {
-                return false;
-            }
-            catch (ArgumentException)
-            {
-                throw new NotSupportedException();
-            }
-        }
-        else if (value == null)
-        {
-            return false;
-        }
-
-        throw new NotSupportedException();
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        if (value != null && value is bool check)
-        {
-            if (check)
+            if (value != null && value.GetType() == Type)
             {
                 try
                 {
-                    if (Flags == true && LastValue.HasValue)
-                    {
-                        var parameterValue = Enum.Parse(Type, parameter as string);
-                        var intParameter = (int)parameterValue;
+                    var parameterValue = Enum.Parse(Type, parameter as string);
 
-                        return Enum.ToObject(Type, LastValue | intParameter);
+                    if (Flags)
+                    {
+                        var intParameter = (int)parameterValue;
+                        var intValue = (int)value;
+                        LastValue = intValue;
+
+                        return (intValue & intParameter) == intParameter;
                     }
                     else
                     {
-                        return Enum.Parse(Type, parameter as string);
+                        return Equals(parameterValue, value);
                     }
                 }
                 catch (ArgumentNullException)
                 {
-                    return Binding.DoNothing;
+                    return false;
                 }
                 catch (ArgumentException)
                 {
-                    return Binding.DoNothing;
+                    throw new NotSupportedException();
                 }
             }
-            else
+            else if (value == null)
             {
-                try
-                {
-                    if (Flags == true && LastValue.HasValue)
-                    {
-                        var parameterValue = Enum.Parse(Type, parameter as string);
-                        var intParameter = (int)parameterValue;
+                return false;
+            }
 
-                        return Enum.ToObject(Type, LastValue ^ intParameter);
+            throw new NotSupportedException();
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value != null && value is bool check)
+            {
+                if (check)
+                {
+                    try
+                    {
+                        if (Flags && LastValue.HasValue)
+                        {
+                            var parameterValue = Enum.Parse(Type, parameter as string);
+                            var intParameter = (int)parameterValue;
+
+                            return Enum.ToObject(Type, LastValue | intParameter);
+                        }
+                        else
+                        {
+                            return Enum.Parse(Type, parameter as string);
+                        }
                     }
-                    else
+                    catch (ArgumentNullException)
+                    {
+                        return Binding.DoNothing;
+                    }
+                    catch (ArgumentException)
                     {
                         return Binding.DoNothing;
                     }
                 }
-                catch (ArgumentNullException)
+                else
                 {
-                    return Binding.DoNothing;
-                }
-                catch (ArgumentException)
-                {
-                    return Binding.DoNothing;
+                    try
+                    {
+                        if (Flags && LastValue.HasValue)
+                        {
+                            var parameterValue = Enum.Parse(Type, parameter as string);
+                            var intParameter = (int)parameterValue;
+
+                            return Enum.ToObject(Type, LastValue ^ intParameter);
+                        }
+                        else
+                        {
+                            return Binding.DoNothing;
+                        }
+                    }
+                    catch (ArgumentNullException)
+                    {
+                        return Binding.DoNothing;
+                    }
+                    catch (ArgumentException)
+                    {
+                        return Binding.DoNothing;
+                    }
                 }
             }
-        }
 
-        throw new NotSupportedException();
+            throw new NotSupportedException();
+        }
     }
-}
 
     public class VisibleEnumConverter : IValueConverter
     {
@@ -166,14 +166,14 @@ namespace IntelliCenterControl.Views
                 {
                     var parameterArray = new List<string>(stringParameter.Split('|'));
 
-                    if(parameterArray.Contains(((int) value).ToString()))
+                    if (parameterArray.Contains(((int)value).ToString()))
                     {
                         return true;
                     }
                 }
                 else if (int.TryParse(stringParameter, out var intParameter))
                 {
-                    return (int) value == intParameter;
+                    return (int)value == intParameter;
                 }
             }
             return false;
@@ -193,10 +193,10 @@ namespace IntelliCenterControl.Views
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool)
+            if (value is bool b)
             {
-                return !(bool)value;
-                
+                return !b;
+
             }
             return false;
         }

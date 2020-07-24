@@ -1,10 +1,10 @@
-﻿using System;
+﻿using IntelliCenterControl.Services;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using IntelliCenterControl.Services;
-using Newtonsoft.Json.Linq;
 
 namespace IntelliCenterControl.Models
 {
@@ -94,7 +94,7 @@ namespace IntelliCenterControl.Models
                 if (_selectedHeater == value) return;
                 _selectedHeater = value;
                 OnPropertyChanged();
-                ExecuteSelectedHeatSourceCommand();
+                Task.Run(ExecuteSelectedHeatSourceCommand);
             }
         }
 
@@ -110,7 +110,7 @@ namespace IntelliCenterControl.Models
                 OnPropertyChanged();
                 if (int.TryParse(_loTemp, out var iloTemp))
                 {
-                    ExecuteHeatTempCommand(iloTemp);
+                    Task.Run(() => ExecuteHeatTempCommand(iloTemp));
                 }
             }
         }
@@ -170,7 +170,7 @@ namespace IntelliCenterControl.Models
             {
                 //Debug.WriteLine(bodyValues);
                 var bv = (JObject)bodyValues;
-                
+
                 if (bv.TryGetValue("TEMP", out var temp))
                 {
                     if (int.TryParse(temp.ToString(), out var bTemp))
@@ -199,13 +199,13 @@ namespace IntelliCenterControl.Models
                 if (bv.TryGetValue("HTMODE", out var htmode))
                 {
                     var hm = (int)htmode;
-                    if (Enum.IsDefined(typeof(Body.HeatModes), hm))
+                    if (Enum.IsDefined(typeof(HeatModes), hm))
                     {
-                        HeatMode = (Body.HeatModes)hm;
+                        HeatMode = (HeatModes)hm;
                     }
                     else
                     {
-                        HeatMode = Body.HeatModes.Off;
+                        HeatMode = HeatModes.Off;
                     }
 
                 }

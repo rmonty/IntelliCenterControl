@@ -24,14 +24,7 @@ namespace IntelliCenterControl.Views
 
         private void UpdateVisibility()
         {
-            if (ActiveToggle.IsToggled)
-            {
-                PumpImage.Source = ImageSource.FromFile("pump_on.png");
-            }
-            else
-            {
-                PumpImage.Source = ImageSource.FromFile("pump_off.png");
-            }
+            PumpImage.Source = ImageSource.FromFile(ActiveToggle.IsToggled ? "pump_on.png" : "pump_off.png");
         }
     }
 }

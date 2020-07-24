@@ -1,6 +1,6 @@
-﻿using System.Reflection;
+﻿using IntelliCenterControl.Views;
+using System.Reflection;
 using System.Windows.Input;
-using IntelliCenterControl.Views;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 
@@ -38,6 +38,6 @@ namespace IntelliCenterControl.ViewModels
 
         public ICommand OpenWebCommand { get; }
 
-        public ICommand OpenForumCommand {get;}
+        public ICommand OpenForumCommand { get; }
     }
 }

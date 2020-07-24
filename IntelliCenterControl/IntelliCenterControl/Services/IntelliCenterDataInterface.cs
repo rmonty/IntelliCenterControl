@@ -1,4 +1,8 @@
-﻿using System;
+﻿using IntelliCenterControl.Models;
+using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,10 +11,6 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using IntelliCenterControl.Models;
-using Microsoft.AspNetCore.SignalR.Client;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace IntelliCenterControl.Services
 {
@@ -59,12 +59,15 @@ namespace IntelliCenterControl.Services
                 new KeyValuePair<string, string>("password", _settings.Password),
                 new KeyValuePair<string, string>("grant_type", "password")
             });
-            var response = await client.PostAsync(_settings.ServerURL + @"/Account/Token", content, Cts.Token);
+            var serverUrl = _settings.ServerURL;
+            if (serverUrl.EndsWith(@"/")) serverUrl = serverUrl.Remove(serverUrl.LastIndexOf(@"/"));
+
+            var response = await client.PostAsync(serverUrl + @"/Account/Token", content, Cts.Token);
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
                 var fieldsCollector = new JsonFieldsCollector(JToken.Parse(json));
-                var fields = (Dictionary<string,JValue>)fieldsCollector.GetAllFields();
+                var fields = (Dictionary<string, JValue>)fieldsCollector.GetAllFields();
                 if (fields != null)
                 {
                     if (fields.TryGetValue("access_token", out var token) && fields.TryGetValue("expires_in", out var expire))
@@ -91,7 +94,7 @@ namespace IntelliCenterControl.Services
         {
             try
             {
-                
+
 
                 if (connection != null && connection.State == HubConnectionState.Connected)
                 {
@@ -102,7 +105,7 @@ namespace IntelliCenterControl.Services
                 {
                     await socketConnection.CloseAsync(WebSocketCloseStatus.NormalClosure, "", Cts.Token);
                 }
-                
+
                 Cts?.Cancel();
                 Cts?.Dispose();
                 Cts = new CancellationTokenSource();
@@ -131,14 +134,8 @@ namespace IntelliCenterControl.Services
                             })
                             .WithAutomaticReconnect(new[] { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
                         .Build();
+
                     
-                    //var result = await CheckCredentials();
-
-                    //connection = new HubConnectionBuilder()
-                    //    .WithUrl(serverUrl)
-                    //    .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
-                    //    .Build();
-
                     connection.KeepAliveInterval = TimeSpan.FromSeconds(10);
 
                     connection.Reconnecting += error =>
@@ -146,10 +143,10 @@ namespace IntelliCenterControl.Services
                         Debug.Assert(connection.State == HubConnectionState.Reconnecting);
                         _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState)connection.State;
                         OnConnectionChanged();
-                     // Notify users the connection was lost and the client is reconnecting.
-                     // Start queuing or dropping messages.
+                        // Notify users the connection was lost and the client is reconnecting.
+                        // Start queuing or dropping messages.
 
-                     return Task.CompletedTask;
+                        return Task.CompletedTask;
                     };
 
                     connection.Reconnected += connectionId =>
@@ -157,10 +154,10 @@ namespace IntelliCenterControl.Services
                         Debug.Assert(connection.State == HubConnectionState.Connected);
                         _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState)connection.State;
                         OnConnectionChanged();
-                     // Notify users the connection was reestablished.
-                     // Start dequeuing messages queued while reconnecting if any.
+                        // Notify users the connection was reestablished.
+                        // Start dequeuing messages queued while reconnecting if any.
 
-                     return Task.CompletedTask;
+                        return Task.CompletedTask;
                     };
 
                     connection.Closed += error =>
@@ -168,9 +165,9 @@ namespace IntelliCenterControl.Services
                         Debug.Assert(connection.State == HubConnectionState.Disconnected);
                         _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState)connection.State;
                         OnConnectionChanged();
-                     // Notify users the connection has been closed or manually try to restart the connection.
+                        // Notify users the connection has been closed or manually try to restart the connection.
 
-                     return Task.CompletedTask;
+                        return Task.CompletedTask;
                     };
 
                     await connection.StartAsync(Cts.Token);
@@ -178,6 +175,8 @@ namespace IntelliCenterControl.Services
                     if (connection.State == HubConnectionState.Connected) DataSubscribe();
 
                     _intelliCenterConnection.State = (IntelliCenterConnection.ConnectionState)connection.State;
+
+                    OnConnectionChanged();
                 }
                 else if (_settings.ServerURL.StartsWith("ws"))
                 {
@@ -209,15 +208,22 @@ namespace IntelliCenterControl.Services
                             _intelliCenterConnection.State = IntelliCenterConnection.ConnectionState.Disconnected;
                             break;
                     }
+
+                    OnConnectionChanged();
                 }
             }
             catch (Exception ex)
             {
-                this._logService.LogError(ex.ToString());
-                this._cloudLogService.LogError(ex);
+                //Debug.WriteLine(ex);
+                if (ex.Message.Contains("Unauthorized"))
+                {
+                    DataReceived?.Invoke(this, "Unauthorized");
+                }
+                //this._logService.LogError(ex.ToString());
+                //this._cloudLogService.LogError(ex);
             }
 
-            OnConnectionChanged();
+
 
             return await Task.FromResult(_intelliCenterConnection.State != IntelliCenterConnection.ConnectionState.Disconnected);
         }
@@ -298,7 +304,6 @@ namespace IntelliCenterControl.Services
                     case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
                         key = Light.LightKeys;
                         break;
-                    default: break;
                 }
 
                 if (!string.IsNullOrEmpty(key))
@@ -357,7 +362,6 @@ namespace IntelliCenterControl.Services
                     case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
                         key = Light.LightKeys;
                         break;
-                    default: break;
                 }
 
                 if (!string.IsNullOrEmpty(key))
@@ -444,7 +448,6 @@ namespace IntelliCenterControl.Services
                                        "\", \"keys\": " + Light.LightKeys + " }";
                             Subscriptions[kvp.Key] = Light.LightKeys;
                             break;
-                        default: break;
                     }
                 }
 
@@ -565,15 +568,10 @@ namespace IntelliCenterControl.Services
                     return await Task.FromResult(true);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //this._logService.LogError(ex.ToString());
                 //this._cloudLogService.LogError(ex);
-            }
-            finally
-            {
-                // Exit our semaphore
-                //_sendRateLimit.Release();
             }
 
             return await Task.FromResult(false);
@@ -654,10 +652,10 @@ namespace IntelliCenterControl.Services
                         }
                     }, Cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    this._logService.LogError(e.ToString());
-                    this._cloudLogService.LogError(e);
+                    //this._logService.LogError(e.ToString());
+                    //this._cloudLogService.LogError(e);
                 }
             }
         }
@@ -715,7 +713,7 @@ namespace IntelliCenterControl.Services
 
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //this._logService.LogError(e.ToString());
                 //this._cloudLogService.LogError(e);

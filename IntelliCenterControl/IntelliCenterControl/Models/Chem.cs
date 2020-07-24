@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using IntelliCenterControl.Services;
+using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using IntelliCenterControl.Services;
 using Xamarin.Forms;
 
 namespace IntelliCenterControl.Models
@@ -19,9 +19,11 @@ namespace IntelliCenterControl.Models
             ICHLOR
         }
 
-        public Command ChangePrimaryCommand { get; set; }
-        public Command ChangeSecondaryCommand { get; set; }
+        public Command SendChangePrimaryCommand { get; set; }
+        public Command SendChangeSecondaryCommand { get; set; }
         public Command ToggleSuperCommand { get; set; }
+        public Command PrimaryChangeCommand { get; set; }
+        public Command SecondaryChangeCommand { get; set; }
 
         private ChemType _type;
 
@@ -32,7 +34,7 @@ namespace IntelliCenterControl.Models
             {
                 if (_type == value) return;
                 _type = value;
-                Description = EnumHelpers.DescriptionAttr<ChemType>(value);
+                Description = EnumHelpers.DescriptionAttr(value);
                 OnPropertyChanged();
             }
         }
@@ -88,7 +90,7 @@ namespace IntelliCenterControl.Models
                 _primary = value;
                 OnPropertyChanged();
 
-                if (SendChangePrimaryCommand) ChangePrimaryCommand.Execute(null);
+                if (SendChangePrimary) SendChangePrimaryCommand.Execute(null);
             }
         }
 
@@ -103,7 +105,7 @@ namespace IntelliCenterControl.Models
                 _secondary = value;
                 OnPropertyChanged();
 
-                if (SendChangeSecondaryCommand) ChangeSecondaryCommand.Execute(null);
+                if (SendChangeSecondary) SendChangeSecondaryCommand.Execute(null);
             }
         }
 
@@ -202,22 +204,56 @@ namespace IntelliCenterControl.Models
             }
         }
 
-        private Settings _settings = Settings.Instance;
-
-        private bool SendChangePrimaryCommand = true;
-        private bool SendChangeSecondaryCommand = true;
+        
+        private bool SendChangePrimary = true;
+        private bool SendChangeSecondary = true;
         private bool SendToggleSuperCommand = true;
 
         public Chem(string name, ChemType chemType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) : base(name, CircuitType.CHEM, hName, dataInterface)
         {
-            ChangePrimaryCommand = new Command(async () => await ExecuteChangePrimaryCommand());
-            ChangeSecondaryCommand = new Command(async () => await ExecuteChangeSecondaryCommand());
+            SendChangePrimaryCommand = new Command(async () => await ExecuteSendChangePrimaryCommand());
+            SendChangeSecondaryCommand = new Command(async () => await ExecuteSendChangeSecondaryCommand());
+            PrimaryChangeCommand = new Command(async (direction) => await ExecutePrimaryChangeCommand(direction));
+            SecondaryChangeCommand = new Command(async (direction) => await ExecuteSecondaryChangeCommand(direction));
+
             ToggleSuperCommand = new Command(async () => await ExecuteToggleSuperCommand());
             Type = chemType;
-            
+
         }
 
-        private async Task ExecuteChangeSecondaryCommand()
+        private async Task ExecuteSecondaryChangeCommand(object direction)
+        {
+            if (direction is string d)
+            {
+                switch (d.ToLower())
+                {
+                    case "increase":
+                        if (Secondary < 100) Secondary++;
+                        break;
+                    case "decrease":
+                        if (Secondary > 0) Secondary--;
+                        break;
+                }
+            }
+        }
+
+        private async Task ExecutePrimaryChangeCommand(object direction)
+        {
+            if (direction != null && direction is string d)
+            {
+                switch (d.ToLower())
+                {
+                    case "increase":
+                        if (Primary < 100) Primary++;
+                        break;
+                    case "decrease":
+                        if (Primary > 0) Primary--;
+                        break;
+                }
+            }
+        }
+
+        private async Task ExecuteSendChangeSecondaryCommand()
         {
             if (DataInterface != null)
             {
@@ -226,7 +262,7 @@ namespace IntelliCenterControl.Models
             }
         }
 
-        private async Task ExecuteChangePrimaryCommand()
+        private async Task ExecuteSendChangePrimaryCommand()
         {
             if (DataInterface != null)
             {
@@ -246,16 +282,16 @@ namespace IntelliCenterControl.Models
 
         public void UpdatePrimaryValue(int value)
         {
-            SendChangePrimaryCommand = false;
+            SendChangePrimary = false;
             Primary = value;
-            SendChangePrimaryCommand = true;
+            SendChangePrimary = true;
         }
 
         public void UpdateSecondaryValue(int value)
         {
-            SendChangeSecondaryCommand = false;
+            SendChangeSecondary = false;
             Secondary = value;
-            SendChangeSecondaryCommand = true;
+            SendChangeSecondary = true;
         }
 
         public void UpdateSuperValue(bool value)
@@ -270,7 +306,7 @@ namespace IntelliCenterControl.Models
             if (data.TryGetValue("params", out var chemValues))
             {
                 var cv = (JObject)chemValues;
-                
+
                 if (cv.TryGetValue("SALT", out var salt))
                 {
                     Salt = salt.ToString() == "0" ? "-" : salt.ToString();
@@ -279,7 +315,7 @@ namespace IntelliCenterControl.Models
                 if (cv.TryGetValue("BODY", out var bodies))
                 {
                     var chemBodies = bodies.ToString().Split(" ").ToList();
-                    SecondaryAvailable = false || chemBodies.Count > 1;
+                    SecondaryAvailable = chemBodies.Count > 1;
                 }
 
                 if (cv.TryGetValue("CLEAN", out var clean))

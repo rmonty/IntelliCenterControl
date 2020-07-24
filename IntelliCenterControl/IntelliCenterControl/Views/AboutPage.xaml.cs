@@ -5,10 +5,10 @@ namespace IntelliCenterControl.Views
 
     public partial class AboutPage : ContentPage
     {
-       public AboutPage()
+        public AboutPage()
         {
             InitializeComponent();
-            
+
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using IntelliCenterControl.Services;
+using System.Collections.Generic;
 using System.ComponentModel;
-using IntelliCenterControl.Services;
 
 namespace IntelliCenterControl.Models
 {
@@ -10,19 +10,19 @@ namespace IntelliCenterControl.Models
 
         public enum HeaterType
         {
-            [Description( "Generic")]
+            [Description("Generic")]
             GENERIC,
-            [Description( "Solar")]
+            [Description("Solar")]
             SOLAR,
-            [Description( "Heat Pump")]
+            [Description("Heat Pump")]
             HTPMP,
-            [Description( "UltraTemp")]
+            [Description("UltraTemp")]
             ULTRA,
-            [Description( "MasterTemp")]
+            [Description("MasterTemp")]
             MASTER,
-            [Description( "Max-E-Therm")]
+            [Description("Max-E-Therm")]
             MAX,
-            [Description( "Hybrid")]
+            [Description("Hybrid")]
             HCOMBO
         }
 
@@ -33,7 +33,7 @@ namespace IntelliCenterControl.Models
             get => _type;
             set
             {
-                if(_type == value) return;
+                if (_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }
@@ -46,7 +46,7 @@ namespace IntelliCenterControl.Models
             get => _bodies;
             set
             {
-                if(_bodies == value) return;
+                if (Equals(_bodies, value)) return;
                 _bodies = value;
                 OnPropertyChanged();
             }

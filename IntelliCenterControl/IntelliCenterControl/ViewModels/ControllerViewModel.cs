@@ -1,20 +1,18 @@
-﻿using System;
+﻿using IntelliCenterControl.Models;
+using IntelliCenterControl.Services;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Threading.Tasks;
-
-using Xamarin.Forms;
-
-using IntelliCenterControl.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Threading;
-using IntelliCenterControl.Services;
+using System.Threading.Tasks;
 using Xamarin.Essentials;
+using Xamarin.Forms;
 
 namespace IntelliCenterControl.ViewModels
 {
@@ -49,7 +47,7 @@ namespace IntelliCenterControl.ViewModels
         public Command AddScheduleItemCommand { get; set; }
 
 
-        
+
         public ObservableCollection<Circuit<IntelliCenterConnection>> Circuits { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> CircuitGroup { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Pumps { get; private set; }
@@ -114,7 +112,7 @@ namespace IntelliCenterControl.ViewModels
             set => SetProperty(ref _hasCircuitGroups, value);
         }
 
-       
+
 
         private DateTime _currentDateTime;
 
@@ -130,10 +128,10 @@ namespace IntelliCenterControl.ViewModels
 
         public string StatusMessage
         {
-            get { return _statusMessage; }
+            get => _statusMessage;
             set
             {
-                if (_statusMessage == value || String.IsNullOrEmpty(value)) return;
+                if (String.IsNullOrEmpty(value)) return;
                 _statusMessage = value;
                 OnPropertyChanged();
             }
@@ -205,7 +203,7 @@ namespace IntelliCenterControl.ViewModels
                     if (ScheduleHeaters.Any())
                     {
 
-                        
+
                         Schedules.Add(new Schedule(Circuit<IntelliCenterConnection>.CircuitType.SCHED, DataInterface, HardwareDictionary)
                         {
                             SelectedHeater = ScheduleHeaters[0],
@@ -232,10 +230,27 @@ namespace IntelliCenterControl.ViewModels
                 DataInterface.UnSubscribeAllItemsUpdate();
                 DataInterface.GetItemsDefinitionAsync(true);
             }
-           
+            else
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Schedules.Clear();
+                    TodaysSchedule.Clear();
+                    Circuits.Clear();
+                    CircuitGroup.Clear();
+                    Pumps.Clear();
+                    Bodies.Clear();
+                    Chems.Clear();
+                    Lights.Clear();
+                    Heaters.Clear();
+                    ScheduleHeaters.Clear();
+                    AvailableCircuits.Clear();
+                });
+            }
+
         }
 
-        public async Task UpdateIpAddress()
+        public async Task UpdateIpAddressAsync()
         {
             await ExecuteClosingCommand();
             await DataInterface.CreateConnectionAsync();
@@ -250,12 +265,12 @@ namespace IntelliCenterControl.ViewModels
 
         private async Task ExecuteAllLightsOnCommand()
         {
-            DataInterface.SendItemParamsUpdateAsync("_A111", "STATUS", "ON");
+            if (DataInterface != null) await DataInterface.SendItemParamsUpdateAsync("_A111", "STATUS", "ON");
         }
 
         private async Task ExecuteAllLightsOffCommand()
         {
-            DataInterface.SendItemParamsUpdateAsync("_A110", "STATUS", "OFF");
+            if (DataInterface != null) await DataInterface.SendItemParamsUpdateAsync("_A110", "STATUS", "OFF");
         }
 
         private Guid _hardwareDefinitionMessageId;
@@ -266,6 +281,12 @@ namespace IntelliCenterControl.ViewModels
         {
             if (!string.IsNullOrEmpty(e))
             {
+                if (e == "Unauthorized")
+                {
+                    StatusMessage = "Unauthorized";
+                    return;
+                }
+
                 var data = JsonConvert.DeserializeObject(e);
                 var jData = (JObject)(data);
 
@@ -475,28 +496,24 @@ namespace IntelliCenterControl.ViewModels
                             case "WriteParamList":
                                 var WriteParamListJson = JToken.Parse(e);
                                 var WriteParamListFieldsCollector = new JsonFieldsCollector(WriteParamListJson);
-                                var WriteParamListFields = (Dictionary<string,JValue>)WriteParamListFieldsCollector.GetAllFields();
+                                var WriteParamListFields = (Dictionary<string, JValue>)WriteParamListFieldsCollector.GetAllFields();
                                 if (WriteParamListFields != null)
                                 {
-                                    bool itemAdded = false;
-
                                     if (WriteParamListFields.TryGetValue("objectList[0].deleted[0]", out var deletedValue))
-                                    { 
-                                        var deletedItem = (JValue)deletedValue;
-
+                                    {
                                         StatusMessage = "Item Deleted";
                                         try
                                         {
                                             await semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(5));
                                             var schItem = Schedules.FirstOrDefault(o =>
-                                                o.Hname == deletedItem.Value.ToString());
+                                                o.Hname == deletedValue.Value.ToString());
                                             if (schItem != null)
                                             {
                                                 Schedules.Remove(schItem);
                                             }
 
                                             var todayItem = TodaysSchedule.FirstOrDefault(o =>
-                                                o.Hname == deletedItem.Value.ToString());
+                                                o.Hname == deletedValue.Value.ToString());
                                             if (todayItem != null)
                                             {
                                                 TodaysSchedule.Remove(todayItem);
@@ -524,22 +541,19 @@ namespace IntelliCenterControl.ViewModels
                                                 var jDataArray = (JArray)writeParamObjList;
                                                 if (jDataArray != null && jDataArray.HasValues)
                                                 {
-                                                    var createdJItem = jDataArray.FirstOrDefault(o=>o.ToString().Contains("created"));
+                                                    var createdJItem = jDataArray.FirstOrDefault(o => o.ToString().Contains("created"));
                                                     if (createdJItem != null)
                                                     {
-                                                        var createdJObject = (JObject) createdJItem;
+                                                        var createdJObject = (JObject)createdJItem;
                                                         if (createdJObject.TryGetValue("created", out var createdObject))
                                                         {
-
-                                                            SchedulesDefinition.Schedule createdSchedule = null;
-                                                            createdSchedule =
-                                                                JsonConvert
-                                                                    .DeserializeObject<SchedulesDefinition.Schedule>(
-                                                                        createdObject.First.ToString());
+                                                            var createdSchedule = JsonConvert
+                                                                .DeserializeObject<SchedulesDefinition.Schedule>(
+                                                                    createdObject.First.ToString());
 
                                                             if (Schedules.Any() && createdSchedule?.Params != null)
                                                             {
-                                                                var newItem = (Schedule) Schedules[^1];
+                                                                var newItem = (Schedule)Schedules[^1];
                                                                 if (newItem.IsNew)
                                                                 {
 
@@ -584,18 +598,15 @@ namespace IntelliCenterControl.ViewModels
                                                                                 });
 
                                                                         }
-
-                                                                        itemAdded = true;
-
                                                                     }
                                                                 }
                                                             }
                                                         }
                                                     }
-                                                    
+
                                                 }
                                             }
-                                            
+
                                         }
                                     }
 
@@ -617,11 +628,9 @@ namespace IntelliCenterControl.ViewModels
                                                     {
                                                         if (changedObjectType.Value.ToString().Contains("SCHED"))
                                                         {
-                                                            SchedulesDefinition.Schedule changedSchedule = null;
-                                                            changedSchedule =
-                                                                JsonConvert
-                                                                    .DeserializeObject<SchedulesDefinition.Schedule>(
-                                                                        changesObject.First.ToString());
+                                                            var changedSchedule = JsonConvert
+                                                                .DeserializeObject<SchedulesDefinition.Schedule>(
+                                                                    changesObject.First.ToString());
 
                                                             if (Schedules.Any() && changedSchedule?.Params != null)
                                                             {
@@ -769,12 +778,12 @@ namespace IntelliCenterControl.ViewModels
                                     }
 
                                 }
-                                
+
                                 break;
                             default:
                                 var json = JToken.Parse(e);
                                 var fieldsCollector = new JsonFieldsCollector(json);
-                                var fields = (Dictionary<string,JValue>)fieldsCollector.GetAllFields();
+                                var fields = (Dictionary<string, JValue>)fieldsCollector.GetAllFields();
                                 if (fields != null)
                                 {
                                     if (fields.TryGetValue("response", out var responseValue))
@@ -785,7 +794,7 @@ namespace IntelliCenterControl.ViewModels
                                         }
                                     }
                                 }
-                                
+
                                 break;
                         }
                     }
@@ -866,116 +875,116 @@ namespace IntelliCenterControl.ViewModels
                 Heaters.Clear();
                 ScheduleHeaters.Clear();
                 AvailableCircuits.Clear();
-            
 
 
-            foreach (var kvp in HardwareDictionary)
-            {
-                switch (kvp.Value.CircuitDescription)
+
+                foreach (var kvp in HardwareDictionary)
                 {
-                    case Circuit<IntelliCenterConnection>.CircuitType.BODY:
-                        //Bodies.Add(kvp.Value);
-                        if (kvp.Value.Display) Bodies.InsertInPlace(kvp.Value, o => o.ListOrd);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
-                        Chems.Add(kvp.Value);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
-                        //CircuitGroup.Add(kvp.Value);
-                        if (kvp.Value.Display) CircuitGroup.InsertInPlace(kvp.Value, o => o.ListOrd);
-                        AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                        //Circuits.Add(kvp.Value);
-                        if (kvp.Value.Display) Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
-                        AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
-                        //Pumps.Add(kvp.Value);
-                        Pumps.InsertInPlace(kvp.Value, o => o.Hname);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
-                        var sen = (Sense)kvp.Value;
-                        switch (sen.Type)
-                        {
-                            case Sense.SenseType.AIR:
-                                AirSensor = kvp.Value;
-                                break;
-                            case Sense.SenseType.SOLAR:
-                                SolarSensor = kvp.Value;
-                                break;
-                            case Sense.SenseType.POOL:
-                                WaterSensor = kvp.Value;
-                                break;
-                        }
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
-                    case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
-                    case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
-                    case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
-                    case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
-                    case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
-                    case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
-                        //Lights.Add(kvp.Value);
-                        if (kvp.Value.Display) Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
-                        Lights.InsertInPlace(kvp.Value, o => o.ListOrd);
-                        AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
-                        var htr = (Heater)kvp.Value;
-                        if (htr != null)
-                        {
-                            Heaters.Add(htr);
-                        }
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.POOL:
-                    case Circuit<IntelliCenterConnection>.CircuitType.SPA:
-                        AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
-                        break;
+                    switch (kvp.Value.CircuitDescription)
+                    {
+                        case Circuit<IntelliCenterConnection>.CircuitType.BODY:
+                            //Bodies.Add(kvp.Value);
+                            if (kvp.Value.Display) Bodies.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
+                            Chems.Add(kvp.Value);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
+                            //CircuitGroup.Add(kvp.Value);
+                            if (kvp.Value.Display) CircuitGroup.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
+                            //Circuits.Add(kvp.Value);
+                            if (kvp.Value.Display) Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
+                            //Pumps.Add(kvp.Value);
+                            Pumps.InsertInPlace(kvp.Value, o => o.Hname);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
+                            var sen = (Sense)kvp.Value;
+                            switch (sen.Type)
+                            {
+                                case Sense.SenseType.AIR:
+                                    AirSensor = kvp.Value;
+                                    break;
+                                case Sense.SenseType.SOLAR:
+                                    SolarSensor = kvp.Value;
+                                    break;
+                                case Sense.SenseType.POOL:
+                                    WaterSensor = kvp.Value;
+                                    break;
+                            }
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
+                        case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
+                        case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
+                        case Circuit<IntelliCenterConnection>.CircuitType.CLRCASC:
+                        case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
+                        case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
+                        case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
+                            //Lights.Add(kvp.Value);
+                            if (kvp.Value.Display) Circuits.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            Lights.InsertInPlace(kvp.Value, o => o.ListOrd);
+                            AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
+                            var htr = (Heater)kvp.Value;
+                            if (htr != null)
+                            {
+                                Heaters.Add(htr);
+                            }
+                            break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.POOL:
+                        case Circuit<IntelliCenterConnection>.CircuitType.SPA:
+                            AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
+                            break;
+                    }
+
                 }
 
-            }
+                ChemInstalled = Chems.Any();
+                HasCircuits = Circuits.Any();
+                HasCircuitGroups = CircuitGroup.Any();
 
-            ChemInstalled = Chems.Any();
-            HasCircuits = Circuits.Any();
-            HasCircuitGroups = CircuitGroup.Any();
-
-            foreach (var bodyCircuit in Bodies)
-            {
-                var body = (Body)bodyCircuit;
-                if (body != null)
+                foreach (var bodyCircuit in Bodies)
                 {
-                    body.Heaters.Clear();
-                    body.Heaters.Add(new Heater("Heat Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
-
-                    foreach (var heater in Heaters)
+                    var body = (Body)bodyCircuit;
+                    if (body != null)
                     {
-                        if (heater.Bodies.Contains(body.Hname))
+                        body.Heaters.Clear();
+                        body.Heaters.Add(new Heater("Heat Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
+
+                        foreach (var heater in Heaters)
                         {
-                            body.Heaters.Add(heater);
+                            if (heater.Bodies.Contains(body.Hname))
+                            {
+                                body.Heaters.Add(heater);
+                            }
                         }
                     }
                 }
-            }
 
-            if (Heaters.Any())
-            {
-                ScheduleHeaters.Add(new Heater("Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
-                ScheduleHeaters.Add(new Heater("Don't Change", Heater.HeaterType.GENERIC, "00001", DataInterface));
-
-                foreach (var heater in Heaters)
+                if (Heaters.Any())
                 {
-                    ScheduleHeaters.Add(heater);
+                    ScheduleHeaters.Add(new Heater("Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
+                    ScheduleHeaters.Add(new Heater("Don't Change", Heater.HeaterType.GENERIC, "00001", DataInterface));
+
+                    foreach (var heater in Heaters)
+                    {
+                        ScheduleHeaters.Add(heater);
+                    }
                 }
-            }
             });
 
             await ExecuteSubscribeDataCommand();
         }
 
-        private async Task ExecuteClosingCommand()
+        private Task ExecuteClosingCommand()
         {
-            await DataInterface.UnSubscribeAllItemsUpdate();
+            return DataInterface.UnSubscribeAllItemsUpdate();
         }
 
         private void LoadModels()
@@ -1027,34 +1036,46 @@ namespace IntelliCenterControl.ViewModels
                                                                     {
                                                                         if (chemType == Chem.ChemType.ICHLOR)
                                                                         {
-                                                                            var c = new Chem(bodyParam.Params.Sname,
+                                                                            if (HardwareDictionary.TryGetValue(bodyParam.Objnam, out var ckt))
+                                                                            {
+                                                                                var chemCkt = (Chem)ckt;
+                                                                                switch (bodyType)
+                                                                                {
+                                                                                    case Body.BodyType.POOL:
+                                                                                        chemCkt.PrimaryName = b.Name;
+                                                                                        break;
+                                                                                    case Body.BodyType.SPA:
+                                                                                        chemCkt.SecondaryName = b.Name;
+                                                                                        break;
+                                                                                }
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                var c = new Chem(bodyParam.Params.Sname,
                                                                                 chemType, bodyParam.Objnam,
                                                                                 DataInterface);
 
-                                                                            switch (bodyType)
-                                                                            {
-                                                                                case Body.BodyType.POOL:
-                                                                                    c.PrimaryName = b.Name;
-                                                                                    break;
-                                                                                case Body.BodyType.SPA:
-                                                                                    c.SecondaryName = b.Name;
-                                                                                    break;
+                                                                                switch (bodyType)
+                                                                                {
+                                                                                    case Body.BodyType.POOL:
+                                                                                        c.PrimaryName = b.Name;
+                                                                                        break;
+                                                                                    case Body.BodyType.SPA:
+                                                                                        c.SecondaryName = b.Name;
+                                                                                        break;
+                                                                                }
+
+                                                                                HardwareDictionary[c.Hname] = c;
                                                                             }
 
-
-                                                                            HardwareDictionary[c.Hname] = c;
                                                                         }
                                                                     }
-
                                                                     break;
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
-
-                                            
-
                                             break;
                                         case Circuit<IntelliCenterConnection>.CircuitType.CIRCUIT:
                                             {

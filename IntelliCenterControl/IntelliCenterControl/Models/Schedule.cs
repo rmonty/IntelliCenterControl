@@ -1,11 +1,11 @@
-﻿using System;
+﻿using IntelliCenterControl.Services;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using IntelliCenterControl.Services;
-using Newtonsoft.Json;
 using Xamarin.Forms;
 
 namespace IntelliCenterControl.Models
@@ -35,34 +35,34 @@ namespace IntelliCenterControl.Models
             [Description("Sunset")] SSET
         }
 
-        public Command SaveScheduleCommand {get; set;}
-        public Command DeleteScheduleCommand {get; set;}
+        public Command SaveScheduleCommand { get; set; }
+        public Command DeleteScheduleCommand { get; set; }
 
-        public bool IsNew {get;set;}
+        public bool IsNew { get; set; }
 
         public List<string> TimeTypeNames => EnumHelpers.GetDescriptions(typeof(TimeType)).ToList();
 
-        private TimeSpan _startTime = new TimeSpan(8,0,0);
+        private TimeSpan _startTime = new TimeSpan(8, 0, 0);
 
         public TimeSpan StartTime
         {
             get => _startTime;
             set
             {
-                if(_startTime == value) return;
+                if (_startTime == value) return;
                 _startTime = value;
                 OnPropertyChanged();
             }
         }
 
-        private TimeSpan _endTime = new TimeSpan(17,0,0);
+        private TimeSpan _endTime = new TimeSpan(17, 0, 0);
 
         public TimeSpan EndTime
         {
             get => _endTime;
             set
             {
-                if(_endTime == value) return;
+                if (_endTime == value) return;
                 _endTime = value;
                 OnPropertyChanged();
             }
@@ -75,7 +75,7 @@ namespace IntelliCenterControl.Models
             get => _days;
             set
             {
-                if(_days == value) return;
+                if (_days == value) return;
                 _days = value;
                 OnPropertyChanged();
             }
@@ -88,7 +88,7 @@ namespace IntelliCenterControl.Models
             get => _repeats;
             set
             {
-                if(value == _repeats) return;
+                if (value == _repeats) return;
                 _repeats = value;
                 OnPropertyChanged();
             }
@@ -101,7 +101,7 @@ namespace IntelliCenterControl.Models
             get => _single;
             set
             {
-                if(_single == value) return;
+                if (_single == value) return;
                 _single = value;
                 OnPropertyChanged();
             }
@@ -115,7 +115,7 @@ namespace IntelliCenterControl.Models
             get => _startTimeType;
             set
             {
-                if(_startTimeType == value) return;
+                if (_startTimeType == value) return;
                 _startTimeType = value;
                 OnPropertyChanged();
             }
@@ -128,7 +128,7 @@ namespace IntelliCenterControl.Models
             get => _endTimeType;
             set
             {
-                if(_endTimeType == value) return;
+                if (_endTimeType == value) return;
                 _endTimeType = value;
                 OnPropertyChanged();
             }
@@ -141,7 +141,7 @@ namespace IntelliCenterControl.Models
             get => _scheduledDays;
             set
             {
-                if(_scheduledDays == value) return;
+                if (_scheduledDays == value) return;
                 _scheduledDays = value;
                 SetDays();
                 OnPropertyChanged();
@@ -155,7 +155,7 @@ namespace IntelliCenterControl.Models
             get => _scheduledDay;
             set
             {
-                if(_scheduledDay == value) return;
+                if (_scheduledDay == value) return;
                 _scheduledDay = value;
                 SetDays();
                 OnPropertyChanged();
@@ -170,7 +170,7 @@ namespace IntelliCenterControl.Models
             get => _scheduledCircuit;
             set
             {
-                if(_scheduledCircuit == value) return;
+                if (_scheduledCircuit == value) return;
                 _scheduledCircuit = value;
                 OnPropertyChanged();
             }
@@ -183,7 +183,7 @@ namespace IntelliCenterControl.Models
             get => _scheduledCircuitNAme;
             set
             {
-                if(_scheduledCircuitNAme == value) return;
+                if (_scheduledCircuitNAme == value) return;
                 _scheduledCircuitNAme = value;
                 Name = value;
                 OnPropertyChanged();
@@ -198,7 +198,7 @@ namespace IntelliCenterControl.Models
             get => _selectedHeater;
             set
             {
-                if(_selectedHeater == value) return;
+                if (_selectedHeater == value) return;
                 _selectedHeater = value;
                 OnPropertyChanged();
             }
@@ -211,7 +211,7 @@ namespace IntelliCenterControl.Models
             get => _lotmp;
             set
             {
-                if(_lotmp == value) return;
+                if (_lotmp == value) return;
                 _lotmp = value;
                 OnPropertyChanged();
             }
@@ -226,20 +226,20 @@ namespace IntelliCenterControl.Models
             get => _expanded;
             set
             {
-                if(value == _expanded) return;
+                if (value == _expanded) return;
                 _expanded = value;
                 OnPropertyChanged();
             }
         }
 
-        public List<Circuit<IntelliCenterConnection>> Bodies {get; set;}
+        public List<Circuit<IntelliCenterConnection>> Bodies { get; set; }
 
         private SchedulesDefinition.Schedule _definition;
 
-        public ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> _hardwareDictionary = new ConcurrentDictionary<string, Circuit<IntelliCenterConnection>>();
+        public ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> _hardwareDictionary;
 
 
-        public Schedule(Circuit<IntelliCenterConnection>.CircuitType circuitType, 
+        public Schedule(CircuitType circuitType,
             IDataInterface<IntelliCenterConnection> dataInterface,
             ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> hardwareDictionary) : base(circuitType, dataInterface)
         {
@@ -274,11 +274,11 @@ namespace IntelliCenterControl.Models
                     int.Parse(endTime[2]));
             }
 
-            if (Enum.TryParse<Schedule.TimeType
+            if (Enum.TryParse<TimeType
                     >(definition.Params.STOP,
                         out var eTimeType)) EndTimeType = eTimeType;
 
-            if (Enum.TryParse<Schedule.TimeType
+            if (Enum.TryParse<TimeType
             >(definition.Params.START,
                 out var sTimeType)) StartTimeType = sTimeType;
 
@@ -287,12 +287,12 @@ namespace IntelliCenterControl.Models
             UpdateActiveState(definition.Params.ACT == "ON");
             Repeats = definition.Params.SINGLE == "OFF";
             Single = definition.Params.SINGLE == "ON";
-            if(int.TryParse(definition.Params.LISTORD, out var liOrd)) ListOrd = liOrd;
+            if (int.TryParse(definition.Params.LISTORD, out var liOrd)) ListOrd = liOrd;
             Lotmp = definition.Params.LOTMP;
             cooling = definition.Params.COOLING;
-            
+
             var tempDays = definition.Params.DAY;
-            
+
             if (Repeats)
             {
                 var temp = new DaysEnum();
@@ -368,8 +368,8 @@ namespace IntelliCenterControl.Models
                 var message = "{ \"command\": \"SETPARAMLIST\", \"objectList\": [" + reqSer + "], \"messageID\" : \"" +
                               g.ToString() + "\" }";
 
-                DataInterface.SendMessage(message);
-                DataInterface.GetScheduleDataAsync();
+                await DataInterface.SendMessage(message);
+                await DataInterface.GetScheduleDataAsync();
             }
         }
 
@@ -387,13 +387,13 @@ namespace IntelliCenterControl.Models
             if (SelectedHeater != null)
             {
                 heaterName = SelectedHeater.Hname;
-               
+
                 if (heaterName == "00000") mode = "1"; //off
                 else if (heaterName == "00001") mode = "0"; //don't change
                 else
                 {
-                    if (ScheduledCircuit.CircuitDescription == Circuit<IntelliCenterConnection>.CircuitType.POOL ||
-                        ScheduledCircuit.CircuitDescription == Circuit<IntelliCenterConnection>.CircuitType.SPA)
+                    if (ScheduledCircuit.CircuitDescription == CircuitType.POOL ||
+                        ScheduledCircuit.CircuitDescription == CircuitType.SPA)
                     {
                         var selectedBody = Bodies.FirstOrDefault(o => o.Name == ScheduledCircuit.Name);
                         if (selectedBody is Body b) mode = b.HeatMode.ToString();
@@ -408,32 +408,32 @@ namespace IntelliCenterControl.Models
                 {
                     objtyp = "SCHED",
                     Params = new
-                            {
-                                SNAME = Name,
-                                CIRCUIT = ScheduledCircuit.Hname,
-                                DAY = Days,
-                                SINGLE = Single ? "ON" : "OFF",
-                                START = Enum.GetName(typeof(TimeType), StartTimeType),
-                                TIME = StartTime.ToString(@"hh\,mm\,ss"),
-                                STOP = Enum.GetName(typeof(TimeType), EndTimeType),
-                                TIMOUT = EndTime.ToString(@"hh\,mm\,ss"),
-                                GROUP = "",
-                                STATUS = "ON",
-                                HEATER = heaterName,
-                                COOLING = cooling,
-                                LOTMP = Lotmp,
-                                SMTSRT = "OFF",
-                                VACFLO = "OFF",
-                                MODE = mode,
-                                DNTSTP = "OFF"
-                            }
+                    {
+                        SNAME = Name,
+                        CIRCUIT = ScheduledCircuit.Hname,
+                        DAY = Days,
+                        SINGLE = Single ? "ON" : "OFF",
+                        START = Enum.GetName(typeof(TimeType), StartTimeType),
+                        TIME = StartTime.ToString(@"hh\,mm\,ss"),
+                        STOP = Enum.GetName(typeof(TimeType), EndTimeType),
+                        TIMOUT = EndTime.ToString(@"hh\,mm\,ss"),
+                        GROUP = "",
+                        STATUS = "ON",
+                        HEATER = heaterName,
+                        COOLING = cooling,
+                        LOTMP = Lotmp,
+                        SMTSRT = "OFF",
+                        VACFLO = "OFF",
+                        MODE = mode,
+                        DNTSTP = "OFF"
+                    }
                 };
-                
+
                 var reqSer = JsonConvert.SerializeObject(req, Formatting.Indented);
 
                 var message = "{ \"command\": \"CREATEOBJECT\", \"objectList\": [" + reqSer + "], \"messageID\" : \"" + g.ToString() + "\" }";
-                
-                DataInterface.SendMessage(message);
+
+                await DataInterface.SendMessage(message);
             }
             else
             {
@@ -465,10 +465,10 @@ namespace IntelliCenterControl.Models
 
                 var message = "{ \"command\": \"SETPARAMLIST\", \"objectList\": [" + reqSer + "], \"messageID\" : \"" + g.ToString() + "\" }";
 
-                DataInterface.SendMessage(message);
+                await DataInterface.SendMessage(message);
             }
         }
-        
+
 
     }
 }

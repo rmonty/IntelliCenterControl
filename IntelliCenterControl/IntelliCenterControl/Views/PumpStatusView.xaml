@@ -18,7 +18,7 @@
               <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
           <Image Grid.Column="0" x:Name="PumpImage" HorizontalOptions="CenterAndExpand" HeightRequest="30" Aspect="AspectFit" Scale="1" Margin="1"/>
-          <Switch IsVisible="false" x:Name="ActiveToggle" IsToggled="{Binding Active}"/>
+          <Switch Grid.Column="0" IsVisible="false" x:Name="ActiveToggle" IsToggled="{Binding Active}"/>
           <Label Grid.Column="1" 
                  Text="{Binding Name}" VerticalTextAlignment="Center" HorizontalTextAlignment="Start"
                  FontAttributes="Bold" />

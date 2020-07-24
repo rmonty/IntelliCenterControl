@@ -1,10 +1,10 @@
-﻿using System;
+﻿using IntelliCenterControl.Services;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using IntelliCenterControl.Services;
-using Newtonsoft.Json.Linq;
 
 namespace IntelliCenterControl.Models
 {
@@ -14,27 +14,27 @@ namespace IntelliCenterControl.Models
 
         public enum LightType
         {
-            [Description( "Dimmer")]
+            [Description("Dimmer")]
             [Color(false)]
             [Dimming(true)]
             DIMMER,
-            [Description( "GloBrite")]
+            [Description("GloBrite")]
             [Color(true)]
             [Dimming(false)]
             GLOW,
-            [Description( "GloBrite White")]
+            [Description("GloBrite White")]
             [Color(false)]
             [Dimming(true)]
             GLOWT,
-            [Description( "IntelliBrite")]
+            [Description("IntelliBrite")]
             [Color(true)]
             [Dimming(false)]
             INTELLI,
-            [Description( "Light")]
+            [Description("Light")]
             [Color(false)]
             [Dimming(false)]
             LIGHT,
-            [Description( "Magic Stream")]
+            [Description("Magic Stream")]
             [Color(true)]
             [Dimming(false)]
             MAGIC2,
@@ -79,7 +79,7 @@ namespace IntelliCenterControl.Models
             get => _type;
             set
             {
-                if(_type == value) return;
+                if (_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }
@@ -98,7 +98,7 @@ namespace IntelliCenterControl.Models
                 if (_color == value) return;
                 _color = value;
                 OnPropertyChanged();
-                if(SendColorStateUpdate) ExecuteLightColorCommand();
+                if (SendColorStateUpdate) Task.Run(ExecuteLightColorCommand);
             }
         }
 
@@ -114,7 +114,7 @@ namespace IntelliCenterControl.Models
                 _dimmingValue = value < MinDimmingValue ? MinDimmingValue : value;
 
                 OnPropertyChanged();
-                ExecuteDimmerValueCommand();
+                Task.Run(ExecuteDimmerValueCommand);
             }
         }
 
@@ -138,7 +138,7 @@ namespace IntelliCenterControl.Models
             get => _dimmingIncrement;
             set
             {
-                if(_dimmingIncrement == value) return;
+                if (_dimmingIncrement == value) return;
                 _dimmingIncrement = value;
                 OnPropertyChanged();
             }
@@ -152,7 +152,7 @@ namespace IntelliCenterControl.Models
 
         private bool SendColorStateUpdate = true;
 
-        public Light(string name, LightType lightType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) : base(name, (CircuitType)Enum.Parse(typeof(CircuitType),lightType.ToString()), hName, dataInterface)
+        public Light(string name, LightType lightType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) : base(name, (CircuitType)Enum.Parse(typeof(CircuitType), lightType.ToString()), hName, dataInterface)
         {
             Type = lightType;
 
@@ -166,8 +166,6 @@ namespace IntelliCenterControl.Models
                     MinDimmingValue = 50;
                     DimmingIncrement = 25;
                     break;
-                default:
-                    break;
             }
         }
 
@@ -176,7 +174,7 @@ namespace IntelliCenterControl.Models
         {
             if (DataInterface != null)
             {
-               // await DataInterface.UnSubscribeItemUpdate(Hname);
+                // await DataInterface.UnSubscribeItemUpdate(Hname);
                 var val = Active ? "ON" : "OFF";
                 await DataInterface.SendItemParamsUpdateAsync(Hname, "STATUS", val);
                 //await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
@@ -240,11 +238,11 @@ namespace IntelliCenterControl.Models
             {
                 var lv = (JObject)lightValues;
 
-                base.UpdateItemAsync(data);
+                await base.UpdateItemAsync(data);
 
                 if (lv.TryGetValue("USE", out var lightColor))
                 {
-                    if (Enum.TryParse<Light.LightColors>(lightColor.ToString(),
+                    if (Enum.TryParse<LightColors>(lightColor.ToString(),
                         out var color))
                     {
                         UpdateColorState(color);
@@ -259,5 +257,5 @@ namespace IntelliCenterControl.Models
 
 
 
-   
+
 }

@@ -159,6 +159,6 @@ namespace IntelliCenterControl.Models
             public string Select { get; set; }
         }
     }
-    
+
 }
 

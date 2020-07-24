@@ -1,9 +1,9 @@
-﻿using Xamarin.Forms;
-using IntelliCenterControl.Services;
-using IntelliCenterControl.Views;
-using GalaSoft.MvvmLight.Ioc;
+﻿using GalaSoft.MvvmLight.Ioc;
 using IntelliCenterControl.Models;
+using IntelliCenterControl.Services;
 using IntelliCenterControl.ViewModels;
+using IntelliCenterControl.Views;
+using Xamarin.Forms;
 
 namespace IntelliCenterControl
 {
@@ -12,36 +12,36 @@ namespace IntelliCenterControl
 
         public App()
         {
-            Device.SetFlags(new string[] {"Expander_Experimental", "RadioButton_Experimental", "SwipeView_Experimental"});
+            Device.SetFlags(new[] { "Expander_Experimental", "RadioButton_Experimental", "SwipeView_Experimental" });
 
-        InitializeComponent();
-            
+            InitializeComponent();
+
             SimpleIoc.Default.Register<ICloudLogService, CloudLogService>();
             SimpleIoc.Default.Register<IDataInterface<IntelliCenterConnection>, IntelliCenterDataInterface>();
             SimpleIoc.Default.Register<ILogService, LogService>();
             SimpleIoc.Default.Register<ControllerViewModel>();
-            
+
             MainPage = new MainPage();
-            
+
         }
 
         protected override void OnStart()
         {
             SimpleIoc.Default.GetInstance<ICloudLogService>().Initialize("94ace755-cc3f-4f64-91a7-6c7956267bf8");
-            MessagingCenter.Send<App>(this, "Starting");
+            MessagingCenter.Send(this, "Starting");
         }
 
         protected override void OnSleep()
         {
-            MessagingCenter.Send<App>(this, "Sleeping");
+            MessagingCenter.Send(this, "Sleeping");
         }
 
         protected override void OnResume()
         {
-            MessagingCenter.Send<App>(this, "Resume");
+            MessagingCenter.Send(this, "Resume");
         }
-        
-        
-         
+
+
+
     }
 }

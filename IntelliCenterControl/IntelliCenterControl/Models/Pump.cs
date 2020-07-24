@@ -1,5 +1,5 @@
-﻿using System;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
 
@@ -191,10 +191,10 @@ namespace IntelliCenterControl.Models
                 if (pv.TryGetValue("STATUS", out var status))
                 {
                     var ps = (int)status;
-                    if (Enum.IsDefined(typeof(Pump.PumpStatus), ps))
-                        Status = (Pump.PumpStatus)ps;
+                    if (Enum.IsDefined(typeof(PumpStatus), ps))
+                        Status = (PumpStatus)ps;
                     else
-                        Status = Pump.PumpStatus.OFF;
+                        Status = PumpStatus.OFF;
                 }
 
             }

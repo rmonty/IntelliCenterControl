@@ -8,13 +8,12 @@ namespace IntelliCenterControl.Views
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class ChemPage : ContentPage
     {
-        ControllerViewModel viewModel;
         public ChemPage()
         {
             InitializeComponent();
 
-            BindingContext = viewModel = SimpleIoc.Default.GetInstance<ControllerViewModel>();
-          
+            BindingContext = SimpleIoc.Default.GetInstance<ControllerViewModel>();
+
         }
 
     }

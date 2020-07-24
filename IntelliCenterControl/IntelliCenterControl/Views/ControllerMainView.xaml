@@ -13,7 +13,7 @@
     <ContentPage.Resources>
        
     </ContentPage.Resources>
-    <Grid>
+    <Grid RowSpacing="3" ColumnSpacing="3">
         <Grid.RowDefinitions>
             <RowDefinition Height="1.75*"/>
             <RowDefinition x:Name="Row2" Height="0"/>

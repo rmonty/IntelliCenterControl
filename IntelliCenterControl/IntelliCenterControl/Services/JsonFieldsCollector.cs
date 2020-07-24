@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace IntelliCenterControl.Services
 {
@@ -26,7 +26,7 @@ namespace IntelliCenterControl.Services
                         CollectFields(child);
                     break;
                 case JTokenType.Property:
-                    CollectFields(((JProperty) jToken).Value);
+                    CollectFields(((JProperty)jToken).Value);
                     break;
                 default:
                     fields.Add(jToken.Path, (JValue)jToken);

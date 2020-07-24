@@ -6,9 +6,9 @@ namespace IntelliCenterControl.Models
     {
         public enum ValveType
         {
-            [Description( "Legacy")]
+            [Description("Legacy")]
             LEGACY,
-            [Description( "Intellivalve")]
+            [Description("Intellivalve")]
             INTELLI
         }
 
@@ -19,7 +19,7 @@ namespace IntelliCenterControl.Models
             get => _type;
             set
             {
-                if(_type == value) return;
+                if (_type == value) return;
                 _type = value;
                 OnPropertyChanged();
             }

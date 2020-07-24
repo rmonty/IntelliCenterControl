@@ -1,10 +1,10 @@
-﻿using System;
+﻿using NLog;
+using NLog.Config;
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
-using NLog;
-using NLog.Config;
 
 
 namespace IntelliCenterControl.Services

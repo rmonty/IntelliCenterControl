@@ -16,7 +16,7 @@ namespace IntelliCenterControl.Services
         /// </summary>
         /// <param name="items">Item is name and type as string</param>
         /// <returns></returns>
-        Task<bool> SubscribeItemsUpdateAsync(IDictionary<string , string> items);
+        Task<bool> SubscribeItemsUpdateAsync(IDictionary<string, string> items);
         Task<bool> GetItemUpdateAsync(string id, string type);
         Task<bool> UnSubscribeItemUpdate(string id);
         Task<bool> UnSubscribeAllItemsUpdate();

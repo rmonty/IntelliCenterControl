@@ -11,8 +11,8 @@ namespace IntelliCenterControl.Views
             InitializeComponent();
         }
 
-       
-      
-        
+
+
+
     }
 }

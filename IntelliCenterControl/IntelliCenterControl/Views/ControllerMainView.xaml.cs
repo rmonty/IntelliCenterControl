@@ -1,8 +1,8 @@
-﻿using System.ComponentModel;
-using GalaSoft.MvvmLight.Ioc;
-using Xamarin.Forms;
+﻿using GalaSoft.MvvmLight.Ioc;
 using IntelliCenterControl.ViewModels;
+using System.ComponentModel;
 using Xamarin.Essentials;
+using Xamarin.Forms;
 
 namespace IntelliCenterControl.Views
 {
@@ -19,7 +19,7 @@ namespace IntelliCenterControl.Views
 
             BindingContext = viewModel = SimpleIoc.Default.GetInstance<ControllerViewModel>();
 
-            viewModel.PropertyChanged += ViewModel_PropertyChanged;          
+            viewModel.PropertyChanged += ViewModel_PropertyChanged;
 
         }
 
@@ -71,10 +71,10 @@ namespace IntelliCenterControl.Views
                                           Grid.SetRowSpan(BodyImage, 2);
                                           Grid.SetRowSpan(BodyGrid, 2);
                                       }
-                                      break;                                 
+                                      break;
                               }
                           });
-        }  
+        }
 
 
 

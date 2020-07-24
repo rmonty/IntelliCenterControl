@@ -1,5 +1,5 @@
-﻿using System;
-using IntelliCenterControl.Models;
+﻿using IntelliCenterControl.Models;
+using System;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -11,12 +11,12 @@ namespace IntelliCenterControl.Views
         public LightView()
         {
             InitializeComponent();
-            
+
         }
 
         private void ColorPicker_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var color = (Light.LightColors) ColorPicker.SelectedIndex;
+            var color = (Light.LightColors)ColorPicker.SelectedIndex;
             switch (color)
             {
                 case Light.LightColors.SAMMOD:
@@ -62,6 +62,6 @@ namespace IntelliCenterControl.Views
         }
     }
 
-    
+
 
 }

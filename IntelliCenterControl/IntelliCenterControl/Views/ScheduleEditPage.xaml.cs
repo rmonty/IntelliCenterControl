@@ -12,17 +12,17 @@ namespace IntelliCenterControl.Views
     public partial class ScheduleEditPage : ContentPage
     {
         ControllerViewModel viewModel;
-        
+
         public ScheduleEditPage()
         {
             InitializeComponent();
-            BindingContext = viewModel = SimpleIoc.Default.GetInstance<ControllerViewModel>();           
+            BindingContext = viewModel = SimpleIoc.Default.GetInstance<ControllerViewModel>();
         }
 
-       
+
         private void Save_Clicked(object sender, System.EventArgs e)
         {
-            if (((SwipeItem) sender).BindingContext is Schedule context)
+            if (((SwipeItem)sender).BindingContext is Schedule context)
             {
                 //((Button)sender).IsEnabled = false;
                 context.Expanded = false;
@@ -55,6 +55,6 @@ namespace IntelliCenterControl.Views
             }
         }
 
-        
+
     }
 }

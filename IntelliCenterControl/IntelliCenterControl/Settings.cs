@@ -1,10 +1,10 @@
-﻿using System;
+﻿using IntelliCenterControl.Annotations;
+using Plugin.Settings;
+using Plugin.Settings.Abstractions;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using IntelliCenterControl.Annotations;
-using Plugin.Settings;
-using Plugin.Settings.Abstractions;
 using Xamarin.Essentials;
 
 namespace IntelliCenterControl
