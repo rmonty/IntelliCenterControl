@@ -8,6 +8,11 @@ A control developed using C# and Xamarin that connects to an IntelliCenter using
 
 This control is still in development.
 
+Install from the Play Store
+[Google Play Store](https://play.google.com/store/apps/details?id=com.mcxs.intellicentercontrol)
+
+
+
 ![Screenshot](https://github.com/rmonty/IntelliCenterControl/blob/master/Screenshot.png)
 
 See thread at [Trouble Free Pool](https://www.troublefreepool.com/threads/intellicenter-web-client-and-its-possible-alternatives.198213/) for more information
