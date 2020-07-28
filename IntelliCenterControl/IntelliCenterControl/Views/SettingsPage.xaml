@@ -4,6 +4,7 @@
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:IntelliCenterControl.ViewModels;assembly=intellicentercontrol"
+             xmlns:sv="clr-namespace:AiForms.Renderers;assembly=SettingsView"
              mc:Ignorable="d"
              x:Class="IntelliCenterControl.Views.SettingsPage"
              Title="{Binding Title}">
@@ -11,26 +12,21 @@
         <viewModels:SettingsViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <TableView>
-            <TableRoot>
-            <TableSection Title="IP Addresses" TextColor="#2196F3">
-                <EntryCell Label="Home URL:" Text="{Binding Settings.HomeURL}" Placeholder="Home URL" LabelColor="#2196F3"/>
-                <EntryCell Label="Away URL:" Text="{Binding Settings.AwayURL}" Placeholder="Away URL" LabelColor="#2196F3"/>
-            </TableSection>
-            <TableSection Title="Authentication" TextColor="#2196F3">
-            <EntryCell Label="Username:" Text="{Binding Settings.Username}" Placeholder="Username" LabelColor="#2196F3"/>
-            <ViewCell>
-                <StackLayout Orientation="Horizontal" Margin="17,0,8,0" Spacing="0">
-                    <Label Text="Password:" VerticalTextAlignment="Center" HorizontalTextAlignment="End"
-                           TextColor="#2196F3"/>
-                    <Entry Text="{Binding Settings.Password}"
-                           HorizontalOptions="FillAndExpand"
-                           IsPassword="True" Placeholder="Password" />
-                </StackLayout>
-            </ViewCell>
-            
-            </TableSection>
-            </TableRoot>
-        </TableView>
+        <sv:SettingsView>
+            <sv:Section Title="IP Addresses" 
+                        FooterText="After entering the desired URLs, click on the IP icon at the top of the screen to set the appropriate URL to use">
+                <sv:EntryCell Title="Home URL:" ValueText="{Binding Settings.HomeURL}" Placeholder="Home URL" TitleColor="#2196F3"/>
+                <sv:EntryCell Title="Away URL:" ValueText="{Binding Settings.AwayURL}" Placeholder="Away URL" TitleColor="#2196F3"/>
+            </sv:Section>
+            <sv:Section Title="Authentication"
+                        FooterText="Authentication section is for entering a Username and Password for a Gateway server connection if used ">
+                <sv:EntryCell Title="Username:" ValueText="{Binding Settings.Username}" Placeholder="Username" TitleColor="#2196F3"/>
+                <sv:EntryCell Title="Password:" ValueText="{Binding Settings.Password}" IsPassword="True" TitleColor="#2196F3" Placeholder="Password"/>
+            </sv:Section>
+            <sv:Section Title="App Defaults">
+                <sv:SwitchCell Title="Show Solar Temp: " On="{Binding Settings.ShowSolarTemp}"
+                               Description="Show Solar Temperature on Control Tab"/>
+            </sv:Section>
+        </sv:SettingsView>
     </ContentPage.Content>
 </ContentPage>

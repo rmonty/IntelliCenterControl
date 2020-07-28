@@ -417,13 +417,13 @@ namespace IntelliCenterControl.Models
                         TIME = StartTime.ToString(@"hh\,mm\,ss"),
                         STOP = Enum.GetName(typeof(TimeType), EndTimeType),
                         TIMOUT = EndTime.ToString(@"hh\,mm\,ss"),
-                        GROUP = "",
-                        STATUS = "ON",
+                        //GROUP = "",
+                        //STATUS = "ON",
                         HEATER = heaterName,
                         COOLING = cooling,
                         LOTMP = Lotmp,
-                        SMTSRT = "OFF",
-                        VACFLO = "OFF",
+                        //SMTSRT = "OFF",
+                        //VACFLO = "OFF",
                         MODE = mode,
                         DNTSTP = "OFF"
                     }
@@ -437,32 +437,97 @@ namespace IntelliCenterControl.Models
             }
             else
             {
-                var req = new
+                string reqSer;
+
+                if (ScheduledCircuit.CircuitDescription == CircuitType.POOL ||
+                    ScheduledCircuit.CircuitDescription == CircuitType.SPA)
                 {
-                    objnam = Hname,
-                    Params = new
+                    if (heaterName == _definition.Params.HEATER)
                     {
-                        SNAME = Name,
-                        CIRCUIT = ScheduledCircuit.Hname,
-                        DAY = Days,
-                        SINGLE = Single ? "ON" : "OFF",
-                        START = Enum.GetName(typeof(TimeType), StartTimeType),
-                        TIME = StartTime.ToString(@"hh\,mm\,ss"),
-                        STOP = Enum.GetName(typeof(TimeType), EndTimeType),
-                        TIMOUT = EndTime.ToString(@"hh\,mm\,ss"),
-                        GROUP = _definition.Params.GROUP,
-                        STATUS = "ON",
-                        HEATER = heaterName,
-                        COOLING = cooling,
-                        LOTMP = Lotmp,
-                        SMTSRT = _definition.Params.SMTSRT,
-                        MODE = mode,
-                        DNTSTP = "OFF"
+                        var req = new
+                        {
+                            objnam = Hname,
+                            Params = new
+                            {
+                                SNAME = Name,
+                                CIRCUIT = ScheduledCircuit.Hname,
+                                DAY = Days,
+                                SINGLE = Single ? "ON" : "OFF",
+                                START = Enum.GetName(typeof(TimeType), StartTimeType),
+                                TIME = StartTime.ToString(@"hh\,mm\,ss"),
+                                STOP = Enum.GetName(typeof(TimeType), EndTimeType),
+                                TIMOUT = EndTime.ToString(@"hh\,mm\,ss")
+                                //GROUP = _definition.Params.GROUP,
+                                //STATUS = "ON",
+                                //HEATER = heaterName,
+                                //COOLING = cooling,
+                                //LOTMP = Lotmp,
+                                //SMTSRT = _definition.Params.SMTSRT,
+                                //MODE = mode
+                                //DNTSTP = "OFF"
+                            }
+                        };
+
+                        reqSer = JsonConvert.SerializeObject(req, Formatting.Indented);
                     }
-                };
+                    else
+                    {
+                        var req = new
+                        {
+                            objnam = Hname,
+                            Params = new
+                            {
+                                SNAME = Name,
+                                CIRCUIT = ScheduledCircuit.Hname,
+                                DAY = Days,
+                                SINGLE = Single ? "ON" : "OFF",
+                                START = Enum.GetName(typeof(TimeType), StartTimeType),
+                                TIME = StartTime.ToString(@"hh\,mm\,ss"),
+                                STOP = Enum.GetName(typeof(TimeType), EndTimeType),
+                                TIMOUT = EndTime.ToString(@"hh\,mm\,ss"),
+                                //GROUP = _definition.Params.GROUP,
+                                //STATUS = "ON",
+                                HEATER = heaterName,
+                                //COOLING = cooling,
+                                LOTMP = Lotmp,
+                                //SMTSRT = _definition.Params.SMTSRT,
+                                MODE = mode
+                                //DNTSTP = "OFF"
+                            }
+                        };
 
-                var reqSer = JsonConvert.SerializeObject(req, Formatting.Indented);
+                        reqSer = JsonConvert.SerializeObject(req, Formatting.Indented);
+                    }
+                }
+                else
+                {
+                    var req = new
+                    {
+                        objnam = Hname,
+                        Params = new
+                        {
+                            SNAME = Name,
+                            CIRCUIT = ScheduledCircuit.Hname,
+                            DAY = Days,
+                            SINGLE = Single ? "ON" : "OFF",
+                            START = Enum.GetName(typeof(TimeType), StartTimeType),
+                            TIME = StartTime.ToString(@"hh\,mm\,ss"),
+                            STOP = Enum.GetName(typeof(TimeType), EndTimeType),
+                            TIMOUT = EndTime.ToString(@"hh\,mm\,ss")
+                            //GROUP = _definition.Params.GROUP,
+                            //STATUS = "ON",
+                            //HEATER = heaterName,
+                            //COOLING = cooling,
+                            //LOTMP = Lotmp,
+                            //SMTSRT = _definition.Params.SMTSRT,
+                            //MODE = mode,
+                            //DNTSTP = "OFF"
+                        }
+                    };
 
+                    reqSer = JsonConvert.SerializeObject(req, Formatting.Indented);
+                }
+               
                 var message = "{ \"command\": \"SETPARAMLIST\", \"objectList\": [" + reqSer + "], \"messageID\" : \"" + g.ToString() + "\" }";
 
                 await DataInterface.SendMessage(message);

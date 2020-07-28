@@ -1,11 +1,13 @@
 ﻿using GalaSoft.MvvmLight.Ioc;
 using IntelliCenterControl.Models;
 using IntelliCenterControl.ViewModels;
-using Plugin.Toast;
+
 using System.ComponentModel;
 using System.Threading.Tasks;
+using Acr.UserDialogs;
 using Xamarin.Essentials;
 using Xamarin.Forms;
+using Plugin.Toasts;
 
 namespace IntelliCenterControl.Views
 {
@@ -17,6 +19,7 @@ namespace IntelliCenterControl.Views
         ControllerViewModel viewModel;
         private Page cPage;
         Settings _settings = Settings.Instance;
+        IToastNotificator _notificator;
 
         public MainPage()
         {
@@ -26,9 +29,9 @@ namespace IntelliCenterControl.Views
                 Title = "Chem",
                 IconImageSource = "chem_icon.png"
             };
-
+            _notificator = DependencyService.Get<IToastNotificator>();
             BindingContext = viewModel = SimpleIoc.Default.GetInstance<ControllerViewModel>();
-
+            
             viewModel.PropertyChanged += ViewModel_PropertyChanged;
             viewModel.DataInterface.ConnectionChanged += DataInterface_ConnectionChanged;
 
@@ -46,7 +49,7 @@ namespace IntelliCenterControl.Views
             });
 
 
-            Task.Run(async () => await CheckAndRequestStoragePermission());
+            //Task.Run(async () => await CheckAndRequestStoragePermission());
 
         }
 
@@ -64,9 +67,19 @@ namespace IntelliCenterControl.Views
                 };
 
                 if (e.State == IntelliCenterConnection.ConnectionState.Disconnected)
-                    CrossToastPopUp.Current.ShowToastWarning(e.State.ToString());
+                {
+                    ToastConfig.DefaultBackgroundColor = Color.Yellow;
+                    ToastConfig.DefaultMessageTextColor = Color.Black;
+                    UserDialogs.Instance.Toast(new ToastConfig(e.State.ToString()).SetDuration(1000)
+                        .SetPosition(ToastPosition.Bottom));
+                }
                 else
-                    CrossToastPopUp.Current.ShowToastSuccess(e.State.ToString());
+                {
+                    ToastConfig.DefaultBackgroundColor = Color.Green;
+                    ToastConfig.DefaultMessageTextColor = Color.White;
+                    UserDialogs.Instance.Toast(new ToastConfig(e.State.ToString()).SetDuration(1000)
+                        .SetPosition(ToastPosition.Bottom));
+                }
 
             });
         }
@@ -81,8 +94,6 @@ namespace IntelliCenterControl.Views
                         if (viewModel.ChemInstalled)
                         {
                             MainAppPage.Children.Insert(1, cPage);
-
-
                         }
                         else
                         {
@@ -96,11 +107,17 @@ namespace IntelliCenterControl.Views
                     case "StatusMessage":
                         if (viewModel.StatusMessage == "Unauthorized")
                         {
-                            CrossToastPopUp.Current.ShowToastError(viewModel.StatusMessage);
+                            ToastConfig.DefaultBackgroundColor = Color.Red;
+                            ToastConfig.DefaultMessageTextColor = Color.White;
+                            UserDialogs.Instance.Toast(new ToastConfig("Unauthorized").SetDuration(1000)
+                                .SetPosition(ToastPosition.Bottom));
                         }
                         else
                         {
-                            CrossToastPopUp.Current.ShowCustomToast(viewModel.StatusMessage, "#2196F3", "#FFFFFF");
+                            ToastConfig.DefaultBackgroundColor = Color.FromHex("#2196F3");
+                            ToastConfig.DefaultMessageTextColor = Color.White;
+                            UserDialogs.Instance.Toast(new ToastConfig(viewModel.StatusMessage).SetDuration(1000)
+                                .SetPosition(ToastPosition.Bottom));
                         }
                         break;
 

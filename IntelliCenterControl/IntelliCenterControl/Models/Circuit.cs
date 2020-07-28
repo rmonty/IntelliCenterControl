@@ -60,7 +60,9 @@ namespace IntelliCenterControl.Models
             [Description("Legacy")]
             LEGACY,
             [Description("Spa")]
-            SPA
+            SPA,
+            [Description("Light Show")]
+            LITSHO
 
         }
 

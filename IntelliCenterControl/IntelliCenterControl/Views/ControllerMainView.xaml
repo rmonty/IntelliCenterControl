@@ -18,8 +18,8 @@
             <RowDefinition Height="1.75*"/>
             <RowDefinition x:Name="Row2" Height="0"/>
             <RowDefinition x:Name="Row3" Height="0"/>
+            <RowDefinition Height="1.2*"/>
             <RowDefinition Height="1*"/>
-            <RowDefinition Height="1.25*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1.4*"/>
@@ -52,7 +52,11 @@
             <Frame Grid.Row="2" Grid.Column="2" BorderColor="#000000" Opacity="0.7"/>
             <Label Text="{Binding AirSensor.Temp, StringFormat='{}{0}°'}"  Grid.Row="2" Grid.Column="2" HorizontalTextAlignment="Center"
                    VerticalTextAlignment="Center" TextColor="DarkGreen" FontAttributes="Italic"/>
-            <StackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Spacing="0">
+            <Label Grid.Column="0" Text="Solar Temp" Grid.Row="3" Grid.ColumnSpan="2" VerticalTextAlignment="Center"
+                   FontSize="Small" HorizontalTextAlignment="End" IsVisible="{Binding Settings.ShowSolarTemp}"/>
+            <Label Text="{Binding SolarSensor.Temp, StringFormat='{}{0}°'}"  Grid.Row="3" Grid.Column="2" HorizontalTextAlignment="Center"
+                   VerticalTextAlignment="Center" FontAttributes="Italic" FontSize="Small" IsVisible="{Binding Settings.ShowSolarTemp}"/>
+            <StackLayout Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Spacing="0">
             <Label Text="{Binding CurrentDateTime, StringFormat='{0:dddd, MMMM d, yyyy}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
             <Label Text="{Binding CurrentDateTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
             </StackLayout>
@@ -122,15 +126,25 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+        
         <Frame Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="2" BackgroundColor="White" CornerRadius="5" x:Name="LightFrame"/>
         <Image Source="light_background.png" Grid.Row="2" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Opacity="0.2" Aspect="Fill" x:Name="LightImage"/>
-        <CollectionView Grid.Row="2" Grid.RowSpan="2" Grid.Column="0" Margin="5" Grid.ColumnSpan="2" x:Name="LightView" ItemsSource="{Binding Lights}" IsEnabled="{Binding IsEnabled}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <views:LightView/>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+        <StackLayout x:Name="LightView" Orientation="Vertical" Grid.Row="2" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2" Spacing="15">
+            <CollectionView Margin="5,0,5,0"   ItemsSource="{Binding Lights}" IsEnabled="{Binding IsEnabled}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <views:LightView/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <CollectionView Margin="5,0,5,0"  x:Name="LightGroupView" ItemsSource="{Binding LightGroups}" IsEnabled="{Binding IsEnabled}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <views:LightGroupView/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </StackLayout>
         <Frame Grid.Row="2" Grid.Column="2" Grid.RowSpan="2" BackgroundColor="White" CornerRadius="5" />
         <CollectionView Grid.Row="2" Grid.Column="2" Grid.RowSpan="2" Margin="5" ItemsSource="{Binding TodaysSchedule}">
             <CollectionView.Header>

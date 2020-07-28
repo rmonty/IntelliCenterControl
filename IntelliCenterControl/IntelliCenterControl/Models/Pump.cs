@@ -42,14 +42,15 @@ namespace IntelliCenterControl.Models
             }
         }
 
-        private PumpStatus pumpStatus;
+        private PumpStatus _pumpStatus;
 
         public PumpStatus Status
         {
-            get => pumpStatus;
+            get => _pumpStatus;
             set
             {
-                pumpStatus = value;
+                if(_pumpStatus == value) return;
+                _pumpStatus = value;
                 this.UpdateActiveState(PumpStatus.ON == value);
                 OnPropertyChanged();
             }
@@ -190,11 +191,22 @@ namespace IntelliCenterControl.Models
 
                 if (pv.TryGetValue("STATUS", out var status))
                 {
-                    var ps = (int)status;
-                    if (Enum.IsDefined(typeof(PumpStatus), ps))
-                        Status = (PumpStatus)ps;
+                    if (int.TryParse(status.ToString(), out var ps))
+                    {
+                        if (Enum.IsDefined(typeof(PumpStatus), ps))
+                            Status = (PumpStatus) ps;
+                        else
+                            Status = PumpStatus.OFF;
+                    }
+                    else if (status.ToString().Contains("ON"))
+                    {
+                        Status = PumpStatus.ON;
+                    }
                     else
+                    {
                         Status = PumpStatus.OFF;
+                    }
+
                 }
 
             }

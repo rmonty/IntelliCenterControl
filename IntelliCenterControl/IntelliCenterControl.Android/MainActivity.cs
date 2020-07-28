@@ -1,10 +1,14 @@
 ﻿
+using Acr.UserDialogs;
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
 using GalaSoft.MvvmLight.Ioc;
 using IntelliCenterControl.Services;
+using Plugin.Toasts;
+using Xamarin.Forms;
 
 namespace IntelliCenterControl.Droid
 {
@@ -20,8 +24,11 @@ namespace IntelliCenterControl.Droid
 
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
-            //DependencyService.Register<ToastNotification>();
-            //ToastNotification.Init(this);
+            AiForms.Renderers.Droid.SettingsViewInit.Init();
+            UserDialogs.Init(this);
+            DependencyService.Register<ToastNotification>();
+            ToastNotification.Init(this);
+
             LoadApplication(new App());
 
             this.Bootstraping();
@@ -31,6 +38,20 @@ namespace IntelliCenterControl.Droid
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
 
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+
+        public override void OnCreate(Bundle savedInstanceState, PersistableBundle persistentState)
+        {
+            //MessagingCenter.Subscribe<StartMacroTaskMessage> (this, "StartMacroTaskMessage", message => {
+            //    var intent = new Intent (this, typeof(MacroTaskService));
+            //    StartService (intent);
+            //});
+
+            //MessagingCenter.Subscribe<StopMacroTaskMessage> (this, "StopMacroTaskMessage", message => {
+            //    var intent = new Intent (this, typeof(MacroTaskService));
+            //    StopService (intent);
+            //});
+            base.OnCreate(savedInstanceState, persistentState);
         }
 
         private void Bootstraping()

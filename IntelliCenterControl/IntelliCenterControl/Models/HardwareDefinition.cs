@@ -58,7 +58,7 @@ namespace IntelliCenterControl.Models
             public string Rly { get; set; }
             public string Dntstp { get; set; }
             public string Featr { get; set; }
-            public List<PumpParams> Objlist { get; set; }
+            public List<CircuitParams> Objlist { get; set; }
             public string Comuart { get; set; }
             public string Primflo { get; set; }
             public string Primtim { get; set; }
@@ -141,13 +141,13 @@ namespace IntelliCenterControl.Models
             public string Comuart { get; set; }
         }
 
-        public partial class PumpParams
+        public partial class CircuitParams
         {
             public string Objnam { get; set; }
-            public PumpCircuit Params { get; set; }
+            public CircuitParamData Params { get; set; }
         }
 
-        public partial class PumpCircuit
+        public partial class CircuitParamData
         {
             public string Objtyp { get; set; }
             public string Circuit { get; set; }

@@ -1,7 +1,8 @@
-﻿using GalaSoft.MvvmLight.Ioc;
+﻿using Acr.UserDialogs;
+using GalaSoft.MvvmLight.Ioc;
 using IntelliCenterControl.Models;
 using IntelliCenterControl.ViewModels;
-using Plugin.Toast;
+using Plugin.Toasts;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -12,10 +13,12 @@ namespace IntelliCenterControl.Views
     public partial class ScheduleEditPage : ContentPage
     {
         ControllerViewModel viewModel;
+        IToastNotificator _notificator;
 
         public ScheduleEditPage()
         {
             InitializeComponent();
+            _notificator = DependencyService.Get<IToastNotificator>();
             BindingContext = viewModel = SimpleIoc.Default.GetInstance<ControllerViewModel>();
         }
 
@@ -39,7 +42,12 @@ namespace IntelliCenterControl.Views
                 {
                     viewModel.Schedules.Remove(context);
                     MainThread.BeginInvokeOnMainThread(
-                        () => { CrossToastPopUp.Current.ShowToastSuccess("Item Deleted"); });
+                        () => {
+                            ToastConfig.DefaultBackgroundColor = Color.FromHex("#2196F3");
+                            ToastConfig.DefaultMessageTextColor = Color.White;
+                            UserDialogs.Instance.Toast(new ToastConfig("Item Deleted").SetDuration(1000)
+                                .SetPosition(ToastPosition.Bottom));
+                            });
                 }
                 else
                 {

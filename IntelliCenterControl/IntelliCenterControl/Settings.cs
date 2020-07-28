@@ -54,16 +54,9 @@ namespace IntelliCenterControl
         private const string AwayURLKey = "away_url_key";
         private readonly string AwayURLDefault = "http://192.168.0.130:5000/";
 
-        private const string SuperChlorinateStartKey = "super_chlorinate_start_key";
-        private readonly DateTime SuperChlorinateStartDefault = DateTime.Now;
+        private const string ShowSolarTempKey = "showSolarTemp_key";
+        private readonly bool ShowSolarTempDefault = false;
         #endregion
-
-
-        //public string ServerURL
-        //{
-        //    get => AppSettings.GetValueOrDefault(ServerURLKey, ServerURLDefault);
-        //    set => AppSettings.AddOrUpdateValue(ServerURLKey, value);
-        //}
 
         public string ServerURL
         {
@@ -122,6 +115,16 @@ namespace IntelliCenterControl
             set
             {
                 StorePassword(value);
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowSolarTemp
+        {
+            get => Preferences.Get(ShowSolarTempKey, ShowSolarTempDefault);
+            set
+            {
+                Preferences.Set(ShowSolarTempKey, value);
                 OnPropertyChanged();
             }
         }

@@ -20,7 +20,8 @@ namespace IntelliCenterControl.ViewModels
     {
         private readonly ILogService _logService;
         private readonly ICloudLogService _cloudLogService;
-        private Settings _settings = Settings.Instance;
+        
+        public Settings Settings => Settings.Instance;
 
         private HardwareDefinition _hardwareDefinition = new HardwareDefinition();
 
@@ -54,6 +55,7 @@ namespace IntelliCenterControl.ViewModels
         public ObservableCollection<Circuit<IntelliCenterConnection>> Bodies { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Chems { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> Lights { get; private set; }
+        public ObservableCollection<Circuit<IntelliCenterConnection>> LightGroups { get; private set; }
         public ObservableCollection<Heater> Heaters { get; private set; }
         public ObservableCollection<Heater> ScheduleHeaters { get; private set; }
         public ObservableCollection<Circuit<IntelliCenterConnection>> TodaysSchedule { get; private set; }
@@ -137,6 +139,7 @@ namespace IntelliCenterControl.ViewModels
             }
         }
 
+        public bool IsEnabled => true;
 
         public ControllerViewModel(ILogService logService, ICloudLogService cloudLogService)
         {
@@ -149,6 +152,7 @@ namespace IntelliCenterControl.ViewModels
             Bodies = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Chems = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Lights = new ObservableCollection<Circuit<IntelliCenterConnection>>();
+            LightGroups = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Heaters = new ObservableCollection<Heater>();
             ScheduleHeaters = new ObservableCollection<Heater>();
             TodaysSchedule = new ObservableCollection<Circuit<IntelliCenterConnection>>();
@@ -171,6 +175,7 @@ namespace IntelliCenterControl.ViewModels
             BindingBase.EnableCollectionSynchronization(Bodies, null, ObservableCollectionCallback);
             BindingBase.EnableCollectionSynchronization(Chems, null, ObservableCollectionCallback);
             BindingBase.EnableCollectionSynchronization(Lights, null, ObservableCollectionCallback);
+            BindingBase.EnableCollectionSynchronization(LightGroups, null, ObservableCollectionCallback);
             BindingBase.EnableCollectionSynchronization(Heaters, null, ObservableCollectionCallback);
             BindingBase.EnableCollectionSynchronization(ScheduleHeaters, null, ObservableCollectionCallback);
             BindingBase.EnableCollectionSynchronization(TodaysSchedule, null, ObservableCollectionCallback);
@@ -227,8 +232,8 @@ namespace IntelliCenterControl.ViewModels
         {
             if (e.State == IntelliCenterConnection.ConnectionState.Connected)
             {
-                DataInterface.UnSubscribeAllItemsUpdate();
-                DataInterface.GetItemsDefinitionAsync(true);
+                _ = DataInterface.UnSubscribeAllItemsUpdate();
+                _ = DataInterface.GetItemsDefinitionAsync(true);
             }
             else
             {
@@ -242,6 +247,7 @@ namespace IntelliCenterControl.ViewModels
                     Bodies.Clear();
                     Chems.Clear();
                     Lights.Clear();
+                    LightGroups.Clear();
                     Heaters.Clear();
                     ScheduleHeaters.Clear();
                     AvailableCircuits.Clear();
@@ -253,7 +259,7 @@ namespace IntelliCenterControl.ViewModels
         public async Task UpdateIpAddressAsync()
         {
             await ExecuteClosingCommand();
-            await DataInterface.CreateConnectionAsync();
+            _ = await DataInterface.CreateConnectionAsync();
             //await ExecuteLoadHardwareDefinitionCommand();
         }
 
@@ -265,12 +271,12 @@ namespace IntelliCenterControl.ViewModels
 
         private async Task ExecuteAllLightsOnCommand()
         {
-            if (DataInterface != null) await DataInterface.SendItemParamsUpdateAsync("_A111", "STATUS", "ON");
+            if (DataInterface != null) _ = await DataInterface.SendItemParamsUpdateAsync("_A111", "STATUS", "ON");
         }
 
         private async Task ExecuteAllLightsOffCommand()
         {
-            if (DataInterface != null) await DataInterface.SendItemParamsUpdateAsync("_A110", "STATUS", "OFF");
+            if (DataInterface != null) _ = await DataInterface.SendItemParamsUpdateAsync("_A110", "STATUS", "OFF");
         }
 
         private Guid _hardwareDefinitionMessageId;
@@ -342,25 +348,25 @@ namespace IntelliCenterControl.ViewModels
                                                     {
                                                         case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                                                             var pump = (Pump)circuit;
-                                                            pump.UpdateItemAsync(notifyList);
+                                                            _ = pump.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.BODY:
                                                             var body = (Body)circuit;
-                                                            body.UpdateItemAsync(notifyList);
+                                                            _ = body.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
                                                             var sensor = (Sense)circuit;
-                                                            sensor.UpdateItemAsync(notifyList);
+                                                            _ = sensor.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                                                            circuit.UpdateItemAsync(notifyList);
+                                                            _ = circuit.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
-                                                            circuit.UpdateItemAsync(notifyList);
+                                                            _ = circuit.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
                                                             var chem = (Chem)circuit;
-                                                            chem.UpdateItemAsync(notifyList);
+                                                            _ = chem.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
                                                         case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
@@ -370,7 +376,11 @@ namespace IntelliCenterControl.ViewModels
                                                         case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
                                                         case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
                                                             var light = (Light)circuit;
-                                                            light.UpdateItemAsync(notifyList);
+                                                            _ = light.UpdateItemAsync(notifyList);
+                                                            break;
+                                                        case Circuit<IntelliCenterConnection>.CircuitType.LITSHO:
+                                                            var lightGroup = (LightGroup)circuit;
+                                                            _ = lightGroup.UpdateItemAsync(notifyList);
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
                                                             //if (notifyList.TryGetValue("params", out var heaterValues))
@@ -403,7 +413,7 @@ namespace IntelliCenterControl.ViewModels
                                                                         StatusMessage = "Retrieving Schedule";
                                                                         try
                                                                         {
-                                                                            await semaphoreSlim.WaitAsync(
+                                                                            _ = await semaphoreSlim.WaitAsync(
                                                                                 TimeSpan.FromSeconds(5));
                                                                             MainThread.BeginInvokeOnMainThread(
                                                                                 () =>
@@ -476,7 +486,7 @@ namespace IntelliCenterControl.ViewModels
                                                                         }
                                                                         finally
                                                                         {
-                                                                            semaphoreSlim.Release();
+                                                                            _ = semaphoreSlim.Release();
                                                                         }
                                                                         return;
                                                                 }
@@ -504,19 +514,19 @@ namespace IntelliCenterControl.ViewModels
                                         StatusMessage = "Item Deleted";
                                         try
                                         {
-                                            await semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(5));
+                                            _ = await semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(5));
                                             var schItem = Schedules.FirstOrDefault(o =>
                                                 o.Hname == deletedValue.Value.ToString());
                                             if (schItem != null)
                                             {
-                                                Schedules.Remove(schItem);
+                                                _ = Schedules.Remove(schItem);
                                             }
 
                                             var todayItem = TodaysSchedule.FirstOrDefault(o =>
                                                 o.Hname == deletedValue.Value.ToString());
                                             if (todayItem != null)
                                             {
-                                                TodaysSchedule.Remove(todayItem);
+                                                _ = TodaysSchedule.Remove(todayItem);
                                             }
                                         }
                                         catch
@@ -525,7 +535,7 @@ namespace IntelliCenterControl.ViewModels
                                         }
                                         finally
                                         {
-                                            semaphoreSlim.Release();
+                                            _ = semaphoreSlim.Release();
                                         }
 
                                         //DataInterface.GetScheduleDataAsync();
@@ -561,7 +571,7 @@ namespace IntelliCenterControl.ViewModels
                                                                         createdSchedule.Params.CIRCUIT,
                                                                         out var schedCir))
                                                                     {
-                                                                        Schedules.Remove(newItem);
+                                                                        _ = Schedules.Remove(newItem);
 
                                                                         var selectedHeater =
                                                                             ScheduleHeaters.FirstOrDefault(o =>
@@ -639,11 +649,11 @@ namespace IntelliCenterControl.ViewModels
                                                                        o.Hname == changedSchedule.objnam);
                                                                 if (changedItem != null)
                                                                 {
-                                                                    Schedules.Remove(changedItem);
+                                                                    _ = Schedules.Remove(changedItem);
 
                                                                     if (TodaysSchedule.Contains(changedItem))
                                                                     {
-                                                                        TodaysSchedule.Remove(changedItem);
+                                                                        _ = TodaysSchedule.Remove(changedItem);
                                                                     }
 
                                                                     if (HardwareDictionary.TryGetValue(
@@ -809,7 +819,7 @@ namespace IntelliCenterControl.ViewModels
 
         private async Task ExecuteLoadHardwareDefinitionCommand()
         {
-            await DataInterface.CreateConnectionAsync();
+            _ = await DataInterface.CreateConnectionAsync();
         }
 
         private async Task ExecuteSubscribeDataCommand()
@@ -821,23 +831,10 @@ namespace IntelliCenterControl.ViewModels
                 switch (kvp.Value.CircuitDescription)
                 {
                     case Circuit<IntelliCenterConnection>.CircuitType.BODY:
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "BODY");
-                        break;
                     case Circuit<IntelliCenterConnection>.CircuitType.CHEM:
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CHEM");
-                        break;
                     case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCGRP");
-                        break;
-                    case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
-                        break;
                     case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "PUMP");
-                        break;
                     case Circuit<IntelliCenterConnection>.CircuitType.SENSE:
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "SENSE");
-                        break;
                     case Circuit<IntelliCenterConnection>.CircuitType.INTELLI:
                     case Circuit<IntelliCenterConnection>.CircuitType.GLOW:
                     case Circuit<IntelliCenterConnection>.CircuitType.MAGIC2:
@@ -845,9 +842,12 @@ namespace IntelliCenterControl.ViewModels
                     case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
                     case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
                     case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
-                        DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname,
+                    case Circuit<IntelliCenterConnection>.CircuitType.LITSHO:
+                        _ = DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname,
                             kvp.Value.CircuitDescription.ToString());
+                        break;
+                    case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
+                        _ = DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "CIRCUIT");
                         break;
                     case Circuit<IntelliCenterConnection>.CircuitType.HEATER:
                         //DataInterface.SubscribeItemUpdateAsync(kvp.Value.Hname, "HEATER");
@@ -855,7 +855,7 @@ namespace IntelliCenterControl.ViewModels
                 }
             }
 
-            await DataInterface.GetScheduleDataAsync();
+            _ = await DataInterface.GetScheduleDataAsync();
 
             IsBusy = false;
         }
@@ -872,6 +872,7 @@ namespace IntelliCenterControl.ViewModels
                 Bodies.Clear();
                 Chems.Clear();
                 Lights.Clear();
+                LightGroups.Clear();
                 Heaters.Clear();
                 ScheduleHeaters.Clear();
                 AvailableCircuits.Clear();
@@ -941,6 +942,10 @@ namespace IntelliCenterControl.ViewModels
                         case Circuit<IntelliCenterConnection>.CircuitType.SPA:
                             AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
                             break;
+                        case Circuit<IntelliCenterConnection>.CircuitType.LITSHO:
+                            LightGroups.Add(kvp.Value);
+                            AvailableCircuits.InsertInPlace(kvp.Value.Name, o => o);
+                            break;
                     }
 
                 }
@@ -967,6 +972,20 @@ namespace IntelliCenterControl.ViewModels
                     }
                 }
 
+                foreach(var circuit in LightGroups)
+                {
+                    var lightgroup = (LightGroup) circuit;
+
+                    foreach(var light in lightgroup.LightHNames)
+                    {
+                        if(HardwareDictionary.TryGetValue(light, out var lightckt))
+                        {
+                            var l = (Light)lightckt;
+                            lightgroup.Lights.Add(l);
+                        }
+                    }
+                }
+
                 if (Heaters.Any())
                 {
                     ScheduleHeaters.Add(new Heater("Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
@@ -989,7 +1008,7 @@ namespace IntelliCenterControl.ViewModels
 
         private void LoadModels()
         {
-            DataInterface.UnSubscribeAllItemsUpdate();
+            _ = DataInterface.UnSubscribeAllItemsUpdate();
             HardwareDictionary.Clear();
 
             foreach (var obj in HardwareDefinition.answer.SelectMany(answer => answer.Params.Objlist))
@@ -1010,7 +1029,7 @@ namespace IntelliCenterControl.ViewModels
                                             if (Enum.TryParse<Body.BodyType>(moduleCircuit.Params.Subtyp,
                                                 out var bodyType))
                                             {
-                                                int.TryParse(moduleCircuit.Params.Listord,
+                                                _ = int.TryParse(moduleCircuit.Params.Listord,
                                                     out var listOrder);
                                                 var b = new Body(moduleCircuit.Params.Sname, bodyType, moduleCircuit.Objnam, DataInterface)
                                                 {
@@ -1094,7 +1113,7 @@ namespace IntelliCenterControl.ViewModels
                                                             if (Enum.TryParse<Light.LightType>(moduleCircuit.Params.Subtyp,
                                                                   out var lightType))
                                                             {
-                                                                int.TryParse(moduleCircuit.Params.Listord,
+                                                                _ = int.TryParse(moduleCircuit.Params.Listord,
                                                                     out var llistOrder);
                                                                 var l = new Light(moduleCircuit.Params.Sname, lightType,
                                                                     moduleCircuit.Objnam, DataInterface)
@@ -1107,7 +1126,7 @@ namespace IntelliCenterControl.ViewModels
                                                             }
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                                                            int.TryParse(moduleCircuit.Params.Listord,
+                                                            _ = int.TryParse(moduleCircuit.Params.Listord,
                                                                 out var glistOrder);
                                                             var gc = new Circuit<IntelliCenterConnection>(moduleCircuit.Params.Sname, subType,
                                                                 moduleCircuit.Objnam, DataInterface)
@@ -1120,7 +1139,7 @@ namespace IntelliCenterControl.ViewModels
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.POOL:
                                                         case Circuit<IntelliCenterConnection>.CircuitType.SPA:
-                                                            int.TryParse(moduleCircuit.Params.Listord,
+                                                            _ = int.TryParse(moduleCircuit.Params.Listord,
                                                                     out var blistOrder);
                                                             var b = new Circuit<IntelliCenterConnection>(moduleCircuit.Params.Sname, subType,
                                                                     moduleCircuit.Objnam, DataInterface)
@@ -1138,7 +1157,7 @@ namespace IntelliCenterControl.ViewModels
                                             if (Enum.TryParse<Heater.HeaterType>(moduleCircuit.Params.Subtyp,
                                                 out var htrType))
                                             {
-                                                int.TryParse(moduleCircuit.Params.Listord,
+                                                _ = int.TryParse(moduleCircuit.Params.Listord,
                                                     out var hlistOrder);
                                                 var bodies = moduleCircuit.Params.Body.Split(' ');
                                                 var h = new Heater(moduleCircuit.Params.Sname, htrType,
@@ -1184,7 +1203,7 @@ namespace IntelliCenterControl.ViewModels
                                         case Circuit<IntelliCenterConnection>.CircuitType.SPILL:
                                             if (!obj.Params.Featr.Contains("FEATR"))
                                             {
-                                                int.TryParse(obj.Params.Listord,
+                                                _ = int.TryParse(obj.Params.Listord,
                                                     out var listOrder);
 
                                                 if (obj.Params.Objlist != null)
@@ -1203,7 +1222,26 @@ namespace IntelliCenterControl.ViewModels
 
                                                 HardwareDictionary[c.Hname] = c;
                                             }
+                                            break;
+                                        case Circuit<IntelliCenterConnection>.CircuitType.LITSHO:
+                                           
+                                            var lg = new LightGroup(obj.Params.Sname, subType,
+                                                obj.Params.Hname, DataInterface)
+                                            {
+                                                Display = obj.Params.Featr == "ON" ||
+                                                          subType == Circuit<IntelliCenterConnection>.CircuitType
+                                                              .LITSHO
+                                            };
 
+                                            if (obj.Params.Objlist != null)
+                                            {
+                                                foreach(var light in obj.Params.Objlist)
+                                                {
+                                                    lg.LightHNames.Add(light.Params.Circuit);
+                                                }
+                                            }
+
+                                            HardwareDictionary[lg.Hname] = lg;
                                             break;
                                     }
                                 }

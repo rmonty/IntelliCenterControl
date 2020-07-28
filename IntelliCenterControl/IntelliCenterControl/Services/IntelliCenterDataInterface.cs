@@ -339,11 +339,7 @@ namespace IntelliCenterControl.Services
                         key = Sense.SenseKeys;
                         break;
                     case Circuit<IntelliCenterConnection>.CircuitType.CIRCUIT:
-                        key = Circuit<IntelliCenterConnection>.CircuitKeys;
-                        break;
                     case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
-                        key = Circuit<IntelliCenterConnection>.CircuitKeys;
-                        break;
                     case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
                         key = Circuit<IntelliCenterConnection>.CircuitKeys;
                         break;
@@ -360,6 +356,7 @@ namespace IntelliCenterControl.Services
                     case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
                     case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
                     case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
+                    case Circuit<IntelliCenterConnection>.CircuitType.LITSHO:
                         key = Light.LightKeys;
                         break;
                 }

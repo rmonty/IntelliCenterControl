@@ -10,7 +10,7 @@ namespace IntelliCenterControl.Models
 {
     public class Light : Circuit<IntelliCenterConnection>
     {
-        public const string LightKeys = "[\"ACT\", \"USE\"]";
+        public const string LightKeys = "[\"STATUS\",\"MODE\",\"LISTORD\",\"USAGE\",\"FREEZE\",\"LIMIT\",\"USE\",\"MANUAL\",\"FEATR\",\"DNTSTP\",\"CHILD\",\"HNAME\",\"SNAME\",\"RLY\",\"OBJNAM\",\"OBJTYP\",\"SHOMNU\",\"TIME\",\"TIMOUT\",\"SOURCE\",\"SUBTYP\",\"BODY\"]";
 
         public enum LightType
         {
@@ -170,17 +170,17 @@ namespace IntelliCenterControl.Models
         }
 
 
-        protected override async Task ExecuteToggleCircuitCommand()
-        {
-            if (DataInterface != null)
-            {
-                // await DataInterface.UnSubscribeItemUpdate(Hname);
-                var val = Active ? "ON" : "OFF";
-                await DataInterface.SendItemParamsUpdateAsync(Hname, "STATUS", val);
-                //await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
-                //await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
-            }
-        }
+        //protected override async Task ExecuteToggleCircuitCommand()
+        //{
+        //    if (DataInterface != null)
+        //    {
+        //        // await DataInterface.UnSubscribeItemUpdate(Hname);
+        //        var val = Active ? "ON" : "OFF";
+        //        await DataInterface.SendItemParamsUpdateAsync(Hname, "STATUS", val);
+        //        //await DataInterface.SubscribeItemUpdateAsync(Hname, "CIRCUIT");
+        //        //await DataInterface.SubscribeItemUpdateAsync(Hname, CircuitDescription.ToString());
+        //    }
+        //}
 
         protected async Task ExecuteLightColorCommand()
         {
