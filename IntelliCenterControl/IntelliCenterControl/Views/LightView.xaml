@@ -18,16 +18,18 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="10*"/>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="6.5*"/>
+                <ColumnDefinition Width="9*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="6*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0"
                    Text="{Binding Name}"
                    FontAttributes="Bold" VerticalOptions="Center" />
-            <BoxView Grid.Column="1" x:Name="ColorBox" HeightRequest="20" Margin="0,5,0,5"/>
-            <Picker Grid.Column="2" x:Name="ColorPicker" FontSize="Micro" Title="Light Color" ItemsSource="{Binding ColorNames}" IsVisible="{Binding SupportsColor}" SelectedIndex="{Binding Color, Converter={StaticResource IntEnum}}" SelectedIndexChanged="ColorPicker_SelectedIndexChanged"/>
+            <Frame Grid.Column="1" BorderColor="Gray" Margin="0,5,0,0" Padding="0">
+            <BoxView x:Name="ColorBox" HeightRequest="10" />
+            </Frame>
+            <Picker Grid.Column="2" x:Name="ColorPicker" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center" Title="Light Color" ItemsSource="{Binding ColorNames}" IsVisible="{Binding SupportsColor}" SelectedIndex="{Binding Color, Converter={StaticResource IntEnum}}" SelectedIndexChanged="ColorPicker_SelectedIndexChanged"/>
             <controls:AdvancedSlider Grid.Column="1" x:Name="DimmingSlider" IsVisible="{Binding SupportsDimming}" Value="{Binding DimmingValue}"  HorizontalOptions="FillAndExpand"  StepValue="10" MinValue="0" MaxValue="100" DisplayMinMaxValue="False"  Padding="-10,-40,-10,0"/>
             <Switch Grid.Column="3" IsToggled="{Binding Active}" HorizontalOptions="End"
                     VerticalOptions="Center" />

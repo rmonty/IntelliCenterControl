@@ -47,5 +47,14 @@ namespace IntelliCenterControl.Views
             }
         }
 
+        private void TempEntry_Completed(object sender, EventArgs e)
+        {
+            if (sender is Entry temp)
+            {
+                var model = (Body)temp.BindingContext;
+
+                model?.SendTemperatureCommand.Execute(null);
+            }
+        }
     }
 }

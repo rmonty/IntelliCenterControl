@@ -12,7 +12,7 @@ namespace IntelliCenterControl
 
         public App()
         {
-            Device.SetFlags(new[] { "Expander_Experimental", "RadioButton_Experimental", "SwipeView_Experimental" });
+            Device.SetFlags(new[] { "Expander_Experimental", "RadioButton_Experimental", "SwipeView_Experimental", "Brush_Experimental" });
 
             InitializeComponent();
 

@@ -8,6 +8,7 @@ using Android.Runtime;
 using GalaSoft.MvvmLight.Ioc;
 using IntelliCenterControl.Services;
 using Plugin.Toasts;
+using Rg.Plugins.Popup;
 using Xamarin.Forms;
 
 namespace IntelliCenterControl.Droid
@@ -21,7 +22,7 @@ namespace IntelliCenterControl.Droid
             ToolbarResource = Resource.Layout.Toolbar;
 
             base.OnCreate(savedInstanceState);
-
+            Rg.Plugins.Popup.Popup.Init(this, savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
             AiForms.Renderers.Droid.SettingsViewInit.Init();
@@ -62,6 +63,16 @@ namespace IntelliCenterControl.Droid
             SimpleIoc.Default.GetInstance<ILogService>().Initialize(assembly, assemblyName);
         }
 
+        public override void OnBackPressed()
+        {
+            if (Popup.SendBackPressed(base.OnBackPressed))
+            {
 
+            }
+            else
+            {
+                base.OnBackPressed();
+            }
+        }
     }
 }

@@ -1,12 +1,14 @@
-﻿using IntelliCenterControl.Models;
+﻿
 using System;
+using IntelliCenterControl.Models;
+using Rg.Plugins.Popup.Extensions;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 namespace IntelliCenterControl.Views
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class LightView : ContentView
+    public partial class LightGroupSettingsPage : Rg.Plugins.Popup.Pages.PopupPage
     {
         private readonly LinearGradientBrush _party = new LinearGradientBrush();
         private readonly LinearGradientBrush _american = new LinearGradientBrush();
@@ -21,9 +23,16 @@ namespace IntelliCenterControl.Views
         private readonly LinearGradientBrush _white = new LinearGradientBrush();
         private readonly LinearGradientBrush _sam = new LinearGradientBrush();
 
-        public LightView()
+        public LightGroupSettingsPage()
         {
-            _party.GradientStops.Add(new GradientStop(Color.FromHex("E7322F"), 0f));
+            InitializeComponent();
+        }
+
+        public LightGroupSettingsPage(object context)
+        {
+            BindingContext = context;
+
+             _party.GradientStops.Add(new GradientStop(Color.FromHex("E7322F"), 0f));
             _party.GradientStops.Add(new GradientStop(Color.FromHex("ea2132"), 0.2f));
             _party.GradientStops.Add(new GradientStop(Color.FromHex("cb5ea7"), 0.4f));
             _party.GradientStops.Add(new GradientStop(Color.FromHex("59449c"), 0.6f));
@@ -84,6 +93,26 @@ namespace IntelliCenterControl.Views
             _sam.SetValue(RotationProperty, 45);
 
             InitializeComponent();
+            
+        }
+
+        // Invoked when a hardware back button is pressed
+        protected override bool OnBackButtonPressed()
+        {
+            // Return true if you don't want to close this popup page when a back button is pressed
+            return false;
+        }
+
+        //// Invoked when background is clicked
+        //protected override bool OnBackgroundClicked()
+        //{
+        //    // Return false if you don't want to close this popup page when a background of the popup page is clicked
+        //    return false;
+        //}
+
+        private void Button_Clicked(object sender, System.EventArgs e)
+        {
+            Navigation.RemovePopupPageAsync(this);
         }
 
         private void ColorPicker_SelectedIndexChanged(object sender, EventArgs e)
@@ -130,10 +159,7 @@ namespace IntelliCenterControl.Views
                 default:
                     ColorBox.Background = _white;
                     break;
-            }
-        }
+            }        }
+
     }
-
-
-
 }

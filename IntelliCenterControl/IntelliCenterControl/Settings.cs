@@ -43,13 +43,13 @@ namespace IntelliCenterControl
         #region Setting Constants
 
         private const string ServerURLKey = "server_url_key";
-        private readonly string ServerURLDefault = "http://192.168.0.130:5000/";
+        private readonly string ServerURLDefault = "ws://192.168.0.114:6680/";
 
         private const string StorageAccessAskedKey = "storage_access_key";
         private readonly bool StorageAccessAskedDefault = false;
 
         private const string HomeURLKey = "home_url_key";
-        private readonly string HomeURLDefault = "http://192.168.0.130:5000/";
+        private readonly string HomeURLDefault = "ws://192.168.0.114:6680/";
 
         private const string AwayURLKey = "away_url_key";
         private readonly string AwayURLDefault = "http://192.168.0.130:5000/";

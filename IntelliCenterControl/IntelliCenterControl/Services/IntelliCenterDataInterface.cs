@@ -356,8 +356,10 @@ namespace IntelliCenterControl.Services
                     case Circuit<IntelliCenterConnection>.CircuitType.DIMMER:
                     case Circuit<IntelliCenterConnection>.CircuitType.GLOWT:
                     case Circuit<IntelliCenterConnection>.CircuitType.LIGHT:
-                    case Circuit<IntelliCenterConnection>.CircuitType.LITSHO:
                         key = Light.LightKeys;
+                        break;
+                    case Circuit<IntelliCenterConnection>.CircuitType.LITSHO:
+                        key = LightGroup.LightGroupKeys;
                         break;
                 }
 

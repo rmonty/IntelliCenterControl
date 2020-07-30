@@ -139,6 +139,9 @@
     <PackageReference Include="AiForms.SettingsView">
       <Version>1.2.14-pre</Version>
     </PackageReference>
+    <PackageReference Include="Rg.Plugins.Popup">
+      <Version>2.0.0.3</Version>
+    </PackageReference>
     <PackageReference Include="Toasts.Forms.Plugin">
       <Version>3.3.2</Version>
     </PackageReference>

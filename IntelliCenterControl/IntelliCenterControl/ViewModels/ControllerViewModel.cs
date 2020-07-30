@@ -62,6 +62,7 @@ namespace IntelliCenterControl.ViewModels
         public ObservableCollection<Circuit<IntelliCenterConnection>> Schedules { get; private set; }
         public ObservableCollection<string> AvailableCircuits { get; private set; }
         public ConcurrentDictionary<string, Circuit<IntelliCenterConnection>> HardwareDictionary = new ConcurrentDictionary<string, Circuit<IntelliCenterConnection>>();
+        public ConcurrentDictionary<string, List<Pump>> CircuitToPump = new ConcurrentDictionary<string, List<Pump>>();
 
         private Circuit<IntelliCenterConnection> _airSensor;
 
@@ -158,6 +159,7 @@ namespace IntelliCenterControl.ViewModels
             TodaysSchedule = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             Schedules = new ObservableCollection<Circuit<IntelliCenterConnection>>();
             AvailableCircuits = new ObservableCollection<string>();
+            CircuitToPump = new ConcurrentDictionary<string, List<Pump>>();
             LoadHardwareDefinitionCommand = new Command(async () => await ExecuteLoadHardwareDefinitionCommand());
             ClosingCommand = new Command(async () => await ExecuteClosingCommand());
             SubscribeDataCommand = new Command(async () => await ExecuteSubscribeDataCommand());
@@ -207,8 +209,6 @@ namespace IntelliCenterControl.ViewModels
                 {
                     if (ScheduleHeaters.Any())
                     {
-
-
                         Schedules.Add(new Schedule(Circuit<IntelliCenterConnection>.CircuitType.SCHED, DataInterface, HardwareDictionary)
                         {
                             SelectedHeater = ScheduleHeaters[0],
@@ -237,6 +237,7 @@ namespace IntelliCenterControl.ViewModels
             }
             else
             {
+                //Clear screens of data on disconnect
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     Schedules.Clear();
@@ -271,11 +272,13 @@ namespace IntelliCenterControl.ViewModels
 
         private async Task ExecuteAllLightsOnCommand()
         {
+            //Special circuit type for All Lights On
             if (DataInterface != null) _ = await DataInterface.SendItemParamsUpdateAsync("_A111", "STATUS", "ON");
         }
 
         private async Task ExecuteAllLightsOffCommand()
         {
+            //Special circuit type for All Lights Off
             if (DataInterface != null) _ = await DataInterface.SendItemParamsUpdateAsync("_A110", "STATUS", "OFF");
         }
 
@@ -302,7 +305,7 @@ namespace IntelliCenterControl.ViewModels
                     {
                         switch (commandValue.ToString())
                         {
-                            case "SendQuery":
+                            case "SendQuery": //Hardware definition request
                                 if (jData.TryGetValue("queryName", out var queryNameValue))
                                 {
                                     if (queryNameValue.ToString() == "GetHardwareDefinition")
@@ -360,6 +363,14 @@ namespace IntelliCenterControl.ViewModels
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.GENERIC:
                                                             _ = circuit.UpdateItemAsync(notifyList);
+
+                                                            if(CircuitToPump.TryGetValue(circuit.Hname, out var pList))
+                                                            {
+                                                                foreach (var p in pList)
+                                                                {
+                                                                    p.Active = circuit.Active;
+                                                                }
+                                                            }
                                                             break;
                                                         case Circuit<IntelliCenterConnection>.CircuitType.CIRCGRP:
                                                             _ = circuit.UpdateItemAsync(notifyList);
@@ -397,7 +408,7 @@ namespace IntelliCenterControl.ViewModels
                                                             break;
                                                     }
                                                 }
-                                                else
+                                                else //Most likely a schedule message if not in the hardware dictionary
                                                 {
                                                     if (notifyList.TryGetValue("params", out var paramValues))
                                                     {
@@ -503,7 +514,7 @@ namespace IntelliCenterControl.ViewModels
                             case "ObjectCreated":
                                 StatusMessage = "Item Created";
                                 break;
-                            case "WriteParamList":
+                            case "WriteParamList": //This is a change/delete/create response from the panel
                                 var WriteParamListJson = JToken.Parse(e);
                                 var WriteParamListFieldsCollector = new JsonFieldsCollector(WriteParamListJson);
                                 var WriteParamListFields = (Dictionary<string, JValue>)WriteParamListFieldsCollector.GetAllFields();
@@ -512,6 +523,7 @@ namespace IntelliCenterControl.ViewModels
                                     if (WriteParamListFields.TryGetValue("objectList[0].deleted[0]", out var deletedValue))
                                     {
                                         StatusMessage = "Item Deleted";
+                                        //Only concerned with Schedule deletions currently
                                         try
                                         {
                                             _ = await semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(5));
@@ -544,6 +556,7 @@ namespace IntelliCenterControl.ViewModels
                                     if (WriteParamListFields.TryGetValue("objectList[0].created[0].params.OBJTYP",
                                         out var createdObjectType))
                                     {
+                                        //Only concerned with Schedule Creations Right Now
                                         if (createdObjectType.Value.ToString().Contains("SCHED"))
                                         {
                                             if (jData.TryGetValue("objectList", out var writeParamObjList))
@@ -636,6 +649,7 @@ namespace IntelliCenterControl.ViewModels
                                                     if (changesJObject.TryGetValue("changes",
                                                         out var changesObject))
                                                     {
+                                                        //Schedule changes require separate processing
                                                         if (changedObjectType.Value.ToString().Contains("SCHED"))
                                                         {
                                                             var changedSchedule = JsonConvert
@@ -708,6 +722,7 @@ namespace IntelliCenterControl.ViewModels
                                                             if (HardwareDictionary.TryGetValue(changedObjectName.ToString(),
                                                                 out var circuit))
                                                             {
+                                                                //Only reporting for debug reasons currently
                                                                 switch (circuit.CircuitDescription)
                                                                 {
                                                                     case Circuit<IntelliCenterConnection>.CircuitType
@@ -790,7 +805,7 @@ namespace IntelliCenterControl.ViewModels
                                 }
 
                                 break;
-                            default:
+                            default: //Undefined message type
                                 var json = JToken.Parse(e);
                                 var fieldsCollector = new JsonFieldsCollector(json);
                                 var fields = (Dictionary<string, JValue>)fieldsCollector.GetAllFields();
@@ -798,7 +813,7 @@ namespace IntelliCenterControl.ViewModels
                                 {
                                     if (fields.TryGetValue("response", out var responseValue))
                                     {
-                                        if (responseValue.Value.ToString().Contains("404"))
+                                        if (responseValue.Value.ToString().Contains("404")) //Unauthorized message type
                                         {
                                             StatusMessage = "Request Not Accepted";
                                         }
@@ -826,6 +841,7 @@ namespace IntelliCenterControl.ViewModels
         {
             IsBusy = true;
             StatusMessage = "Subscribing To Data";
+            //Add a subscription for each type to enable updates
             foreach (var kvp in HardwareDictionary)
             {
                 switch (kvp.Value.CircuitDescription)
@@ -855,6 +871,7 @@ namespace IntelliCenterControl.ViewModels
                 }
             }
 
+            //Request Schedule Data
             _ = await DataInterface.GetScheduleDataAsync();
 
             IsBusy = false;
@@ -878,7 +895,8 @@ namespace IntelliCenterControl.ViewModels
                 AvailableCircuits.Clear();
 
 
-
+                //Add all hardware to appropriate observable collection for display
+                //Also add to available circuits for scheduling
                 foreach (var kvp in HardwareDictionary)
                 {
                     switch (kvp.Value.CircuitDescription)
@@ -950,10 +968,14 @@ namespace IntelliCenterControl.ViewModels
 
                 }
 
+                //Check if Chem is installed
                 ChemInstalled = Chems.Any();
+                //Show circuits if they exist
                 HasCircuits = Circuits.Any();
+                //Show cicuit groups if they exist
                 HasCircuitGroups = CircuitGroup.Any();
 
+                //Assign the heaters to each body they belong
                 foreach (var bodyCircuit in Bodies)
                 {
                     var body = (Body)bodyCircuit;
@@ -972,6 +994,7 @@ namespace IntelliCenterControl.ViewModels
                     }
                 }
 
+                //Assign lights to appropriate light group
                 foreach(var circuit in LightGroups)
                 {
                     var lightgroup = (LightGroup) circuit;
@@ -986,6 +1009,7 @@ namespace IntelliCenterControl.ViewModels
                     }
                 }
 
+                //Create the heater collection for setting up schedule
                 if (Heaters.Any())
                 {
                     ScheduleHeaters.Add(new Heater("Off", Heater.HeaterType.GENERIC, "00000", DataInterface));
@@ -1010,6 +1034,7 @@ namespace IntelliCenterControl.ViewModels
         {
             _ = DataInterface.UnSubscribeAllItemsUpdate();
             HardwareDictionary.Clear();
+            CircuitToPump.Clear();
 
             foreach (var obj in HardwareDefinition.answer.SelectMany(answer => answer.Params.Objlist))
             {
@@ -1251,7 +1276,7 @@ namespace IntelliCenterControl.ViewModels
                         case Circuit<IntelliCenterConnection>.CircuitType.PUMP:
                             {
                                 if (Enum.TryParse<Pump.PumpType>(obj.Params.Subtyp,
-                                    out _))
+                                    out var pumpType))
                                 {
                                     var p = new Pump(obj.Params.Sname, obj.Objnam)
                                     {
@@ -1259,6 +1284,33 @@ namespace IntelliCenterControl.ViewModels
                                         GPM = "-",
                                         Power = "-"
                                     };
+
+                                    switch (pumpType)
+                                    {
+                                        case Pump.PumpType.SINGLE:
+                                        case Pump.PumpType.DUAL:
+                                            //Adding the circuit list for dual and single speed pumps
+                                            //since the pumps do not report a status.
+                                            //The pump active will follow the circuit for these pumps
+                                            if (obj.Params.Objlist != null)
+                                            {
+                                                foreach(var ckt in obj.Params.Objlist)
+                                                {
+                                                    if (!CircuitToPump.ContainsKey(ckt.Params.Circuit))
+                                                    {
+                                                        CircuitToPump[ckt.Params.Circuit] = new List<Pump>();
+                                                    }
+
+                                                    CircuitToPump[ckt.Params.Circuit].Add(p);
+                                                }
+                                        
+                                            }
+                                            break;
+                                        case Pump.PumpType.SPEED:
+                                        case Pump.PumpType.FLOW:
+                                        case Pump.PumpType.VSF:
+                                            break;
+                                    }
 
                                     HardwareDictionary[p.Hname] = p;
                                 }

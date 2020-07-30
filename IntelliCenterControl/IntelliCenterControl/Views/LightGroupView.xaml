@@ -7,11 +7,7 @@
              xmlns:controls="clr-namespace:Plugin.InputKit.Shared.Controls;assembly=Plugin.InputKit"
              mc:Ignorable="d"
              x:Class="IntelliCenterControl.Views.LightGroupView">
-    <ContentView.Resources>
-        <ResourceDictionary>
-            <views:IntEnumConverter x:Key="IntEnum"/>
-        </ResourceDictionary>
-    </ContentView.Resources>
+   
     <ContentView.Content>
         <Grid >
             <Grid.RowDefinitions>
@@ -26,8 +22,8 @@
             <Label Grid.Column="0"
                    Text="{Binding Name}"
                    FontAttributes="Bold" VerticalOptions="Center" />
-            <BoxView Grid.Column="1" x:Name="ColorBox" HeightRequest="20" Margin="0,5,0,5"/>
-            <Picker Grid.Column="2" x:Name="ColorPicker" FontSize="Micro" Title="Light Color" ItemsSource="{Binding ColorNames}" IsVisible="{Binding SupportsColor}" SelectedIndex="{Binding Color, Converter={StaticResource IntEnum}}" SelectedIndexChanged="ColorPicker_SelectedIndexChanged"/>
+            <Button x:Name="LightGroupSettingsButton" Grid.Column="1" Grid.ColumnSpan="2" Text="SET" FontSize="Caption" Clicked="LightGroupSettingsButton_Clicked"
+                    BackgroundColor="#2196F3" TextColor="White" CornerRadius="5" HorizontalOptions="Center" VerticalOptions="Center" HeightRequest="30" Padding="0"/>
             <Switch Grid.Column="3" IsToggled="{Binding Active}" HorizontalOptions="End"
                     VerticalOptions="Center" />
         </Grid>

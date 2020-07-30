@@ -5,12 +5,15 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Xamarin.Forms;
 
 namespace IntelliCenterControl.Models
 {
     public class Body : Circuit<IntelliCenterConnection>
     {
         public const string BodyKeys = "[\"TEMP\",\"STATUS\",\"HTMODE\",\"MODE\",\"LSTTMP\",\"HTSRC\", \"HITMP\", \"LOTMP\"]";
+
+        public Command SendTemperatureCommand {get;set;}
 
         public enum BodyType
         {
@@ -108,10 +111,6 @@ namespace IntelliCenterControl.Models
                 if (_loTemp == value) return;
                 _loTemp = value;
                 OnPropertyChanged();
-                if (int.TryParse(_loTemp, out var iloTemp))
-                {
-                    Task.Run(() => ExecuteHeatTempCommand(iloTemp));
-                }
             }
         }
 
@@ -132,6 +131,20 @@ namespace IntelliCenterControl.Models
         public Body(string name, BodyType bodyType, string hName, IDataInterface<IntelliCenterConnection> dataInterface) : base(name, CircuitType.BODY, hName, dataInterface)
         {
             Type = bodyType;
+            SendTemperatureCommand = new Command(async () => await ExecuteSendTemperatureCommand());
+        }
+
+        private async Task ExecuteSendTemperatureCommand()
+        {
+            if (int.TryParse(_loTemp, out var temp))
+            {
+                if (DataInterface != null && temp >= 60 && temp <= 104)
+                {
+                    //await DataInterface.UnSubscribeItemUpdate(Hname);
+                    await DataInterface.SendItemParamsUpdateAsync(Hname, "LOTMP", temp.ToString());
+                    //await DataInterface.SubscribeItemUpdateAsync(Hname, "BODY");
+                }
+            }
         }
 
         protected override async Task ExecuteToggleCircuitCommand()
@@ -154,15 +167,7 @@ namespace IntelliCenterControl.Models
             }
         }
 
-        private async Task ExecuteHeatTempCommand(int temp)
-        {
-            if (DataInterface != null && temp >= 60 && temp <= 104)
-            {
-                //await DataInterface.UnSubscribeItemUpdate(Hname);
-                await DataInterface.SendItemParamsUpdateAsync(Hname, "LOTMP", temp.ToString());
-                //await DataInterface.SubscribeItemUpdateAsync(Hname, "BODY");
-            }
-        }
+       
 
         public override async Task UpdateItemAsync(JObject data)
         {

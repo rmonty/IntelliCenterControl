@@ -41,8 +41,8 @@
                             <Image Source="water.png" Aspect="AspectFill" Opacity="0.4"/>
                         </Frame>
                         <StackLayout Orientation="Horizontal" Grid.Row="1" HorizontalOptions="Center" Margin="0,5,0,0">
-                            <Label Text="Output: " FontSize="Medium" FontAttributes="Bold,Italic"/>
-                            <Label Text="{Binding PrimaryName}" FontSize="Medium" FontAttributes="Bold,Italic"/>
+                            <Label Text="{Binding PrimaryName}" FontSize="Medium" FontAttributes="Bold,Italic" TextColor="DarkGoldenrod"/>
+                            <Label Text=" Output" FontSize="Medium" FontAttributes="Bold,Italic" TextColor="DarkGoldenrod"/>
                         </StackLayout>
                         <Frame Grid.Row="2" IsVisible="{Binding SecondaryAvailable}" BorderColor="Black" HorizontalOptions="Center" VerticalOptions="Center"
                                BackgroundColor="{StaticResource Accent}" Opacity="0.6"/>
@@ -61,8 +61,8 @@
                         </Frame>
 
                         <StackLayout Orientation="Horizontal" Grid.Row="4" HorizontalOptions="Center" Margin="0,5,0,0" IsVisible="{Binding SecondaryAvailable}">
-                            <Label Text="Output: " FontSize="Medium" FontAttributes="Bold,Italic"/>
-                            <Label Text="{Binding SecondaryName}" FontSize="Medium" FontAttributes="Bold,Italic"/>
+                            <Label Text="{Binding SecondaryName}" FontSize="Medium" FontAttributes="Bold,Italic" TextColor="DarkGoldenrod"/>
+                            <Label Text=" Output" FontSize="Medium" FontAttributes="Bold,Italic" TextColor="DarkGoldenrod"/>
                         </StackLayout>
                         <Frame Grid.Row="5" IsVisible="{Binding SecondaryAvailable}" BorderColor="Black" HorizontalOptions="Center" VerticalOptions="Center"
                                BackgroundColor="{StaticResource Accent}" Opacity="0.6"/>

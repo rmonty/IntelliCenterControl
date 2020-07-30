@@ -7,8 +7,8 @@
     <Version>1.0.1</Version>
     <Company>MCXS</Company>
     <AssemblyName>intellicentercontrol</AssemblyName>
-    <AssemblyVersion>1.0.7514.18</AssemblyVersion>
-    <FileVersion>1.0.7514.18</FileVersion>
+    <AssemblyVersion>1.0.7516.18</AssemblyVersion>
+    <FileVersion>1.0.7516.18</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -26,6 +26,7 @@
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.7.2" />
+    <PackageReference Include="Rg.Plugins.Popup" Version="2.0.0.3" />
     <PackageReference Include="Toasts.Forms.Plugin" Version="3.3.2" />
     <PackageReference Include="Xam.Plugins.Settings" Version="4.1.0-beta" />
     <PackageReference Include="Xamarin.Forms" Version="4.8.0.1187-pre2" />  
@@ -59,6 +60,9 @@
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="Views\CircuitView.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Views\LightGroupSettingsPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="Views\LightView.xaml">

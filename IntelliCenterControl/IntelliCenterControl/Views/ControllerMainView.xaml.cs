@@ -1,6 +1,7 @@
 ﻿using GalaSoft.MvvmLight.Ioc;
 using IntelliCenterControl.ViewModels;
 using System.ComponentModel;
+
 using Xamarin.Essentials;
 using Xamarin.Forms;
 
@@ -76,8 +77,6 @@ namespace IntelliCenterControl.Views
                           });
         }
 
-
-
-
+        
     }
 }
