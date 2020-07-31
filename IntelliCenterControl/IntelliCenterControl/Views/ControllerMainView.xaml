@@ -15,19 +15,24 @@
     </ContentPage.Resources>
     <Grid RowSpacing="3" ColumnSpacing="3">
         <Grid.RowDefinitions>
-            <RowDefinition Height="1.5*"/>
+            <RowDefinition Height="1.15*"/>
             <RowDefinition x:Name="Row2" Height="0"/>
             <RowDefinition x:Name="Row3" Height="0"/>
-            <RowDefinition Height="1.3*"/>
+            <RowDefinition Height="1.75*"/>
             <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1.4*"/>
-            <ColumnDefinition Width="1.1*"/>
-            <ColumnDefinition Width="1.75*"/>
+            <ColumnDefinition Width="1.5*"/>
+            <ColumnDefinition Width="1.35*"/>
+            <ColumnDefinition Width="1.65*"/>
         </Grid.ColumnDefinitions>
-        
+       
         <Frame x:Name="TempFrame" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" BackgroundColor="White" CornerRadius="5" />
+        <Frame x:Name="BodyFrame" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
+
+        <Image x:Name="BodyImage" Source="pool_water.png" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="3" VerticalOptions="CenterAndExpand" 
+               Opacity="0.1" Aspect="AspectFill"/>
+        
         <Grid x:Name="TempGrid" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Margin="5,2,5,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -47,27 +52,23 @@
                    HorizontalTextAlignment="Center" VerticalTextAlignment="Start" FontSize="Caption" TextColor="DarkGoldenrod"/>
             <Label Text="Water"  Grid.Row="1" Grid.Column="1" FontAttributes="Bold,Italic"
                    HorizontalTextAlignment="End" VerticalTextAlignment="Center" FontSize="Small" TextColor="DarkBlue"/>
-            <Frame Grid.Row="1" Grid.Column="2" BorderColor="#000000" Opacity="0.7" Padding="0"/>
+            <Frame Grid.Row="1" Grid.Column="2" BorderColor="#000000" BackgroundColor="White" Padding="0"/>
             <Label Text="{Binding WaterSensor.Temp, StringFormat='{}{0}°'}" FontAttributes="Bold,Italic" HorizontalTextAlignment="Center" 
                    VerticalTextAlignment="Center" Grid.Row="1" Grid.Column="2" FontSize="Body"
                    TextColor="DarkBlue"/>
             <Label Grid.Column="1" Text="Air" Grid.Row="2" VerticalTextAlignment="Center"
                    FontSize="Small" TextColor="DarkGreen" HorizontalTextAlignment="End" FontAttributes="Bold"/>
-            <Frame Grid.Row="2" Grid.Column="2" BorderColor="#000000" Opacity="0.7" Padding="0"/>
+            <Frame Grid.Row="2" Grid.Column="2" BorderColor="#000000" BackgroundColor="White" Padding="0"/>
             <Label Text="{Binding AirSensor.Temp, StringFormat='{}{0}°'}"  Grid.Row="2" Grid.Column="2" HorizontalTextAlignment="Center"
                    VerticalTextAlignment="Center" TextColor="DarkGreen" FontAttributes="Bold,Italic"/>
             <Label Grid.Column="0" Text="Solar" Grid.Row="3" Grid.ColumnSpan="2" VerticalTextAlignment="Center" FontAttributes="Bold"
                    FontSize="Small" HorizontalTextAlignment="End" IsVisible="{Binding Settings.ShowSolarTemp}"/>
-            <Frame Grid.Row="3" Grid.Column="2" BorderColor="#000000" Opacity="0.7" Padding="0"/>
+            <Frame Grid.Row="3" Grid.Column="2" BorderColor="#000000" BackgroundColor="White" Padding="0"/>
             <Label Text="{Binding SolarSensor.Temp, StringFormat='{}{0}°'}"  Grid.Row="3" Grid.Column="2" HorizontalTextAlignment="Center"
                    VerticalTextAlignment="Center" FontAttributes="Italic" IsVisible="{Binding Settings.ShowSolarTemp}"/>
-            <StackLayout Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Spacing="0">
-            <Label Text="{Binding CurrentDateTime, StringFormat='{0:dddd, MMMM d, yyyy}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
-            <Label Text="{Binding CurrentDateTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
-            </StackLayout>
+            
         </Grid>
-        <Frame x:Name="BodyFrame" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
-        <Image x:Name="BodyImage" Source="pool_water.png" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" VerticalOptions="CenterAndExpand" Opacity="0.2" Aspect="AspectFill"/>
+       
         <Grid x:Name="BodyGrid"  Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="5,2,5,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="2*"/>
@@ -78,7 +79,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <CollectionView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" x:Name="BodyView" ItemsSource="{Binding Bodies}" >
+            <CollectionView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" x:Name="BodyView" ItemsSource="{Binding Bodies}" ItemSizingStrategy="MeasureFirstItem">
                 <CollectionView.Header>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -98,18 +99,11 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-           
-            <Frame Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" BackgroundColor="White" CornerRadius="5" />
-            <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" HeightRequest="35" Text="All Lights On" VerticalOptions="Center" BackgroundColor="LightGreen"
-                            FontSize="Micro" FontAttributes="Bold" Command="{Binding AllLightsOnCommand}" />
-                <Button Grid.Column="1" HeightRequest="35" Text="All Lights Off" VerticalOptions="Center" BackgroundColor="LightCoral"
-                            FontSize="Micro" FontAttributes="Bold" Command="{Binding AllLightsOffCommand}" />
-            </Grid>
+            <StackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Spacing="10" Orientation="Horizontal" HorizontalOptions="Center">
+                <Label Text="{Binding CurrentDateTime, StringFormat='{0:dddd, MMMM d, yyyy}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                <Label Text="{Binding CurrentDateTime, StringFormat='{0:h:mm tt}'}" FontSize="Micro" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+            </StackLayout>
+            
         </Grid>
         <Frame Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" BackgroundColor="White" CornerRadius="5" IsVisible="{Binding HasCircuitGroups}"/>
         <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" x:Name="CircuitGroupView" IsVisible="{Binding HasCircuitGroups}" Margin="5,0,5,0">
@@ -119,7 +113,7 @@
             </Grid.RowDefinitions>
             <Label Grid.Row="0" Text="Circuit Groups" FontSize="Caption" FontAttributes="Bold,Italic" Margin="0,0,0,-5" HorizontalOptions="Center"
                    TextColor="DarkGoldenrod"/>
-            <CollectionView Grid.Row="1" ItemsSource="{Binding CircuitGroup}" IsVisible="{Binding HasCircuitGroups}">
+            <CollectionView Grid.Row="1" ItemsSource="{Binding CircuitGroup}" IsVisible="{Binding HasCircuitGroups}" ItemSizingStrategy="MeasureFirstItem">
                 <CollectionView.ItemsLayout>
                     <GridItemsLayout Orientation="Vertical" Span="2" />
                 </CollectionView.ItemsLayout>
@@ -138,7 +132,7 @@
             </Grid.RowDefinitions>
             <Label Grid.Row="0" Text="Circuits" FontSize="Caption" FontAttributes="Bold,Italic" Margin="0,0,0,-5" HorizontalOptions="Center"
                    TextColor="DarkGoldenrod"/>
-        <CollectionView Grid.Row="1"   ItemsSource="{Binding Circuits}" >
+        <CollectionView Grid.Row="1"   ItemsSource="{Binding Circuits}" ItemSizingStrategy="MeasureFirstItem" >
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <views:CircuitView/>
@@ -154,23 +148,43 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="2*"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Label Grid.Row="0" Text="Lights/Light Groups" FontSize="Caption" FontAttributes="Bold,Italic" Margin="0,0,0,-5" HorizontalOptions="Center"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="0" Grid.ColumnSpan="2" Text="Lights/Light Groups" FontSize="Caption" FontAttributes="Bold,Italic" Margin="0,0,0,-5" HorizontalOptions="Center"
                    TextColor="DarkGoldenrod"/>
-            <CollectionView Grid.Row="1"  ItemsSource="{Binding Lights}">
+            <CollectionView Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding Lights}"
+                            ItemSizingStrategy="MeasureFirstItem">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <views:LightView/>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <CollectionView Grid.Row="2"  x:Name="LightGroupView" ItemsSource="{Binding LightGroups}">
+
+            <CollectionView Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"  x:Name="LightGroupView" ItemsSource="{Binding LightGroups}" ItemSizingStrategy="MeasureFirstItem">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <views:LightGroupView/>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+           
+            <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" HeightRequest="30" Text="All On" VerticalOptions="Center" BackgroundColor="DarkGreen"
+                        FontSize="Caption" Command="{Binding AllLightsOnCommand}" HorizontalOptions="End" 
+                        CornerRadius="5" FontAttributes="Bold" TextColor="White" Padding="0" IsVisible="{Binding Settings.ShowAllLightsButtons}"/>
+                <Button Grid.Column="1" HeightRequest="30" Text="All Off" VerticalOptions="Center" BackgroundColor="DarkRed"
+                        FontSize="Caption" FontAttributes="Bold" Command="{Binding AllLightsOffCommand}"  HorizontalOptions="Start" 
+                        CornerRadius="5" TextColor="White" Padding="0" IsVisible="{Binding Settings.ShowAllLightsButtons}"/>
+            </Grid>
         </Grid>
         <Frame Grid.Row="2" Grid.Column="2" Grid.RowSpan="2" BackgroundColor="White" CornerRadius="5" />
         <Grid Grid.Row="2" Grid.Column="2" Grid.RowSpan="2" Margin="5,0,5,0">
@@ -184,7 +198,7 @@
                 <Label Text="Schedule" FontSize="Caption" FontAttributes="Bold,Italic"
                        TextColor="DarkGoldenrod"/>
             </StackLayout>
-            <CollectionView Grid.Row="1"  ItemsSource="{Binding TodaysSchedule}">
+            <CollectionView Grid.Row="1"  ItemsSource="{Binding TodaysSchedule}" ItemSizingStrategy="MeasureFirstItem">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <views:ScheduleView/>
@@ -194,13 +208,13 @@
         </Grid>
         
         <Frame Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" BackgroundColor="White" CornerRadius="5" />
-        <Image Source="water_splash.png" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Opacity="0.2" Aspect="Fill"/>
+        <Image Source="water_splash.png" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Opacity="0.15" Aspect="Fill"/>
         <Grid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,0,5,0" Padding="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <CollectionView Grid.Row="1" x:Name="PumpView" ItemsSource="{Binding Pumps}">
+            <CollectionView Grid.Row="1" x:Name="PumpView" ItemsSource="{Binding Pumps}" ItemSizingStrategy="MeasureFirstItem">
                 <CollectionView.Header>
                     <Grid >
                         <Grid.RowDefinitions>

@@ -17,18 +17,18 @@
               <ColumnDefinition Width="*"/>
               <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
-          <Image Grid.Column="0" x:Name="PumpImage" HorizontalOptions="CenterAndExpand" HeightRequest="30" Aspect="AspectFit" Scale="1" Margin="1"/>
+          <Image Grid.Column="0" x:Name="PumpImage" HorizontalOptions="CenterAndExpand" HeightRequest="30" Aspect="AspectFit" Source="pump_off.png" Scale="0.9" Margin="1"/>
           <Switch Grid.Column="0" IsVisible="false" x:Name="ActiveToggle" IsToggled="{Binding Active}"/>
-          <Label Grid.Column="1" 
+          <Label Grid.Column="1" FontSize="Small"
                  Text="{Binding Name}" VerticalTextAlignment="Center" HorizontalTextAlignment="Start"
                  FontAttributes="Bold" />
-          <Label Grid.Column="2" x:Name="PumpPower"
+          <Label Grid.Column="2" x:Name="PumpPower" FontSize="Small"
                  Text="{Binding Power}" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
                  FontAttributes="Italic" />
-            <Label Grid.Column="3" x:Name="PumpRPM"
+            <Label Grid.Column="3" x:Name="PumpRPM" FontSize="Small"
                  Text="{Binding RPM}" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
                  FontAttributes="Italic" />
-            <Label Grid.Column="4" x:Name="PumpGPM"
+            <Label Grid.Column="4" x:Name="PumpGPM" FontSize="Small"
                  Text="{Binding GPM}" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
                  FontAttributes="Italic"/>
       </Grid>

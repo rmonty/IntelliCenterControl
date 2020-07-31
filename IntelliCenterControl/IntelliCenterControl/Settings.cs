@@ -56,6 +56,10 @@ namespace IntelliCenterControl
 
         private const string ShowSolarTempKey = "showSolarTemp_key";
         private readonly bool ShowSolarTempDefault = false;
+
+        private const string ShowAllLightsButtonsKey = "showAllLightsButtons_key";
+        private readonly bool ShowAllLightsButtonsDefault = false;
+
         #endregion
 
         public string ServerURL
@@ -129,6 +133,16 @@ namespace IntelliCenterControl
             }
         }
 
+        public bool ShowAllLightsButtons
+        {
+            get => Preferences.Get(ShowAllLightsButtonsKey, ShowAllLightsButtonsDefault);
+            set
+            {
+                Preferences.Set(ShowAllLightsButtonsKey, value);
+                OnPropertyChanged();
+            }
+        }
+        
         public async Task<string> GetUserName()
         {
             try

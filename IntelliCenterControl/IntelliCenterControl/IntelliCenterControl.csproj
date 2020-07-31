@@ -7,8 +7,8 @@
     <Version>1.0.1</Version>
     <Company>MCXS</Company>
     <AssemblyName>intellicentercontrol</AssemblyName>
-    <AssemblyVersion>1.0.7516.18</AssemblyVersion>
-    <FileVersion>1.0.7516.18</FileVersion>
+    <AssemblyVersion>1.0.7517.5</AssemblyVersion>
+    <FileVersion>1.0.7517.5</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

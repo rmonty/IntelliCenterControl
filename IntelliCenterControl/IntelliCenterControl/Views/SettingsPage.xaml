@@ -26,6 +26,8 @@
             <sv:Section Title="App Defaults">
                 <sv:SwitchCell Title="Show Solar Temp: " On="{Binding Settings.ShowSolarTemp}"
                                Description="Show Solar Temperature on Control Tab"/>
+                <sv:SwitchCell Title="Show All Lights Buttons: " On="{Binding Settings.ShowAllLightsButtons}"
+                               Description="Show All Lights On/Off Buttons on Control Tab"/>
             </sv:Section>
         </sv:SettingsView>
     </ContentPage.Content>

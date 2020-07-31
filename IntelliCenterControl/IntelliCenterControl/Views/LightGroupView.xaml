@@ -23,7 +23,8 @@
                    Text="{Binding Name}"
                    FontAttributes="Bold" VerticalOptions="Center" />
             <Button x:Name="LightGroupSettingsButton" Grid.Column="1" Grid.ColumnSpan="2" Text="SET" FontSize="Caption" Clicked="LightGroupSettingsButton_Clicked"
-                    BackgroundColor="#2196F3" TextColor="White" CornerRadius="5" HorizontalOptions="Center" VerticalOptions="Center" HeightRequest="30" Padding="0"/>
+                    BackgroundColor="#2196F3" TextColor="White" CornerRadius="5" HorizontalOptions="Center" VerticalOptions="Center" HeightRequest="30" Padding="0"
+                    FontAttributes="Bold"/>
             <Switch Grid.Column="3" IsToggled="{Binding Active}" HorizontalOptions="End"
                     VerticalOptions="Center" />
         </Grid>
