@@ -131,6 +131,10 @@ namespace IntelliCenterControl.Services
                                             (sender, certificate, chain, sslPolicyErrors) => true;
                                     return message;
                                 };
+                                options.WebSocketConfiguration = c =>
+                                {
+                                    c.RemoteCertificateValidationCallback = (sender, cert, chain, errors) => true;
+                                };
                             })
                             .WithAutomaticReconnect(new[] { TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20) })
                         .Build();
